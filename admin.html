@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -17,32 +16,36 @@
             --accent: #3B82F6; --success: #059669; --warning: #D97706;
             --danger: #DC2626; --text-primary: #F0F4FA; --text-secondary: #B0C4DE;
             --gray-200: #2D4B73; --gray-300: #3D5C86; --white: #FFFFFF;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.3); --radius-lg: 20px; --radius-xl: 24px;
         }
         body {
             font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary);
-            min-height: 100vh;
+            margin: 0; min-height: 100vh; display: flex; flex-direction: column;
         }
         .app-header {
             background: var(--bg-card); padding: 18px 20px; border-bottom: 1px solid var(--gray-300);
         }
         .header-content {
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex; justify-content: space-between; align-items: center; max-width: 100%;
         }
         .logo {
-            font-size: 1.6rem; font-weight: 700; color: var(--white); cursor: pointer;
+            font-size: 1.6rem; font-weight: 700; color: var(--white); letter-spacing: -0.5px;
+            cursor: pointer;
         }
         .admin-badge {
             background: var(--accent); padding: 8px 16px; border-radius: 40px;
             font-size: 0.85rem; font-weight: 600; color: white;
         }
         .container {
-            max-width: 1200px; margin: 0 auto; padding: 20px 20px 100px 20px;
+            max-width: 100%; margin: 0 auto; padding: 20px 20px 100px 20px; width: 100%; flex: 1;
         }
-        h1 { font-size: 1.8rem; margin-bottom: 24px; color: var(--white); }
-        
+        h1 {
+            font-size: 1.8rem; margin-bottom: 24px; font-weight: 600; color: var(--white);
+        }
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card);
             border-top: 2px solid var(--gray-300); padding: 10px 0; z-index: 100;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.3);
         }
         .nav-menu {
             display: flex; justify-content: space-around; align-items: center; max-width: 600px; margin: 0 auto;
@@ -53,50 +56,96 @@
         }
         .nav-item i { font-size: 1.6rem; }
         .nav-item.active { color: var(--accent); }
-        
-        .stats-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px; margin-bottom: 20px;
+        .nav-item.active i { color: var(--accent); }
+        .admin-grid {
+            display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 20px;
         }
-        .stat-card {
-            background: var(--primary); border-radius: 28px; padding: 20px; text-align: center;
-            border: 1px solid var(--gray-300);
-        }
-        .stat-value { font-size: 2rem; font-weight: 700; color: var(--accent); }
-        
-        .tabs {
-            display: flex; gap: 8px; margin-bottom: 24px; background: var(--bg-card);
-            padding: 6px; border-radius: 40px; border: 1px solid var(--gray-300);
-            flex-wrap: wrap;
-        }
-        .tab {
-            flex: 1; text-align: center; padding: 12px 0; cursor: pointer; border-radius: 40px;
-            color: var(--text-secondary); display: flex; align-items: center; justify-content: center; gap: 8px;
-            min-width: 100px;
-        }
-        .tab i { font-size: 1.1rem; }
-        .tab.active { background: var(--accent); color: white; }
-        
         .admin-card {
-            background: var(--bg-card); border-radius: 28px; padding: 24px;
-            border: 1px solid var(--gray-300); margin-bottom: 20px;
-        }
-        .admin-card h2 { margin-bottom: 18px; color: var(--white); display: flex; align-items: center; gap: 10px; }
-        
-        .item-list { max-height: 500px; overflow-y: auto; }
-        .item-row {
-            background: var(--primary); border-radius: 20px; padding: 16px; margin-bottom: 10px;
+            background: var(--bg-card); border-radius: var(--radius-xl); padding: 24px;
             border: 1px solid var(--gray-300);
         }
-        
+        .admin-card h2 {
+            margin-bottom: 18px; color: var(--white); display: flex; align-items: center;
+            gap: 10px; font-size: 1.3rem; font-weight: 500;
+        }
+        .admin-card h2 i { color: var(--accent); }
+        .item-list { margin-bottom: 16px; max-height: 400px; overflow-y: auto; }
+        .item-row {
+            display: flex; align-items: center; justify-content: space-between; padding: 16px;
+            background: var(--primary); border-radius: var(--radius-lg); margin-bottom: 10px;
+            border: 1px solid var(--gray-300);
+        }
+        .item-info { flex: 1; }
+        .item-nom { font-weight: 600; color: var(--white); margin-bottom: 4px; font-size: 1rem; }
+        .item-reponse {
+            color: var(--text-secondary); font-size: 0.85rem; background: var(--bg-dark);
+            padding: 10px; border-radius: var(--radius-lg); margin-top: 8px;
+        }
+        .item-actions { display: flex; gap: 8px; }
         .btn {
             padding: 10px 18px; border: none; border-radius: 40px; cursor: pointer; font-weight: 600;
-            background: var(--gray-200); color: var(--white); display: inline-flex; align-items: center; gap: 8px;
+            transition: all 0.2s; font-size: 0.9rem; background: var(--gray-200); color: var(--white);
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
         }
-        .btn-success { background: var(--success); }
-        .btn-warning { background: var(--warning); }
-        .btn-danger { background: var(--danger); }
+        .btn i { font-size: 1rem; }
+        .btn-edit { background: var(--accent); }
+        .btn-delete { background: var(--danger); }
         .btn-add { background: var(--success); width: 100%; padding: 14px; margin-top: 8px; }
+        .btn-message { background: var(--warning); }
+        .btn-approuver { background: var(--success); padding: 8px 16px; font-size: 0.9rem; flex: 2; }
+        .btn-rejeter { background: var(--danger); padding: 8px 16px; font-size: 0.9rem; flex: 1; }
+        .btn-confirm { background: var(--success); }
+        .btn-cancel { background: var(--gray-300); }
+        .btn-debloquer { background: var(--warning); }
+        .btn-pause { background: var(--warning); }
+        .btn-play { background: var(--success); }
+        .btn-refresh { background: var(--accent); }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .status-active {
+            background: #065f46;
+            color: var(--success);
+        }
+        
+        .status-paused {
+            background: #7f1d1d;
+            color: var(--danger);
+        }
+        
+        .pause-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+            background: var(--primary);
+            padding: 20px;
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--gray-300);
+        }
+        
+        .pause-info {
+            flex: 1;
+        }
+        
+        .pause-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--white);
+        }
+        
+        .pause-status {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
         
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -105,47 +154,379 @@
         }
         .modal.active { display: flex; }
         .modal-content {
-            background: var(--bg-card); border-radius: 36px; padding: 32px; max-width: 500px;
-            width: 100%; border: 1px solid var(--gray-300);
+            background: var(--bg-card); border-radius: 36px; padding: 32px; max-width: 100%;
+            width: 100%; max-width: 500px; border: 1px solid var(--gray-300);
+            max-height: 80vh; overflow-y: auto;
         }
-        .modal-content input, .modal-content textarea {
+        .modal-content h3 {
+            margin-bottom: 20px; color: var(--white); font-weight: 500; font-size: 1.5rem;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .modal-content input, .modal-content textarea, .modal-content select {
             width: 100%; padding: 16px; margin-bottom: 16px; background: var(--primary);
-            border: 1px solid var(--gray-300); border-radius: 40px; color: var(--white);
+            border: 1px solid var(--gray-300); border-radius: 40px; color: var(--white); font-size: 1rem;
         }
-        
-        /* Login page */
-        #login-page {
-            min-height: 100vh; display: flex; align-items: center; justify-content: center;
-            background: var(--bg-dark); padding: 20px;
+        .modal-content textarea { min-height: 100px; border-radius: 24px; }
+        .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
+        .tabs {
+            display: flex; gap: 8px; margin-bottom: 24px; background: var(--bg-card);
+            padding: 6px; border-radius: 40px; border: 1px solid var(--gray-300);
+            flex-wrap: wrap;
         }
-        .login-card {
-            background: var(--bg-card); border-radius: 28px; padding: 40px; max-width: 400px;
-            width: 100%; border: 1px solid var(--gray-300); text-align: center;
+        .tab {
+            flex: 1; text-align: center; padding: 12px 0; cursor: pointer; border-radius: 40px;
+            transition: all 0.2s; font-size: 0.95rem; font-weight: 500; color: var(--text-secondary);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            min-width: 120px;
         }
-        .login-input {
-            width: 100%; padding: 16px; margin: 10px 0; background: var(--primary);
-            border: 1px solid var(--gray-300); border-radius: 50px; color: var(--white);
+        .tab i { font-size: 1.1rem; }
+        .tab.active { background: var(--accent); color: white; }
+        .filter-bar {
+            display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;
         }
-        .login-btn {
-            width: 100%; padding: 16px; margin-top: 20px; background: var(--accent);
-            color: white; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: 600;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+        .filter-bar select, .filter-bar input {
+            padding: 14px; background: var(--primary); border: 1px solid var(--gray-300);
+            border-radius: 40px; color: var(--white); font-size: 0.95rem; width: 100%;
         }
-        .login-error { color: var(--danger); margin: 10px 0; display: none; }
-        
         .request-item {
-            background: var(--primary); border-radius: 20px; padding: 20px; margin-bottom: 15px;
+            background: var(--primary); border-radius: 28px; padding: 20px; margin-bottom: 15px;
+            border: 1px solid var(--gray-300);
             border-left: 4px solid transparent;
         }
-        .status-en_attente { border-left-color: var(--warning); }
-        .status-confirme { border-left-color: var(--success); }
-        .status-rejete { border-left-color: var(--danger); }
-        
-        .pin-badge {
-            background: var(--bg-dark); padding: 4px 8px; border-radius: 20px;
-            font-size: 0.75rem; color: var(--text-secondary);
+        .request-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+            flex-wrap: wrap; gap: 8px;
         }
-        .pin-verifie { color: var(--success); }
+        .request-type {
+            padding: 6px 14px; border-radius: 40px; font-size: 0.8rem; font-weight: 600;
+            background: var(--bg-dark);
+        }
+        .type-ACHAT { color: var(--success); }
+        .type-VENTE { color: var(--warning); }
+        .request-status {
+            padding: 6px 14px; border-radius: 40px; font-size: 0.8rem; font-weight: 600;
+        }
+        .status-en_attente { background: #92400e; color: var(--warning); }
+        .status-confirme { background: #065f46; color: var(--success); }
+        .status-rejete { background: #7f1d1d; color: var(--danger); }
+        
+        .numero-item {
+            background: var(--primary); border-radius: 20px; padding: 15px; margin-bottom: 10px;
+            border: 1px solid var(--gray-300);
+        }
+        .numero-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+        }
+        .numero-user {
+            font-weight: 600; color: var(--white); font-size: 1rem;
+        }
+        .numero-info {
+            color: var(--text-secondary); margin-bottom: 8px;
+        }
+        .numero-status-badge {
+            display: inline-block; padding: 4px 10px; border-radius: 40px; font-size: 0.75rem;
+            font-weight: 600; margin-left: 10px;
+        }
+        .badge-attente { background: #92400e; color: var(--warning); }
+        .badge-approuve { background: #065f46; color: var(--success); }
+        .badge-rejete { background: #7f1d1d; color: var(--danger); }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: var(--primary);
+            border-radius: 28px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid var(--gray-300);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .user-item {
+            background: var(--primary);
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid var(--gray-300);
+        }
+        
+        .user-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            color: var(--white);
+            font-size: 1.1rem;
+        }
+        
+        .user-email {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+        
+        .user-detail {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .user-detail i {
+            color: var(--accent);
+            width: 20px;
+        }
+        
+        .pin-info {
+            background: var(--bg-dark);
+            border-radius: 16px;
+            padding: 12px;
+            margin: 10px 0;
+            border-left: 4px solid var(--warning);
+        }
+        
+        .pin-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .pin-actif { background: #065f46; color: var(--success); }
+        .pin-bloque { background: #7f1d1d; color: var(--danger); }
+        .pin-inactif { background: #92400e; color: var(--warning); }
+        
+        .numero-mini-item {
+            background: var(--bg-dark);
+            border-radius: 16px;
+            padding: 8px 12px;
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .taux-item {
+            background: var(--primary);
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid var(--gray-300);
+        }
+        
+        .taux-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .taux-symbole {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        
+        .taux-valeur {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--white);
+            margin: 10px 0;
+        }
+        
+        .taux-change {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+        }
+        
+        .positive { color: var(--success); }
+        .negative { color: var(--danger); }
+        
+        .frais-item {
+            background: var(--primary);
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid var(--gray-300);
+        }
+        
+        .reseau-item {
+            background: var(--primary);
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid var(--gray-300);
+        }
+        
+        .reseau-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .btn-config {
+            background: var(--accent);
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+        }
+        
+        /* Login page styles */
+        #login-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-dark);
+            padding: 20px;
+        }
+        
+        .login-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+            border: 1px solid var(--gray-300);
+            text-align: center;
+        }
+        
+        .login-title {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: var(--white);
+        }
+        
+        .login-input {
+            width: 100%;
+            padding: 16px;
+            margin: 10px 0;
+            background: var(--primary);
+            border: 1px solid var(--gray-300);
+            border-radius: 50px;
+            color: var(--white);
+            font-size: 1rem;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            margin-top: 20px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .login-btn:hover {
+            background: var(--accent-dark);
+        }
+        
+        .login-error {
+            color: var(--danger);
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .login-info {
+            color: var(--text-secondary);
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* Styles pour les NEWS */
+        .news-item-admin {
+            background: var(--primary);
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid var(--gray-300);
+        }
+        
+        .news-header-admin {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .news-titre-admin {
+            font-weight: 600;
+            color: var(--white);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .news-statut-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .news-statut-active {
+            background: #065f46;
+            color: var(--success);
+        }
+        
+        .news-statut-archive {
+            background: #7f1d1d;
+            color: var(--danger);
+        }
+        
+        .news-contenu-admin {
+            color: var(--text-secondary);
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+        
+        .news-date-admin {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+        
+        @media (min-width: 768px) {
+            .container { max-width: 600px; margin: 0 auto; }
+            .nav-menu { max-width: 600px; }
+        }
     </style>
 </head>
 <body>
@@ -153,18 +534,22 @@
     <div id="login-page">
         <div class="login-card">
             <div class="logo" style="font-size: 2rem; margin-bottom: 20px;">Typh X-chain</div>
-            <h3 style="color: var(--white); margin-bottom: 20px;">🔐 Administration</h3>
+            <h3 class="login-title">🔐 Administration</h3>
             
-            <input type="text" id="admin-username" class="login-input" placeholder="Nom d'utilisateur">
-            <input type="password" id="admin-password" class="login-input" placeholder="Mot de passe">
+            <input type="text" id="admin-username" class="login-input" placeholder="Nom d'utilisateur" value="Admin">
+            <input type="password" id="admin-password" class="login-input" placeholder="Mot de passe" value="ERREUR">
             
             <div class="login-error" id="admin-error">
                 <i class="fas fa-exclamation-triangle"></i> Identifiants incorrects
             </div>
             
             <button class="login-btn" onclick="loginAdmin()">
-                <i class="fas fa-sign-in-alt"></i> Accéder
+                <i class="fas fa-sign-in-alt"></i> Accéder à l'administration
             </button>
+            
+            <p class="login-info">
+                <i class="fas fa-info-circle"></i> Identifiants: Admin - T'yph Exchange 
+            </p>
         </div>
     </div>
 
@@ -202,63 +587,160 @@
 
             <div class="tabs">
                 <div class="tab active" onclick="switchTab('gestion')"><i class="fas fa-database"></i> Gestion</div>
+                <div class="tab" onclick="switchTab('taux')"><i class="fas fa-chart-line"></i> Taux & Frais</div>
+                <div class="tab" onclick="switchTab('pause')"><i class="fas fa-pause-circle"></i> Pause/Activer</div>
                 <div class="tab" onclick="switchTab('utilisateurs')"><i class="fas fa-users"></i> Utilisateurs</div>
                 <div class="tab" onclick="switchTab('numeros')"><i class="fas fa-phone-alt"></i> Approbations</div>
                 <div class="tab" onclick="switchTab('demandes')"><i class="fas fa-clipboard-list"></i> Demandes</div>
-                <div class="tab" onclick="switchTab('taux')"><i class="fas fa-chart-line"></i> Taux</div>
+                <div class="tab" onclick="switchTab('news')"><i class="fas fa-newspaper"></i> News</div> <!-- NOUVEL ONGLET -->
             </div>
 
-            <!-- GESTION -->
+            <!-- GESTION DES DONNÉES -->
             <div id="gestion-tab" style="display: block;">
-                <div class="admin-card">
-                    <h2><i class="fas fa-briefcase"></i> Portefeuilles</h2>
-                    <div id="portefeuilles-liste" class="item-list"></div>
-                    <button class="btn btn-add" onclick="ouvrirModal('portefeuille')">+ Nouveau portefeuille</button>
+                <div class="admin-grid">
+                    <!-- PORTEFEUILLES -->
+                    <div class="admin-card">
+                        <h2><i class="fas fa-briefcase"></i> Portefeuilles + Réseaux</h2>
+                        <div id="portefeuilles-liste" class="item-list"></div>
+                        <button class="btn btn-add" onclick="ouvrirModal('portefeuille')"><i class="fas fa-plus"></i> Nouveau portefeuille</button>
+                    </div>
+
+                    <!-- OPÉRATEURS -->
+                    <div class="admin-card">
+                        <h2><i class="fas fa-mobile-alt"></i> Opérateurs + Message</h2>
+                        <div id="operateurs-liste" class="item-list"></div>
+                        <button class="btn btn-add" onclick="ouvrirModal('operateur')"><i class="fas fa-plus"></i> Nouvel opérateur</button>
+                    </div>
+                    
+                    <!-- RÉSEAUX CRYPTO -->
+                    <div class="admin-card">
+                        <h2><i class="fas fa-network-wired"></i> Réseaux Crypto</h2>
+                        <div id="reseaux-liste" class="item-list"></div>
+                        <button class="btn btn-add" onclick="ouvrirModal('reseau')"><i class="fas fa-plus"></i> Ajouter réseau</button>
+                    </div>
                 </div>
-                <div class="admin-card">
-                    <h2><i class="fas fa-mobile-alt"></i> Opérateurs</h2>
-                    <div id="operateurs-liste" class="item-list"></div>
-                    <button class="btn btn-add" onclick="ouvrirModal('operateur')">+ Nouvel opérateur</button>
-                </div>
+            </div>
+
+            <!-- GESTION DES TAUX CRYPTO ET FRAIS -->
+            <div id="taux-tab" style="display: none;">
                 <div class="admin-card">
                     <h2><i class="fas fa-coins"></i> Cryptomonnaies</h2>
                     <div id="cryptos-liste" class="item-list"></div>
-                    <button class="btn btn-add" onclick="ouvrirModal('crypto')">+ Ajouter crypto</button>
+                    <button class="btn btn-add" onclick="ouvrirModal('crypto')"><i class="fas fa-plus"></i> Ajouter crypto</button>
+                </div>
+                
+                <div class="admin-card">
+                    <h2><i class="fas fa-chart-line"></i> Gestion des taux</h2>
+                    <div id="taux-liste" class="item-list"></div>
+                </div>
+                
+                <div class="admin-card">
+                    <h2><i class="fas fa-percent"></i> Frais de transaction</h2>
+                    <div class="frais-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span><i class="fas fa-arrow-down" style="color: var(--success);"></i> Frais ACHAT</span>
+                            <span style="font-size: 1.3rem; font-weight: 700; color: var(--white);" id="frais-achat-display">1.5%</span>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <input type="number" id="frais-achat-input" placeholder="Nouveau frais ACHAT %" step="0.1" min="0" max="100" style="flex: 1;">
+                            <button class="btn btn-edit" onclick="modifierFrais('achat')">Modifier</button>
+                        </div>
+                    </div>
+                    <div class="frais-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span><i class="fas fa-arrow-up" style="color: var(--warning);"></i> Frais VENTE</span>
+                            <span style="font-size: 1.3rem; font-weight: 700; color: var(--white);" id="frais-vente-display">2.0%</span>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <input type="number" id="frais-vente-input" placeholder="Nouveau frais VENTE %" step="0.1" min="0" max="100" style="flex: 1;">
+                            <button class="btn btn-edit" onclick="modifierFrais('vente')">Modifier</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- UTILISATEURS -->
+            <!-- GESTION DE LA PAUSE -->
+            <div id="pause-tab" style="display: none;">
+                <div class="admin-card">
+                    <h2><i class="fas fa-pause-circle"></i> Contrôle des transactions</h2>
+                    
+                    <div class="pause-controls">
+                        <div class="pause-info">
+                            <div class="pause-title">État des ACHATS</div>
+                            <div class="pause-status" id="achat-status-text">Actuellement: Actif</div>
+                        </div>
+                        <button class="btn" id="btn-pause-achat" onclick="togglePause('achat')">
+                            <i class="fas fa-pause"></i> Mettre en PAUSE
+                        </button>
+                    </div>
+                    
+                    <div class="pause-controls">
+                        <div class="pause-info">
+                            <div class="pause-title">État des VENTES</div>
+                            <div class="pause-status" id="vente-status-text">Actuellement: Actif</div>
+                        </div>
+                        <button class="btn" id="btn-pause-vente" onclick="togglePause('vente')">
+                            <i class="fas fa-pause"></i> Mettre en PAUSE
+                        </button>
+                    </div>
+                    
+                    <div style="background: var(--primary); padding: 20px; border-radius: var(--radius-xl); margin-top: 20px;">
+                        <h3 style="color: var(--white); margin-bottom: 10px;">⚠️ Important</h3>
+                        <p style="color: var(--text-secondary);">
+                            Lorsqu'une section est en PAUSE, les utilisateurs ne peuvent pas effectuer de transactions.
+                            Ils verront un message indiquant que le service est temporairement indisponible.
+                            Vous devez manuellement réactiver la section en cliquant sur le bouton "ACTIVER".
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GESTION DES UTILISATEURS -->
             <div id="utilisateurs-tab" style="display: none;">
                 <div class="admin-card">
                     <h2><i class="fas fa-users"></i> Liste des utilisateurs</h2>
-                    <input type="text" id="recherche-utilisateur" class="login-input" placeholder="Rechercher..." oninput="filtrerUtilisateurs()">
+                    <div class="filter-bar">
+                        <input type="text" id="recherche-utilisateur" placeholder="Rechercher par nom ou email..." oninput="filtrerUtilisateurs()">
+                    </div>
                     <div id="utilisateurs-liste" class="item-list"></div>
                 </div>
             </div>
 
-            <!-- APPROBATIONS NUMÉROS -->
+            <!-- GESTION DES APPROBATIONS DE NUMÉROS -->
             <div id="numeros-tab" style="display: none;">
                 <div class="admin-card">
-                    <h2><i class="fas fa-clock"></i> En attente</h2>
+                    <h2><i class="fas fa-phone-alt"></i> Demandes d'approbation de numéros</h2>
                     <div id="numeros-attente-liste" class="item-list"></div>
                 </div>
+                
                 <div class="admin-card">
-                    <h2><i class="fas fa-check-circle"></i> Approuvés</h2>
+                    <h2><i class="fas fa-check-circle"></i> Numéros approuvés</h2>
                     <div id="numeros-approuves-liste" class="item-list"></div>
                 </div>
             </div>
 
-            <!-- DEMANDES -->
+            <!-- GESTION DES DEMANDES DES CLIENTS (AVEC TXID) -->
             <div id="demandes-tab" style="display: none;">
                 <div class="admin-card">
                     <h2><i class="fas fa-clipboard-list"></i> Demandes des clients</h2>
-                    <div class="tabs" style="margin-bottom: 15px;">
-                        <select id="filtre-type" class="login-input" onchange="afficherDemandes()" style="margin:0;">
+                    
+                    <!-- Bouton de rafraîchissement manuel -->
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <button class="btn btn-refresh" onclick="verifierConnexionFirebase()" style="flex: 1;">
+                            <i class="fas fa-plug"></i> Vérifier connexion
+                        </button>
+                        <button class="btn btn-success" onclick="afficherDemandes()" style="flex: 1;">
+                            <i class="fas fa-sync"></i> Rafraîchir
+                        </button>
+                    </div>
+                    
+                    <div class="filter-bar">
+                        <select id="filtre-type" onchange="afficherDemandes()">
                             <option value="all">Tous types</option>
                             <option value="ACHAT">ACHAT</option>
                             <option value="VENTE">VENTE</option>
                         </select>
-                        <select id="filtre-statut" class="login-input" onchange="afficherDemandes()" style="margin:0;">
+                        <select id="filtre-statut" onchange="afficherDemandes()">
                             <option value="all">Tous statuts</option>
                             <option value="en_attente">En attente</option>
                             <option value="confirme">Confirmé</option>
@@ -269,34 +751,63 @@
                 </div>
             </div>
 
-            <!-- TAUX DE CHANGE -->
-            <div id="taux-tab" style="display: none;">
+            <!-- NOUVELLE SECTION GESTION DES NEWS -->
+            <div id="news-tab" style="display: none;">
                 <div class="admin-card">
-                    <h2><i class="fas fa-chart-line"></i> Gestion des taux</h2>
+                    <h2><i class="fas fa-newspaper"></i> Gestion des actualités</h2>
                     
-                    <div style="background: var(--primary); padding: 20px; border-radius: 20px; margin-bottom: 20px;">
-                        <h3 style="margin-bottom: 15px;">Ajouter un taux</h3>
-                        <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 10px;">
-                            <input type="text" id="new-crypto-symbole" placeholder="Symbole" class="login-input" style="margin:0;">
-                            <input type="number" id="new-crypto-valeur" placeholder="Valeur en Ar" class="login-input" style="margin:0;">
-                            <button class="btn btn-success" onclick="ajouterTaux()">Ajouter</button>
+                    <!-- Formulaire d'ajout/modification -->
+                    <div style="margin-bottom: 30px; padding: 20px; background: var(--primary); border-radius: var(--radius-xl);">
+                        <h3 style="color: var(--white); margin-bottom: 20px;" id="news-form-title">
+                            <i class="fas fa-plus-circle"></i> Ajouter une actualité
+                        </h3>
+                        
+                        <input type="hidden" id="news-editing-id" value="">
+                        
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="color: var(--text-secondary); display: block; margin-bottom: 5px;">Titre</label>
+                            <input type="text" id="news-titre" placeholder="Titre de l'actualité" style="width: 100%; padding: 14px; background: var(--bg-dark); border: 1px solid var(--gray-300); border-radius: 40px; color: var(--white);">
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="color: var(--text-secondary); display: block; margin-bottom: 5px;">Contenu</label>
+                            <textarea id="news-contenu" placeholder="Contenu détaillé..." rows="4" style="width: 100%; padding: 14px; background: var(--bg-dark); border: 1px solid var(--gray-300); border-radius: 24px; color: var(--white);"></textarea>
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="color: var(--text-secondary); display: block; margin-bottom: 5px;">Statut</label>
+                            <select id="news-statut" style="width: 100%; padding: 14px; background: var(--bg-dark); border: 1px solid var(--gray-300); border-radius: 40px; color: var(--white);">
+                                <option value="active">Active (visible)</option>
+                                <option value="archive">Archivée (cachée)</option>
+                            </select>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button class="btn btn-success" onclick="sauvegarderNews()" style="flex: 2;">
+                                <i class="fas fa-save"></i> Publier
+                            </button>
+                            <button class="btn btn-cancel" onclick="annulerEditionNews()" style="flex: 1;" id="btn-annuler-news">
+                                <i class="fas fa-times"></i> Annuler
+                            </button>
                         </div>
                     </div>
-
-                    <div id="taux-liste" class="item-list"></div>
                     
-                    <div style="text-align: right; color: var(--text-secondary); margin-top: 10px;">
-                        Dernière mise à jour: <span id="derniere-maj-taux"></span>
-                    </div>
+                    <!-- Liste des actualités -->
+                    <h3 style="color: var(--white); margin: 30px 0 15px 0;">
+                        <i class="fas fa-list"></i> Liste des actualités
+                    </h3>
+                    <div id="news-liste-admin" class="item-list"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Bottom navigation -->
+        <!-- BOTTOM NAVIGATION -->
         <div class="bottom-nav">
             <div class="nav-menu">
                 <div class="nav-item" onclick="window.location.href='index.html'"><i class="fas fa-home"></i><span>Accueil</span></div>
                 <div class="nav-item active"><i class="fas fa-user-shield"></i><span>Admin</span></div>
+                <div class="nav-item" onclick="window.location.reload()"><i class="fas fa-sync-alt"></i><span>Refresh</span></div>
+                <div class="nav-item" onclick="exporterDonnees()"><i class="fas fa-download"></i><span>Export</span></div>
                 <div class="nav-item" onclick="logoutAdmin()"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></div>
             </div>
         </div>
@@ -307,53 +818,58 @@
         <div class="modal-content">
             <h3 id="modal-titre"><i class="fas fa-edit"></i> Édition</h3>
             <div id="modal-champs"></div>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn" style="flex:1; background: var(--gray-300);" onclick="fermerModal()">Annuler</button>
-                <button class="btn btn-success" style="flex:1;" onclick="sauvegarderModal()">Confirmer</button>
+            <div class="modal-buttons">
+                <button class="btn btn-cancel" onclick="fermerModal()"><i class="fas fa-times"></i> Annuler</button>
+                <button class="btn btn-confirm" onclick="sauvegarderModal()"><i class="fas fa-check"></i> Confirmer</button>
             </div>
         </div>
     </div>
 
     <script>
+        // Configuration Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAC6xQXWg_5EplLDPQu_7RuuQ0NrCUSQ2g",
             authDomain: "typhxchain.firebaseapp.com",
             databaseURL: "https://typhxchain-default-rtdb.firebaseio.com",
             projectId: "typhxchain",
             storageBucket: "typhxchain.firebasestorage.app",
-            appId: "1:1036771874416:web:aeca9ac347f6bbcc9886b5"
+            messagingSenderId: "1036771874416",
+            appId: "1:1036771874416:web:aeca9ac347f6bbcc9886b5",
+            measurementId: "G-DHMY4MSP9Y"
         };
 
+        // Initialiser Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        console.log('✅ Firebase Admin connecté');
 
         let donnees = {
             utilisateurs: [],
             portefeuilles: [],
             operateurs: [],
-            cryptos: ["USDT", "BTC", "ETH", "BNB"],
+            cryptos: [],
+            taux: {},
+            reseaux: [],
+            frais: { achat: 1.5, vente: 2.0 },
+            pause: { achat: false, vente: false },
             demandes: [],
-            tauxChange: {
-                BTC: { valeur: 78500000, changement: "+2.4", variation: 1200000 },
-                ETH: { valeur: 4200000, changement: "-1.2", variation: 52000 },
-                USDT: { valeur: 4950, changement: "+0.1", variation: 5 },
-                BNB: { valeur: 1250000, changement: "+1.8", variation: 22000 }
-            }
+            news: [] // Ajout du tableau news
         };
 
         let modalMode = 'ajout';
         let modalType = '';
         let modalIndex = -1;
+        let modalCryptoNom = null;
+        let rechercheUtilisateurs = '';
 
-        // ADMIN FIXED CREDENTIALS (non visibles dans l'interface)
-        const ADMIN_USERNAME = "Admin";
-        const ADMIN_PASSWORD = "TYPH001";  // Le mot de passe n'est pas affiché
+        // Variables pour la gestion des news
+        let newsEnEdition = null;
 
         function loginAdmin() {
             const username = document.getElementById('admin-username').value;
             const password = document.getElementById('admin-password').value;
             
-            if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+            if (username === 'Admin' && password === 'Typh_#3600') {
                 document.getElementById('login-page').style.display = 'none';
                 document.getElementById('admin-interface').style.display = 'block';
                 sessionStorage.setItem('adminLoggedIn', 'true');
@@ -369,34 +885,365 @@
             document.getElementById('admin-interface').style.display = 'none';
         }
 
+        // Vérifier si déjà connecté
         if (sessionStorage.getItem('adminLoggedIn') === 'true') {
             document.getElementById('login-page').style.display = 'none';
             document.getElementById('admin-interface').style.display = 'block';
             chargerDonnees();
         }
 
-        async function chargerDonnees() {
-            try {
-                const snapshot = await database.ref('donnees').once('value');
-                const data = snapshot.val();
-                if (data) {
-                    donnees = data;
-                }
-                mettreAJourStats();
-                afficherTout();
-            } catch (error) {
-                console.error('Erreur chargement:', error);
+        function obtenirDonneesParDefaut() {
+            return {
+                utilisateurs: [
+                    { 
+                        nom: "Jean Rakoto", 
+                        email: "jean.rakoto@email.com",
+                        motDePasse: "pass123",
+                        dateInscription: new Date().toISOString(),
+                        numeros: [
+                            { nom: "Jean Rakoto", numero: "0341234567", statut: "approuve" }
+                        ],
+                        codePIN: {
+                            hash: btoa("123456"),
+                            actif: true,
+                            tentativeEchouees: 0,
+                            bloque: false,
+                            dateModification: new Date().toISOString()
+                        }
+                    },
+                    { 
+                        nom: "Marie Claire", 
+                        email: "marie.claire@email.com",
+                        motDePasse: "pass456",
+                        dateInscription: new Date().toISOString(),
+                        numeros: [
+                            { nom: "Marie Claire", numero: "0339876543", statut: "approuve" }
+                        ],
+                        codePIN: {
+                            hash: btoa("789012"),
+                            actif: true,
+                            tentativeEchouees: 2,
+                            bloque: false,
+                            dateModification: new Date().toISOString()
+                        }
+                    }
+                ],
+                portefeuilles: [
+                    { 
+                        nom: "Principal", 
+                        reponse: "Portefeuille principal",
+                        messageConfirmation: "Envoyez à l'email: principal@typh.com",
+                        reseau: "BEP20"
+                    },
+                    { 
+                        nom: "Épargne", 
+                        reponse: "Portefeuille épargne",
+                        messageConfirmation: "Envoyez à l'ID: epargne123",
+                        reseau: "ERC20"
+                    }
+                ],
+                operateurs: [
+                    { nom: "MVola", messageConfirmation: "Envoyez au 034 51 547 81" },
+                    { nom: "Orange Money", messageConfirmation: "Envoyez au 034 99 999 99" },
+                    { nom: "Airtel Money", messageConfirmation: "Envoyez au 033 88 888 88" }
+                ],
+                cryptos: ["USDT", "BTC", "ETH", "BNB"],
+                reseaux: [
+                    { nom: "BEP20", crypto: "USDT", fraisReseau: 0.5 },
+                    { nom: "ERC20", crypto: "USDT", fraisReseau: 1.2 },
+                    { nom: "TRC20", crypto: "USDT", fraisReseau: 0.8 },
+                    { nom: "BEP20", crypto: "BNB", fraisReseau: 0.3 }
+                ],
+                frais: { achat: 1.5, vente: 2.0 },
+                pause: { achat: false, vente: false },
+                taux: {
+                    "USDT": { achat: 4950, vente: 4850, variation: "+0.1", couleur: "positive" },
+                    "BTC": { achat: 78500000, vente: 77000000, variation: "+2.4", couleur: "positive" },
+                    "ETH": { achat: 4200000, vente: 4100000, variation: "-1.2", couleur: "negative" },
+                    "BNB": { achat: 1250000, vente: 1200000, variation: "+1.8", couleur: "positive" }
+                },
+                demandes: [],
+                news: [
+                    {
+                        id: "NEWS-" + Date.now() + "-1",
+                        titre: "Bienvenue sur TYPH X-CHAIN",
+                        contenu: "Nous sommes ravis de vous accueillir sur notre plateforme d'échange crypto !",
+                        statut: "active",
+                        dateCreation: new Date().toISOString()
+                    },
+                    {
+                        id: "NEWS-" + Date.now() + "-2",
+                        titre: "Nouveaux taux disponibles",
+                        contenu: "Les taux USDT et BTC ont été mis à jour. Consultez-les en direct !",
+                        statut: "active",
+                        dateCreation: new Date().toISOString()
+                    }
+                ]
+            };
+        }
+
+        function chargerDonnees() {
+            document.body.style.opacity = '0.7';
+            
+            database.ref('donnees').once('value')
+                .then((snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        donnees = data;
+                        console.log('✅ Données chargées depuis Firebase');
+                        console.log('📊 Total demandes reçues:', donnees.demandes?.length || 0);
+                        
+                        if (!donnees.taux) donnees.taux = obtenirDonneesParDefaut().taux;
+                        if (!donnees.reseaux) donnees.reseaux = obtenirDonneesParDefaut().reseaux;
+                        if (!donnees.frais) donnees.frais = obtenirDonneesParDefaut().frais;
+                        if (!donnees.pause) donnees.pause = { achat: false, vente: false };
+                        if (!donnees.news) donnees.news = obtenirDonneesParDefaut().news; // Ajout
+                    } else {
+                        console.log('📦 Aucune donnée trouvée, création des données par défaut');
+                        donnees = obtenirDonneesParDefaut();
+                        sauvegarderDonnees();
+                    }
+                    
+                    document.body.style.opacity = '1';
+                    mettreAJourStats();
+                    afficherTout();
+                    mettreAJourPauseUI();
+                    
+                    // Si on est sur l'onglet demandes, forcer l'affichage
+                    if (document.getElementById('demandes-tab').style.display === 'block') {
+                        afficherDemandes();
+                    }
+                    
+                    // Si on est sur l'onglet news, afficher les news
+                    if (document.getElementById('news-tab').style.display === 'block') {
+                        afficherNewsAdmin();
+                    }
+                })
+                .catch((error) => {
+                    console.error('❌ Erreur chargement Firebase:', error);
+                    alert('Erreur de connexion à Firebase. Utilisation des données locales.');
+                    
+                    const saved = localStorage.getItem('typhData');
+                    if (saved) {
+                        donnees = JSON.parse(saved);
+                        console.log('📦 Données chargées depuis localStorage');
+                        if (!donnees.reseaux) donnees.reseaux = obtenirDonneesParDefaut().reseaux;
+                        if (!donnees.frais) donnees.frais = obtenirDonneesParDefaut().frais;
+                        if (!donnees.pause) donnees.pause = { achat: false, vente: false };
+                        if (!donnees.news) donnees.news = obtenirDonneesParDefaut().news; // Ajout
+                    } else {
+                        donnees = obtenirDonneesParDefaut();
+                    }
+                    
+                    document.body.style.opacity = '1';
+                    mettreAJourStats();
+                    afficherTout();
+                    mettreAJourPauseUI();
+                });
+        }
+
+        function sauvegarderDonnees() {
+            database.ref('donnees').set(donnees)
+                .then(() => {
+                    console.log('✅ Données synchronisées avec Firebase');
+                    localStorage.setItem('typhData', JSON.stringify(donnees));
+                })
+                .catch((error) => {
+                    console.error('❌ Erreur synchronisation Firebase:', error);
+                    localStorage.setItem('typhData', JSON.stringify(donnees));
+                });
+            
+            mettreAJourStats();
+            afficherTout();
+            mettreAJourPauseUI();
+            
+            // Rafraîchir l'affichage des news si l'onglet est actif
+            if (document.getElementById('news-tab').style.display === 'block') {
+                afficherNewsAdmin();
             }
         }
 
-        async function sauvegarderDonnees() {
-            try {
-                await database.ref('donnees').set(donnees);
-                mettreAJourStats();
-                afficherTout();
-            } catch (error) {
-                console.error('Erreur sauvegarde:', error);
+        // NOUVELLES FONCTIONS POUR LES NEWS
+        function afficherNewsAdmin() {
+            const liste = document.getElementById('news-liste-admin');
+            if (!liste) return;
+            
+            if (!donnees.news || donnees.news.length === 0) {
+                liste.innerHTML = '<div class="item-row">Aucune actualité</div>';
+                return;
             }
+            
+            liste.innerHTML = donnees.news
+                .sort((a, b) => new Date(b.dateCreation) - new Date(a.dateCreation))
+                .map((news, index) => `
+                    <div class="news-item-admin">
+                        <div class="news-header-admin">
+                            <div class="news-titre-admin">
+                                <i class="fas fa-newspaper" style="color: var(--accent);"></i> 
+                                ${news.titre}
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn btn-edit" onclick="editerNews('${news.id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-delete" onclick="supprimerNews('${news.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="news-contenu-admin">
+                            ${news.contenu}
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                            <div class="news-date-admin">
+                                <i class="far fa-calendar-alt"></i> ${new Date(news.dateCreation).toLocaleDateString()}
+                            </div>
+                            <span class="news-statut-badge ${news.statut === 'active' ? 'news-statut-active' : 'news-statut-archive'}">
+                                ${news.statut === 'active' ? '✓ Visible' : '🗄️ Archivée'}
+                            </span>
+                        </div>
+                    </div>
+                `).join('');
+        }
+
+        function editerNews(id) {
+            const news = donnees.news.find(n => n.id === id);
+            if (!news) return;
+            
+            newsEnEdition = id;
+            document.getElementById('news-editing-id').value = id;
+            document.getElementById('news-titre').value = news.titre;
+            document.getElementById('news-contenu').value = news.contenu;
+            document.getElementById('news-statut').value = news.statut;
+            
+            document.getElementById('news-form-title').innerHTML = '<i class="fas fa-edit"></i> Modifier l\'actualité';
+            document.getElementById('btn-annuler-news').style.display = 'block';
+        }
+
+        function annulerEditionNews() {
+            newsEnEdition = null;
+            document.getElementById('news-editing-id').value = '';
+            document.getElementById('news-titre').value = '';
+            document.getElementById('news-contenu').value = '';
+            document.getElementById('news-statut').value = 'active';
+            
+            document.getElementById('news-form-title').innerHTML = '<i class="fas fa-plus-circle"></i> Ajouter une actualité';
+            document.getElementById('btn-annuler-news').style.display = 'none';
+        }
+
+        function sauvegarderNews() {
+            const titre = document.getElementById('news-titre').value.trim();
+            const contenu = document.getElementById('news-contenu').value.trim();
+            const statut = document.getElementById('news-statut').value;
+            
+            if (!titre || !contenu) {
+                alert('Veuillez remplir tous les champs');
+                return;
+            }
+            
+            if (!donnees.news) donnees.news = [];
+            
+            const id = document.getElementById('news-editing-id').value;
+            
+            if (id) {
+                // Modification
+                const index = donnees.news.findIndex(n => n.id === id);
+                if (index !== -1) {
+                    donnees.news[index] = {
+                        ...donnees.news[index],
+                        titre,
+                        contenu,
+                        statut,
+                        dateModification: new Date().toISOString()
+                    };
+                }
+            } else {
+                // Nouvelle news
+                const nouvelleNews = {
+                    id: 'NEWS-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+                    titre,
+                    contenu,
+                    statut,
+                    dateCreation: new Date().toISOString()
+                };
+                donnees.news.push(nouvelleNews);
+            }
+            
+            sauvegarderDonnees();
+            annulerEditionNews();
+            afficherNewsAdmin();
+            alert('✅ Actualité enregistrée avec succès');
+        }
+
+        function supprimerNews(id) {
+            if (!confirm('Supprimer cette actualité ?')) return;
+            
+            donnees.news = donnees.news.filter(n => n.id !== id);
+            sauvegarderDonnees();
+            afficherNewsAdmin();
+        }
+
+        function verifierConnexionFirebase() {
+            console.log('🔍 Vérification connexion Firebase...');
+            
+            database.ref('.info/connected').once('value')
+                .then((snap) => {
+                    if (snap.val() === true) {
+                        alert('✅ Connecté à Firebase Realtime Database');
+                        console.log('✅ Connecté à Firebase');
+                        
+                        // Recharger les données
+                        chargerDonnees();
+                    } else {
+                        alert('❌ Déconnecté de Firebase');
+                        console.log('❌ Déconnecté de Firebase');
+                    }
+                })
+                .catch((error) => {
+                    alert('❌ Erreur de connexion: ' + error.message);
+                    console.error('❌ Erreur:', error);
+                });
+        }
+
+        function mettreAJourPauseUI() {
+            // Mettre à jour l'affichage des statuts de pause
+            const achatStatus = document.getElementById('achat-status-text');
+            const venteStatus = document.getElementById('vente-status-text');
+            const btnAchat = document.getElementById('btn-pause-achat');
+            const btnVente = document.getElementById('btn-pause-vente');
+            
+            if (achatStatus) {
+                if (donnees.pause.achat) {
+                    achatStatus.innerHTML = 'Actuellement: <span style="color: var(--danger);">EN PAUSE</span>';
+                    btnAchat.innerHTML = '<i class="fas fa-play"></i> ACTIVER';
+                    btnAchat.className = 'btn btn-play';
+                } else {
+                    achatStatus.innerHTML = 'Actuellement: <span style="color: var(--success);">Actif</span>';
+                    btnAchat.innerHTML = '<i class="fas fa-pause"></i> Mettre en PAUSE';
+                    btnAchat.className = 'btn btn-pause';
+                }
+            }
+            
+            if (venteStatus) {
+                if (donnees.pause.vente) {
+                    venteStatus.innerHTML = 'Actuellement: <span style="color: var(--danger);">EN PAUSE</span>';
+                    btnVente.innerHTML = '<i class="fas fa-play"></i> ACTIVER';
+                    btnVente.className = 'btn btn-play';
+                } else {
+                    venteStatus.innerHTML = 'Actuellement: <span style="color: var(--success);">Actif</span>';
+                    btnVente.innerHTML = '<i class="fas fa-pause"></i> Mettre en PAUSE';
+                    btnVente.className = 'btn btn-pause';
+                }
+            }
+        }
+
+        function togglePause(type) {
+            donnees.pause[type] = !donnees.pause[type];
+            sauvegarderDonnees();
+            mettreAJourPauseUI();
+            
+            const etat = donnees.pause[type] ? 'EN PAUSE' : 'ACTIVÉ';
+            alert(`✅ Section ${type.toUpperCase()} ${etat} avec succès`);
         }
 
         function mettreAJourStats() {
@@ -419,44 +1266,250 @@
             document.getElementById('stats-transactions').textContent = stats.transactions;
         }
 
+        function filtrerUtilisateurs() {
+            rechercheUtilisateurs = document.getElementById('recherche-utilisateur')?.value.toLowerCase() || '';
+            afficherUtilisateurs();
+        }
+
+        function afficherUtilisateurs() {
+            const liste = document.getElementById('utilisateurs-liste');
+            if (!liste) return;
+
+            let utilisateursFiltres = donnees.utilisateurs || [];
+            if (rechercheUtilisateurs) {
+                utilisateursFiltres = utilisateursFiltres.filter(u => 
+                    u.nom.toLowerCase().includes(rechercheUtilisateurs) || 
+                    (u.email && u.email.toLowerCase().includes(rechercheUtilisateurs))
+                );
+            }
+
+            if (utilisateursFiltres.length === 0) {
+                liste.innerHTML = '<div class="item-row">Aucun utilisateur</div>';
+                return;
+            }
+
+            liste.innerHTML = utilisateursFiltres.map((user, index) => {
+                const pinStatus = user.codePIN ? 
+                    (user.codePIN.bloque ? 'bloque' : (user.codePIN.actif ? 'actif' : 'inactif')) : 
+                    'inactif';
+                
+                return `
+                <div class="user-item">
+                    <div class="user-header">
+                        <span class="user-name"><i class="fas fa-user-circle" style="color:var(--accent);"></i> ${user.nom}</span>
+                        <div class="item-actions">
+                            <button class="btn btn-edit" onclick="editerUtilisateur(${index})"><i class="fas fa-edit"></i></button>
+                            <button class="btn ${pinStatus === 'bloque' ? 'btn-debloquer' : 'btn-edit'}" onclick="gererCodePIN(${index})">
+                                <i class="fas fa-key"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="user-email"><i class="fas fa-envelope"></i> ${user.email || 'Email non renseigné'}</div>
+                    
+                    <div class="pin-info">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                            <i class="fas fa-lock" style="color: var(--warning);"></i>
+                            <span style="font-weight: 600;">Code PIN</span>
+                            <span class="pin-status pin-${pinStatus}">${pinStatus}</span>
+                        </div>
+                        <div style="font-size: 0.9rem; color: var(--text-secondary);">
+                            Tentatives échouées: ${user.codePIN?.tentativeEchouees || 0}/3
+                        </div>
+                        ${user.codePIN?.bloque ? `
+                            <button class="btn btn-success" style="margin-top: 10px; padding: 8px;" onclick="debloquerCodePIN(${index})">
+                                <i class="fas fa-unlock"></i> Débloquer
+                            </button>
+                        ` : ''}
+                        ${!user.codePIN?.actif ? `
+                            <button class="btn btn-warning" style="margin-top: 10px; padding: 8px;" onclick="reinitialiserCodePIN(${index})">
+                                <i class="fas fa-sync"></i> Réinitialiser
+                            </button>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="user-detail">
+                        <span><i class="fas fa-calendar"></i> Inscrit le: ${new Date(user.dateInscription).toLocaleDateString()}</span>
+                        <span><i class="fas fa-phone"></i> ${user.numeros?.length || 0} numéro(s)</span>
+                    </div>
+                    
+                    ${user.numeros && user.numeros.length > 0 ? `
+                        <div style="margin-top: 10px;">
+                            ${user.numeros.map(num => `
+                                <div class="numero-mini-item">
+                                    <span><i class="fas fa-phone"></i> ${num.numero} (${num.nom})</span>
+                                    <span class="numero-status-badge badge-${num.statut}">${num.statut}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `}).join('');
+        }
+
+        function editerUtilisateur(index) {
+            const user = donnees.utilisateurs[index];
+            if (user) {
+                modalType = 'utilisateur';
+                modalIndex = index;
+                modalMode = 'modification';
+                
+                const modal = document.getElementById('modal-admin');
+                const titre = document.getElementById('modal-titre');
+                titre.innerHTML = '<i class="fas fa-user-edit"></i> Modifier utilisateur';
+                
+                // Ne plus afficher le champ mot de passe
+                document.getElementById('modal-champs').innerHTML = `
+                    <input type="text" id="modal-nom" placeholder="Nom complet" value="${user.nom}">
+                    <input type="email" id="modal-email" placeholder="Email" value="${user.email || ''}">
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 10px 0;">
+                        <i class="fas fa-info-circle"></i> Pour modifier le mot de passe, utilisez la gestion des utilisateurs.
+                    </p>
+                `;
+                
+                modal.classList.add('active');
+            }
+        }
+
+        function gererCodePIN(index) {
+            const user = donnees.utilisateurs[index];
+            modalType = 'pin';
+            modalIndex = index;
+            modalMode = 'modification';
+            
+            const modal = document.getElementById('modal-admin');
+            const titre = document.getElementById('modal-titre');
+            titre.innerHTML = '<i class="fas fa-key"></i> Gérer code PIN';
+            
+            document.getElementById('modal-champs').innerHTML = `
+                <p style="margin-bottom: 15px; color: var(--text-secondary);">
+                    Utilisateur: <strong>${user.nom}</strong>
+                </p>
+                <input type="text" id="modal-pin" placeholder="Nouveau code PIN (6 chiffres)" maxlength="6" pattern="[0-9]{6}">
+                <div style="display: flex; gap: 10px;">
+                    <label style="display: flex; align-items: center; gap: 5px;">
+                        <input type="checkbox" id="modal-bloque" ${user.codePIN?.bloque ? 'checked' : ''}> Bloqué
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 5px;">
+                        <input type="checkbox" id="modal-actif" ${user.codePIN?.actif ? 'checked' : ''}> Actif
+                    </label>
+                </div>
+                <p style="margin-top: 10px; font-size: 0.9rem; color: var(--warning);">
+                    <i class="fas fa-info-circle"></i> Laissez vide pour ne pas changer le code
+                </p>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function debloquerCodePIN(index) {
+            if (donnees.utilisateurs[index]?.codePIN) {
+                donnees.utilisateurs[index].codePIN.bloque = false;
+                donnees.utilisateurs[index].codePIN.tentativeEchouees = 0;
+                sauvegarderDonnees();
+                alert('✅ Code PIN débloqué avec succès');
+            }
+        }
+
+        function reinitialiserCodePIN(index) {
+            if (confirm('Réinitialiser le code PIN ? L\'utilisateur devra en créer un nouveau.')) {
+                if (donnees.utilisateurs[index]) {
+                    delete donnees.utilisateurs[index].codePIN;
+                    sauvegarderDonnees();
+                    alert('✅ Code PIN réinitialisé');
+                }
+            }
+        }
+
+        function supprimerUtilisateur(index) {
+            if (!confirm('Supprimer cet utilisateur ?')) return;
+            donnees.utilisateurs.splice(index, 1);
+            sauvegarderDonnees();
+        }
+
+        function exporterDonnees() {
+            const dataStr = JSON.stringify(donnees, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = 'typh-data-export.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        function modifierFrais(type) {
+            const input = document.getElementById(`frais-${type}-input`);
+            const valeur = parseFloat(input.value);
+            
+            if (isNaN(valeur) || valeur < 0 || valeur > 100) {
+                alert('Veuillez entrer un pourcentage valide (0-100)');
+                return;
+            }
+            
+            donnees.frais[type] = valeur;
+            sauvegarderDonnees();
+            document.getElementById(`frais-${type}-display`).textContent = valeur + '%';
+            input.value = '';
+            alert(`✅ Frais ${type} modifié à ${valeur}%`);
+        }
+
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.getElementById('gestion-tab').style.display = 'none';
+            document.getElementById('taux-tab').style.display = 'none';
+            document.getElementById('pause-tab').style.display = 'none';
             document.getElementById('utilisateurs-tab').style.display = 'none';
             document.getElementById('numeros-tab').style.display = 'none';
             document.getElementById('demandes-tab').style.display = 'none';
-            document.getElementById('taux-tab').style.display = 'none';
+            document.getElementById('news-tab').style.display = 'none'; // Ajout
             
             if (tab === 'gestion') {
                 document.querySelectorAll('.tab')[0].classList.add('active');
                 document.getElementById('gestion-tab').style.display = 'block';
-            } else if (tab === 'utilisateurs') {
+            } else if (tab === 'taux') {
                 document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('taux-tab').style.display = 'block';
+                afficherTaux();
+            } else if (tab === 'pause') {
+                document.querySelectorAll('.tab')[2].classList.add('active');
+                document.getElementById('pause-tab').style.display = 'block';
+                mettreAJourPauseUI();
+            } else if (tab === 'utilisateurs') {
+                document.querySelectorAll('.tab')[3].classList.add('active');
                 document.getElementById('utilisateurs-tab').style.display = 'block';
                 afficherUtilisateurs();
             } else if (tab === 'numeros') {
-                document.querySelectorAll('.tab')[2].classList.add('active');
+                document.querySelectorAll('.tab')[4].classList.add('active');
                 document.getElementById('numeros-tab').style.display = 'block';
-                afficherNumeros();
+                afficherNumerosAttente();
+                afficherNumerosApprouves();
             } else if (tab === 'demandes') {
-                document.querySelectorAll('.tab')[3].classList.add('active');
+                document.querySelectorAll('.tab')[5].classList.add('active');
                 document.getElementById('demandes-tab').style.display = 'block';
                 afficherDemandes();
-            } else if (tab === 'taux') {
-                document.querySelectorAll('.tab')[4].classList.add('active');
-                document.getElementById('taux-tab').style.display = 'block';
-                afficherTaux();
+            } else if (tab === 'news') {
+                document.querySelectorAll('.tab')[6].classList.add('active');
+                document.getElementById('news-tab').style.display = 'block';
+                afficherNewsAdmin();
+                annulerEditionNews();
             }
         }
 
         function afficherTout() {
             afficherPortefeuilles();
             afficherOperateurs();
-            afficherCryptos();
-            afficherNumeros();
+            afficherReseaux();
+            afficherTaux();
+            afficherNumerosAttente();
+            afficherNumerosApprouves();
             afficherDemandes();
             afficherUtilisateurs();
-            afficherTaux();
+            afficherNewsAdmin(); // Ajout
+            
+            if (donnees.frais) {
+                document.getElementById('frais-achat-display').textContent = donnees.frais.achat + '%';
+                document.getElementById('frais-vente-display').textContent = donnees.frais.vente + '%';
+            }
         }
 
         function afficherPortefeuilles() {
@@ -464,21 +1517,22 @@
             if (!liste) return;
             liste.innerHTML = (donnees.portefeuilles || []).map((p, index) => `
                 <div class="item-row">
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div>
-                            <div style="font-weight:600;">${p.nom}</div>
-                            <div style="font-size:0.85rem; color:var(--text-secondary); margin-top:5px;">
-                                ${p.reponse || ''}<br>
-                                <span style="color:var(--warning);">📝 ${p.messageConfirmation || ''}</span>
-                            </div>
+                    <div class="item-info">
+                        <div class="item-nom"><i class="fas fa-wallet" style="color:var(--accent);"></i> ${p.nom}</div>
+                        <div class="item-reponse">${(p.reponse || '').substring(0,50)}...</div>
+                        <div style="font-size:0.8rem; margin-top:5px; color:var(--warning);">
+                            <i class="fas fa-comment"></i> Message: ${p.messageConfirmation || 'Aucun'}
                         </div>
-                        <div style="display: flex; gap: 5px;">
-                            <button class="btn" style="padding:5px 10px;" onclick="ouvrirModal('portefeuille', ${index})">✏️</button>
-                            <button class="btn btn-danger" style="padding:5px 10px;" onclick="supprimer('portefeuille', ${index})">🗑️</button>
+                        <div style="font-size:0.8rem; margin-top:5px; color:var(--accent);">
+                            <i class="fas fa-network-wired"></i> Réseau: ${p.reseau || 'Non défini'}
                         </div>
                     </div>
+                    <div class="item-actions">
+                        <button class="btn btn-edit" onclick="ouvrirModal('portefeuille', ${index})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-delete" onclick="supprimer('portefeuille', ${index})"><i class="fas fa-trash"></i></button>
+                    </div>
                 </div>
-            `).join('');
+            `).join('') || '<div class="item-row">Aucun portefeuille</div>';
         }
 
         function afficherOperateurs() {
@@ -486,365 +1540,586 @@
             if (!liste) return;
             liste.innerHTML = (donnees.operateurs || []).map((op, index) => `
                 <div class="item-row">
-                    <div style="display: flex; justify-content: space-between;">
-                        <div>
-                            <div style="font-weight:600;">${op.nom}</div>
-                            <div style="color:var(--warning);">📝 ${op.messageConfirmation || ''}</div>
-                        </div>
-                        <div style="display: flex; gap: 5px;">
-                            <button class="btn" style="padding:5px 10px;" onclick="ouvrirModal('operateur', ${index})">✏️</button>
-                            <button class="btn btn-danger" style="padding:5px 10px;" onclick="supprimer('operateur', ${index})">🗑️</button>
+                    <div class="item-info">
+                        <div class="item-nom"><i class="fas fa-sim-card" style="color:var(--accent);"></i> ${op.nom}</div>
+                        <div style="font-size:0.8rem; margin-top:5px; color:var(--warning);">
+                            <i class="fas fa-comment"></i> Message: ${op.messageConfirmation || 'Aucun'}
                         </div>
                     </div>
+                    <div class="item-actions">
+                        <button class="btn btn-edit" onclick="ouvrirModal('operateur', ${index})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-delete" onclick="supprimer('operateur', ${index})"><i class="fas fa-trash"></i></button>
+                    </div>
                 </div>
-            `).join('');
+            `).join('') || '<div class="item-row">Aucun opérateur</div>';
         }
 
-        function afficherCryptos() {
-            const liste = document.getElementById('cryptos-liste');
+        function afficherReseaux() {
+            const liste = document.getElementById('reseaux-liste');
             if (!liste) return;
-            liste.innerHTML = (donnees.cryptos || []).map((crypto, index) => `
-                <div class="item-row">
-                    <div style="display: flex; justify-content: space-between;">
-                        <div style="font-weight:600;">${crypto}</div>
-                        <div style="display: flex; gap: 5px;">
-                            <button class="btn" style="padding:5px 10px;" onclick="ouvrirModal('crypto', ${index})">✏️</button>
-                            <button class="btn btn-danger" style="padding:5px 10px;" onclick="supprimer('crypto', ${index})">🗑️</button>
+            liste.innerHTML = (donnees.reseaux || []).map((reseau, index) => `
+                <div class="reseau-item">
+                    <div class="reseau-header">
+                        <span><i class="fas fa-network-wired" style="color:var(--accent);"></i> <strong>${reseau.nom}</strong></span>
+                        <div class="item-actions">
+                            <button class="btn btn-edit" onclick="ouvrirModal('reseau', ${index})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-delete" onclick="supprimer('reseau', ${index})"><i class="fas fa-trash"></i></button>
                         </div>
+                    </div>
+                    <div style="margin-top: 8px;">
+                        <span style="color: var(--text-secondary);">Crypto: </span>${reseau.crypto}<br>
+                        <span style="color: var(--text-secondary);">Frais réseau: </span>${reseau.fraisReseau || 0}%
                     </div>
                 </div>
-            `).join('');
-        }
-
-        function afficherNumeros() {
-            const attente = document.getElementById('numeros-attente-liste');
-            const approuves = document.getElementById('numeros-approuves-liste');
-            
-            let htmlAttente = '', htmlApprouves = '';
-            
-            (donnees.utilisateurs || []).forEach(user => {
-                if (user.numeros) {
-                    user.numeros.forEach((num, idx) => {
-                        const item = `
-                            <div class="item-row">
-                                <div style="font-weight:600;">${user.nom}</div>
-                                <div>${num.nom} - ${num.numero}</div>
-                                ${num.statut === 'en_attente' ? `
-                                    <div style="display: flex; gap: 10px; margin-top: 10px;">
-                                        <button class="btn btn-success" style="flex:1;" onclick="approuverNumero('${user.uid}', ${idx})">Approuver</button>
-                                        <button class="btn btn-danger" style="flex:1;" onclick="rejeterNumero('${user.uid}', ${idx})">Rejeter</button>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        `;
-                        
-                        if (num.statut === 'en_attente') {
-                            htmlAttente += item;
-                        } else if (num.statut === 'approuve') {
-                            htmlApprouves += item;
-                        }
-                    });
-                }
-            });
-            
-            attente.innerHTML = htmlAttente || '<div class="item-row">Aucune demande</div>';
-            approuves.innerHTML = htmlApprouves || '<div class="item-row">Aucun numéro approuvé</div>';
-        }
-
-        async function approuverNumero(uid, index) {
-            const user = donnees.utilisateurs.find(u => u.uid === uid);
-            if (user && user.numeros[index]) {
-                user.numeros[index].statut = 'approuve';
-                await database.ref(`utilisateurs/${uid}/numeros`).set(user.numeros);
-                await sauvegarderDonnees();
-                alert('Numéro approuvé');
-            }
-        }
-
-        async function rejeterNumero(uid, index) {
-            const user = donnees.utilisateurs.find(u => u.uid === uid);
-            if (user && user.numeros[index]) {
-                user.numeros[index].statut = 'rejete';
-                await database.ref(`utilisateurs/${uid}/numeros`).set(user.numeros);
-                await sauvegarderDonnees();
-                alert('Numéro rejeté');
-            }
-        }
-
-        function afficherUtilisateurs() {
-            const recherche = document.getElementById('recherche-utilisateur')?.value.toLowerCase() || '';
-            const liste = document.getElementById('utilisateurs-liste');
-            if (!liste) return;
-
-            const utilisateursFiltres = (donnees.utilisateurs || []).filter(u => 
-                u.nom.toLowerCase().includes(recherche) || 
-                (u.email && u.email.toLowerCase().includes(recherche))
-            );
-
-            liste.innerHTML = utilisateursFiltres.map(user => `
-                <div class="item-row">
-                    <div style="font-weight:600;">${user.nom}</div>
-                    <div>📧 ${user.email}</div>
-                    <div>📱 ${user.numeros?.length || 0} numéro(s)</div>
-                    <div style="font-size:0.85rem; color:var(--text-secondary);">
-                        Inscrit le: ${new Date(user.dateInscription).toLocaleDateString()}
-                        ${user.codePIN ? ' 🔒 PIN configuré' : ' ⚠️ PIN non configuré'}
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function afficherDemandes() {
-            const type = document.getElementById('filtre-type')?.value || 'all';
-            const statut = document.getElementById('filtre-statut')?.value || 'all';
-            const liste = document.getElementById('demandes-liste');
-            
-            let demandesFiltrees = (donnees.demandes || []).filter(d => {
-                if (type !== 'all' && d.type !== type) return false;
-                if (statut !== 'all' && d.statut !== statut) return false;
-                return true;
-            });
-
-            liste.innerHTML = demandesFiltrees.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(d => `
-                <div class="item-row status-${d.statut}">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span class="${d.type === 'ACHAT' ? 'pin-verifie' : 'pin-verifie'}">
-                            <i class="fas ${d.type === 'ACHAT' ? 'fa-arrow-down' : 'fa-arrow-up'}"></i> 
-                            ${d.type} ${d.crypto}
-                        </span>
-                        <span class="pin-badge">
-                            ${d.pinVerifie ? '✅ PIN vérifié' : '⏳ En attente'}
-                        </span>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0;">
-                        <div>
-                            <div style="color:var(--text-secondary);">Client</div>
-                            <div>${d.utilisateur}</div>
-                        </div>
-                        <div>
-                            <div style="color:var(--text-secondary);">Montant</div>
-                            <div>${d.montant} ${d.type === 'ACHAT' ? 'Ar' : d.crypto}</div>
-                        </div>
-                    </div>
-                    
-                    <div style="background: var(--bg-dark); padding: 10px; border-radius: 10px; margin: 10px 0;">
-                        <i class="fas fa-comment"></i> ${d.messagePaiement || 'Message non défini'}
-                    </div>
-                    
-                    ${d.statut === 'en_attente' ? `
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
-                            <button class="btn btn-success" style="flex:1;" onclick="approuverDemande('${d.id}')">Approuver</button>
-                            <button class="btn btn-danger" style="flex:1;" onclick="rejeterDemande('${d.id}')">Rejeter</button>
-                        </div>
-                    ` : `
-                        <div style="text-align: right; color: var(--text-secondary);">
-                            Traité: ${new Date(d.dateModification || d.date).toLocaleString()}
-                        </div>
-                    `}
-                </div>
-            `).join('') || '<div class="item-row">Aucune demande</div>';
-        }
-
-        async function approuverDemande(id) {
-            const demande = donnees.demandes.find(d => d.id === id);
-            if (demande) {
-                demande.statut = 'confirme';
-                demande.dateModification = new Date().toISOString();
-                await sauvegarderDonnees();
-                alert('Demande approuvée');
-            }
-        }
-
-        async function rejeterDemande(id) {
-            const demande = donnees.demandes.find(d => d.id === id);
-            if (demande) {
-                demande.statut = 'rejete';
-                demande.dateModification = new Date().toISOString();
-                await sauvegarderDonnees();
-                alert('Demande rejetée');
-            }
+            `).join('') || '<div class="item-row">Aucun réseau configuré</div>';
         }
 
         function afficherTaux() {
             const liste = document.getElementById('taux-liste');
             if (!liste) return;
-
-            liste.innerHTML = Object.entries(donnees.tauxChange || {}).map(([crypto, data]) => `
-                <div class="item-row" id="taux-${crypto}">
-                    <div style="font-size:1.2rem; font-weight:600; margin-bottom:10px;">${crypto}</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: center;">
-                        <input type="number" id="val-${crypto}" value="${data.valeur}" class="login-input" style="margin:0;" placeholder="Valeur">
-                        <input type="text" id="chg-${crypto}" value="${data.changement}" class="login-input" style="margin:0;" placeholder="%">
-                        <input type="number" id="var-${crypto}" value="${data.variation}" class="login-input" style="margin:0;" placeholder="Variation">
-                        <div style="display: flex; gap: 5px;">
-                            <button class="btn btn-success" style="padding:10px;" onclick="mettreAJourTaux('${crypto}')">💾</button>
-                            <button class="btn btn-danger" style="padding:10px;" onclick="supprimerTaux('${crypto}')">🗑️</button>
+            
+            if (!donnees.taux) donnees.taux = {};
+            
+            liste.innerHTML = (donnees.cryptos || []).map(crypto => {
+                const taux = donnees.taux[crypto] || { achat: 0, vente: 0, variation: "0", couleur: "positive" };
+                return `
+                <div class="taux-item">
+                    <div class="taux-header">
+                        <span class="taux-symbole"><i class="fas fa-coins"></i> ${crypto}</span>
+                        <div class="item-actions">
+                            <button class="btn btn-edit" onclick="ouvrirModal('taux', null, '${crypto}')">
+                                <i class="fas fa-edit"></i> Modifier taux
+                            </button>
                         </div>
                     </div>
+                    <div class="taux-valeur">Achat: ${taux.achat.toLocaleString()} Ar</div>
+                    <div class="taux-valeur">Vente: ${taux.vente.toLocaleString()} Ar</div>
+                    <div class="taux-change ${taux.couleur}">
+                        <i class="fas fa-${taux.couleur === 'positive' ? 'arrow-up' : 'arrow-down'}"></i>
+                        Variation: ${taux.variation}%
+                    </div>
                 </div>
-            `).join('');
-
-            document.getElementById('derniere-maj-taux').textContent = 
-                donnees.dernierMajTaux ? new Date(donnees.dernierMajTaux).toLocaleString() : 'Jamais';
-        }
-
-        async function mettreAJourTaux(crypto) {
-            const valeur = document.getElementById(`val-${crypto}`).value;
-            const changement = document.getElementById(`chg-${crypto}`).value;
-            const variation = document.getElementById(`var-${crypto}`).value;
-
-            donnees.tauxChange[crypto] = {
-                valeur: parseFloat(valeur),
-                changement: changement,
-                variation: parseFloat(variation)
-            };
+            `}).join('') || '<div class="item-row">Aucune crypto</div>';
             
-            donnees.dernierMajTaux = new Date().toISOString();
-            await sauvegarderDonnees();
-            afficherTaux();
+            const cryptoListe = document.getElementById('cryptos-liste');
+            if (cryptoListe) {
+                cryptoListe.innerHTML = (donnees.cryptos || []).map((crypto, index) => `
+                    <div class="item-row">
+                        <div class="item-info">
+                            <div class="item-nom"><i class="fas fa-coins" style="color:var(--accent);"></i> ${crypto}</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="btn btn-edit" onclick="ouvrirModal('crypto', ${index})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-delete" onclick="supprimer('crypto', ${index})"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `).join('') || '<div class="item-row">Aucune crypto</div>';
+            }
         }
 
-        async function ajouterTaux() {
-            const symbole = document.getElementById('new-crypto-symbole').value.trim().toUpperCase();
-            const valeur = document.getElementById('new-crypto-valeur').value;
+        function afficherNumerosAttente() {
+            const liste = document.getElementById('numeros-attente-liste');
+            if (!liste) return;
+            
+            let html = '';
+            (donnees.utilisateurs || []).forEach((user) => {
+                if (user.numeros) {
+                    user.numeros.forEach((num, numIndex) => {
+                        if (num.statut === 'en_attente') {
+                            html += `
+                                <div class="numero-item">
+                                    <div class="numero-header">
+                                        <span class="numero-user"><i class="fas fa-user"></i> ${user.nom}</span>
+                                        <span class="numero-status-badge badge-attente">En attente</span>
+                                    </div>
+                                    <div class="numero-info">
+                                        <div><i class="fas fa-user-tag"></i> Nom: ${num.nom}</div>
+                                        <div><i class="fas fa-phone"></i> ${num.numero}</div>
+                                        <div><i class="fas fa-envelope"></i> ${user.email || 'Email non renseigné'}</div>
+                                    </div>
+                                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                        <button class="btn btn-approuver" onclick="approuverNumero('${user.email}', ${numIndex})">
+                                            <i class="fas fa-check"></i> Approuver
+                                        </button>
+                                        <button class="btn btn-rejeter" onclick="rejeterNumero('${user.email}', ${numIndex})">
+                                            <i class="fas fa-times"></i> Rejeter
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+            });
+            
+            liste.innerHTML = html || '<div class="item-row">Aucune demande en attente</div>';
+        }
 
-            if (!symbole || !valeur) {
-                alert('Symbole et valeur requis');
+        function afficherNumerosApprouves() {
+            const liste = document.getElementById('numeros-approuves-liste');
+            if (!liste) return;
+            
+            let html = '';
+            (donnees.utilisateurs || []).forEach(user => {
+                if (user.numeros) {
+                    user.numeros.forEach(num => {
+                        if (num.statut === 'approuve') {
+                            html += `
+                                <div class="numero-item">
+                                    <div class="numero-header">
+                                        <span class="numero-user"><i class="fas fa-user"></i> ${user.nom}</span>
+                                        <span class="numero-status-badge badge-approuve">Approuvé</span>
+                                    </div>
+                                    <div class="numero-info">
+                                        <div><i class="fas fa-user-tag"></i> ${num.nom}</div>
+                                        <div><i class="fas fa-phone"></i> ${num.numero}</div>
+                                        <div><i class="fas fa-envelope"></i> ${user.email}</div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+            });
+            
+            liste.innerHTML = html || '<div class="item-row">Aucun numéro approuvé</div>';
+        }
+
+        function approuverNumero(userEmail, numIndex) {
+            const user = donnees.utilisateurs.find(u => u.email === userEmail);
+            if (user && user.numeros && user.numeros[numIndex]) {
+                user.numeros[numIndex].statut = 'approuve';
+                sauvegarderDonnees();
+                alert('✅ Numéro approuvé avec succès !');
+                afficherNumerosAttente();
+                afficherNumerosApprouves();
+            }
+        }
+
+        function rejeterNumero(userEmail, numIndex) {
+            if (!confirm('❌ Rejeter ce numéro ?')) return;
+            const user = donnees.utilisateurs.find(u => u.email === userEmail);
+            if (user && user.numeros && user.numeros[numIndex]) {
+                user.numeros[numIndex].statut = 'rejete';
+                sauvegarderDonnees();
+                alert('Numéro rejeté');
+                afficherNumerosAttente();
+                afficherNumerosApprouves();
+            }
+        }
+
+        function afficherDemandes() {
+            console.log('📝 Affichage des demandes...');
+            console.log('📊 Données actuelles:', donnees);
+            console.log('📝 Demandes dans les données:', donnees.demandes);
+            
+            const type = document.getElementById('filtre-type')?.value || 'all';
+            const statut = document.getElementById('filtre-statut')?.value || 'all';
+            let demandesFiltrees = donnees.demandes || [];
+            
+            console.log('📝 Nombre total de demandes avant filtre:', demandesFiltrees.length);
+            
+            if (type !== 'all') demandesFiltrees = demandesFiltrees.filter(d => d.type === type);
+            if (statut !== 'all') demandesFiltrees = demandesFiltrees.filter(d => d.statut === statut);
+
+            console.log('📝 Nombre de demandes après filtre:', demandesFiltrees.length);
+
+            const liste = document.getElementById('demandes-liste');
+            if (!liste) return;
+            
+            if (demandesFiltrees.length === 0) {
+                liste.innerHTML = '<div class="item-row">Aucune demande</div>';
                 return;
             }
+            
+            liste.innerHTML = demandesFiltrees.sort((a,b)=>new Date(b.date)-new Date(a.date)).map((d, index) => {
+                // Déterminer la valeur de l'adresse ou du numéro selon le type
+                let infoDestinataire = '';
+                if (d.type === 'ACHAT' && d.adresse) {
+                    infoDestinataire = `
+                        <div style="background: var(--bg-dark); padding: 12px; border-radius: 16px; margin: 10px 0; border-left: 4px solid var(--accent);">
+                            <div style="color: var(--accent); margin-bottom: 5px;"><i class="fas fa-qrcode"></i> ADRESSE DE RÉCEPTION (ACHAT):</div>
+                            <div style="font-family: monospace; word-break: break-all; color: var(--white); background: var(--primary); padding: 10px; border-radius: 12px;">${d.adresse}</div>
+                        </div>
+                    `;
+                } else if (d.type === 'VENTE' && d.numero) {
+                    infoDestinataire = `
+                        <div style="background: var(--bg-dark); padding: 12px; border-radius: 16px; margin: 10px 0; border-left: 4px solid var(--warning);">
+                            <div style="color: var(--warning); margin-bottom: 5px;"><i class="fas fa-user"></i> BÉNÉFICIAIRE (VENTE):</div>
+                            <div style="background: var(--primary); padding: 10px; border-radius: 12px;">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                    <i class="fas fa-user-circle" style="color: var(--accent);"></i>
+                                    <span style="font-weight: 600; color: var(--white);">${d.nomNumero || d.utilisateur}</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <i class="fas fa-phone-alt" style="color: var(--success);"></i>
+                                    <span style="font-family: monospace; font-size: 1.1rem; color: var(--white);">${d.numero}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                return `
+                <div class="request-item" style="border-left-color: ${d.statut === 'en_attente' ? 'var(--warning)' : d.statut === 'confirme' ? 'var(--success)' : 'var(--danger)'};">
+                    <div class="request-header">
+                        <div>
+                            <span class="request-type type-${d.type}"><i class="fas ${d.type==='ACHAT'?'fa-arrow-down':'fa-arrow-up'}"></i> ${d.type}</span>
+                            <span class="request-status status-${d.statut}">${d.statut}</span>
+                        </div>
+                        <span style="color: var(--text-secondary); font-size: 0.8rem;">
+                            <i class="far fa-clock"></i> ${new Date(d.date).toLocaleString()}
+                        </span>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0;">
+                        <div>
+                            <div style="color: var(--text-secondary); font-size: 0.8rem;">Client</div>
+                            <div style="font-weight: 600;">${d.utilisateur}</div>
+                            <div style="font-size: 0.9rem;">📧 ${d.email || 'N/A'}</div>
+                            ${d.avecPIN ? '<div style="color: var(--success);"><i class="fas fa-check-circle"></i> Validé par PIN</div>' : ''}
+                        </div>
+                        <div>
+                            <div style="color: var(--text-secondary); font-size: 0.8rem;">Transaction</div>
+                            <div style="font-weight: 600;">${d.montant} ${d.type === 'ACHAT' ? 'Ar' : d.crypto}</div>
+                            <div style="font-size: 0.9rem;">Réseau: ${d.reseau || 'N/A'}</div>
+                            ${d.operateur ? `<div style="font-size: 0.9rem;"><i class="fas fa-sim-card"></i> Opérateur: ${d.operateur}</div>` : ''}
+                            ${d.portefeuille ? `<div style="font-size: 0.9rem;"><i class="fas fa-wallet"></i> Portefeuille: ${d.portefeuille}</div>` : ''}
+                        </div>
+                    </div>
+                    
+                    <!-- Affichage de l'adresse pour ACHAT ou du numéro pour VENTE -->
+                    ${infoDestinataire}
+                    
+                    <!-- Affichage du TXID saisi par l'utilisateur -->
+                    ${d.txid ? `
+                    <div style="background: var(--bg-dark); padding: 12px; border-radius: 16px; margin: 10px 0; border-left: 4px solid var(--accent);">
+                        <div style="color: var(--accent); margin-bottom: 5px;"><i class="fas fa-hashtag"></i> TXID de transaction:</div>
+                        <div style="font-family: monospace; word-break: break-all; color: var(--white); background: var(--primary); padding: 10px; border-radius: 12px;">${d.txid}</div>
+                    </div>
+                    ` : ''}
+                    
+                    ${d.messagePaiement ? `
+                    <div style="background: var(--primary); padding: 12px; border-radius: 16px; margin: 10px 0; border: 1px solid var(--gray-300);">
+                        <div style="color: var(--warning); margin-bottom: 5px;"><i class="fas fa-comment"></i> Message de paiement:</div>
+                        <div style="word-break: break-all;">${d.messagePaiement}</div>
+                    </div>
+                    ` : ''}
+                    
+                    ${d.statut === 'en_attente' ? `
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button class="btn btn-approuver" onclick="approuverDemande('${d.id}')">
+                            <i class="fas fa-check-circle"></i> APPROUVER
+                        </button>
+                        <button class="btn btn-rejeter" onclick="rejeterDemande('${d.id}')">
+                            <i class="fas fa-times-circle"></i> REJETER
+                        </button>
+                    </div>
+                    ` : `
+                    <div style="margin-top: 10px; text-align: right;">
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">
+                            Traité le ${new Date(d.dateModification || d.date).toLocaleString()}
+                        </span>
+                    </div>
+                    `}
+                </div>
+            `}).join('');
+        }
 
-            if (!donnees.tauxChange) donnees.tauxChange = {};
+        function approuverDemande(id) {
+            if (!confirm('✅ Approuver cette demande ? Le client sera notifié.')) return;
             
-            donnees.tauxChange[symbole] = {
-                valeur: parseFloat(valeur),
-                changement: "0",
-                variation: 0
-            };
-            
-            if (!donnees.cryptos.includes(symbole)) {
-                donnees.cryptos.push(symbole);
+            const demande = donnees.demandes.find(d => d.id === id);
+            if (demande) {
+                demande.statut = 'confirme';
+                demande.dateModification = new Date().toISOString();
+                
+                sauvegarderDonnees();
+                afficherDemandes();
+                
+                alert('Demande approuvée avec succès !');
             }
-            
-            donnees.dernierMajTaux = new Date().toISOString();
-            await sauvegarderDonnees();
-            
-            document.getElementById('new-crypto-symbole').value = '';
-            document.getElementById('new-crypto-valeur').value = '';
-            afficherTaux();
-            afficherCryptos();
         }
 
-        async function supprimerTaux(crypto) {
-            if (!confirm(`Supprimer ${crypto} ?`)) return;
-            delete donnees.tauxChange[crypto];
-            donnees.dernierMajTaux = new Date().toISOString();
-            await sauvegarderDonnees();
-            afficherTaux();
+        function rejeterDemande(id) {
+            if (!confirm('❌ Rejeter cette demande ? Le client sera notifié.')) return;
+            
+            const demande = donnees.demandes.find(d => d.id === id);
+            if (demande) {
+                demande.statut = 'rejete';
+                demande.dateModification = new Date().toISOString();
+                
+                sauvegarderDonnees();
+                afficherDemandes();
+                
+                alert('Demande rejetée.');
+            }
         }
 
-        function ouvrirModal(type, index = -1) {
+        function ouvrirModal(type, index = -1, cryptoNom = null) {
             modalType = type;
             modalIndex = index;
+            modalCryptoNom = cryptoNom;
             modalMode = index === -1 ? 'ajout' : 'modification';
-            
             const modal = document.getElementById('modal-admin');
             const titre = document.getElementById('modal-titre');
             const champs = document.getElementById('modal-champs');
-            
             let html = '';
+
             switch(type) {
                 case 'portefeuille':
-                    titre.innerHTML = modalMode === 'ajout' ? 'Nouveau portefeuille' : 'Modifier portefeuille';
+                    titre.innerHTML = '<i class="fas fa-briefcase"></i> ' + (modalMode === 'ajout' ? 'Nouveau portefeuille' : 'Modifier portefeuille');
                     if (modalMode === 'ajout') {
                         html = `
-                            <input type="text" id="modal-nom" placeholder="Nom">
-                            <textarea id="modal-reponse" placeholder="Description"></textarea>
-                            <textarea id="modal-message" placeholder="Message de confirmation"></textarea>
+                            <input type="text" id="modal-nom" placeholder="Nom du portefeuille" value="">
+                            <textarea id="modal-reponse" placeholder="Description du portefeuille"></textarea>
+                            <textarea id="modal-message" placeholder="Message de confirmation (pour VENTE)"></textarea>
+                            <select id="modal-reseau">
+                                <option value="">Sélectionner un réseau</option>
+                                ${(donnees.reseaux || []).map(r => `<option value="${r.nom}">${r.nom} (${r.crypto})</option>`).join('')}
+                            </select>
                         `;
                     } else {
                         html = `
-                            <input type="text" id="modal-nom" value="${donnees.portefeuilles[index].nom}">
-                            <textarea id="modal-reponse">${donnees.portefeuilles[index].reponse || ''}</textarea>
-                            <textarea id="modal-message">${donnees.portefeuilles[index].messageConfirmation || ''}</textarea>
+                            <input type="text" id="modal-nom" placeholder="Nom" value="${donnees.portefeuilles[index].nom}">
+                            <textarea id="modal-reponse" placeholder="Description">${donnees.portefeuilles[index].reponse || ''}</textarea>
+                            <textarea id="modal-message" placeholder="Message de confirmation">${donnees.portefeuilles[index].messageConfirmation || ''}</textarea>
+                            <select id="modal-reseau">
+                                <option value="">Sélectionner un réseau</option>
+                                ${(donnees.reseaux || []).map(r => `<option value="${r.nom}" ${donnees.portefeuilles[index].reseau === r.nom ? 'selected' : ''}>${r.nom} (${r.crypto})</option>`).join('')}
+                            </select>
                         `;
                     }
                     break;
+                    
                 case 'operateur':
-                    titre.innerHTML = modalMode === 'ajout' ? 'Nouvel opérateur' : 'Modifier opérateur';
+                    titre.innerHTML = '<i class="fas fa-mobile-alt"></i> ' + (modalMode === 'ajout' ? 'Nouvel opérateur' : 'Modifier opérateur');
                     if (modalMode === 'ajout') {
                         html = `
-                            <input type="text" id="modal-nom" placeholder="Nom">
-                            <textarea id="modal-message" placeholder="Message de confirmation"></textarea>
+                            <input type="text" id="modal-nom" placeholder="Nom de l'opérateur" value="">
+                            <textarea id="modal-message" placeholder="Message de confirmation (pour ACHAT)"></textarea>
                         `;
                     } else {
                         html = `
-                            <input type="text" id="modal-nom" value="${donnees.operateurs[index].nom}">
-                            <textarea id="modal-message">${donnees.operateurs[index].messageConfirmation || ''}</textarea>
+                            <input type="text" id="modal-nom" placeholder="Nom" value="${donnees.operateurs[index].nom}">
+                            <textarea id="modal-message" placeholder="Message de confirmation">${donnees.operateurs[index].messageConfirmation || ''}</textarea>
                         `;
                     }
                     break;
+                    
+                case 'reseau':
+                    titre.innerHTML = '<i class="fas fa-network-wired"></i> ' + (modalMode === 'ajout' ? 'Nouveau réseau' : 'Modifier réseau');
+                    if (modalMode === 'ajout') {
+                        html = `
+                            <input type="text" id="modal-nom" placeholder="Nom du réseau (ex: BEP20, ERC20)" value="">
+                            <select id="modal-crypto">
+                                ${(donnees.cryptos || []).map(c => `<option value="${c}">${c}</option>`).join('')}
+                            </select>
+                            <input type="number" id="modal-frais-reseau" placeholder="Frais réseau (%)" step="0.1" min="0" value="0">
+                        `;
+                    } else {
+                        html = `
+                            <input type="text" id="modal-nom" placeholder="Nom du réseau" value="${donnees.reseaux[index].nom}">
+                            <select id="modal-crypto">
+                                ${(donnees.cryptos || []).map(c => `<option value="${c}" ${donnees.reseaux[index].crypto === c ? 'selected' : ''}>${c}</option>`).join('')}
+                            </select>
+                            <input type="number" id="modal-frais-reseau" placeholder="Frais réseau (%)" step="0.1" min="0" value="${donnees.reseaux[index].fraisReseau || 0}">
+                        `;
+                    }
+                    break;
+                    
                 case 'crypto':
-                    titre.innerHTML = modalMode === 'ajout' ? 'Ajouter crypto' : 'Modifier crypto';
-                    html = `<input type="text" id="modal-nom" value="${modalMode === 'modification' ? donnees.cryptos[index] : ''}">`;
+                    titre.innerHTML = '<i class="fas fa-coins"></i> ' + (modalMode === 'ajout' ? 'Ajouter crypto' : 'Modifier crypto');
+                    html = `<input type="text" id="modal-nom" placeholder="Nom (ex: USDT, BTC)" value="${modalMode === 'modification' ? donnees.cryptos[index] : ''}">`;
+                    break;
+                    
+                case 'taux':
+                    const crypto = cryptoNom || (modalMode === 'modification' ? Object.keys(donnees.taux)[index] : '');
+                    const taux = crypto && donnees.taux[crypto] ? donnees.taux[crypto] : { achat: 0, vente: 0, variation: "0", couleur: "positive" };
+                    
+                    titre.innerHTML = `<i class="fas fa-chart-line"></i> Modifier taux ${crypto}`;
+                    html = `
+                        <input type="hidden" id="modal-crypto" value="${crypto}">
+                        <div style="margin-bottom: 15px; color: var(--text-secondary);">
+                            Crypto: <strong>${crypto}</strong>
+                        </div>
+                        <input type="number" id="modal-taux-achat" placeholder="Taux achat (Ar)" value="${taux.achat || 0}">
+                        <input type="number" id="modal-taux-vente" placeholder="Taux vente (Ar)" value="${taux.vente || 0}">
+                        <input type="text" id="modal-variation" placeholder="Variation %" value="${taux.variation || '0'}">
+                        <select id="modal-couleur">
+                            <option value="positive" ${taux.couleur === 'positive' ? 'selected' : ''}>Positif (+)</option>
+                            <option value="negative" ${taux.couleur === 'negative' ? 'selected' : ''}>Négatif (-)</option>
+                        </select>
+                    `;
                     break;
             }
-            
-            champs.innerHTML = html;
-            modal.classList.add('active');
+            if (html) {
+                champs.innerHTML = html;
+                modal.classList.add('active');
+            }
         }
 
         function fermerModal() {
             document.getElementById('modal-admin').classList.remove('active');
         }
 
-        async function sauvegarderModal() {
+        function sauvegarderModal() {
             const nom = document.getElementById('modal-nom')?.value;
-            if (!nom) { alert('Nom requis'); return; }
-
+            
             switch(modalType) {
                 case 'portefeuille': {
+                    if (!nom) { alert('Nom requis'); return; }
                     const reponse = document.getElementById('modal-reponse')?.value || '';
                     const message = document.getElementById('modal-message')?.value || '';
+                    const reseau = document.getElementById('modal-reseau')?.value || '';
                     if (modalMode === 'ajout') {
-                        donnees.portefeuilles.push({ nom, reponse, messageConfirmation: message });
+                        donnees.portefeuilles.push({ nom, reponse, messageConfirmation: message, reseau });
                     } else {
-                        donnees.portefeuilles[modalIndex] = { nom, reponse, messageConfirmation: message };
+                        donnees.portefeuilles[modalIndex] = { ...donnees.portefeuilles[modalIndex], nom, reponse, messageConfirmation: message, reseau };
                     }
                     break;
                 }
                 case 'operateur': {
+                    if (!nom) { alert('Nom requis'); return; }
                     const message = document.getElementById('modal-message')?.value || '';
                     if (modalMode === 'ajout') {
                         donnees.operateurs.push({ nom, messageConfirmation: message });
                     } else {
-                        donnees.operateurs[modalIndex] = { nom, messageConfirmation: message };
+                        donnees.operateurs[modalIndex] = { ...donnees.operateurs[modalIndex], nom, messageConfirmation: message };
                     }
                     break;
                 }
-                case 'crypto':
-                    if (modalMode === 'ajout') donnees.cryptos.push(nom);
-                    else donnees.cryptos[modalIndex] = nom;
+                case 'reseau': {
+                    if (!nom) { alert('Nom requis'); return; }
+                    const crypto = document.getElementById('modal-crypto')?.value;
+                    const fraisReseau = parseFloat(document.getElementById('modal-frais-reseau')?.value) || 0;
+                    
+                    if (modalMode === 'ajout') {
+                        if (!donnees.reseaux) donnees.reseaux = [];
+                        donnees.reseaux.push({ nom, crypto, fraisReseau });
+                    } else {
+                        donnees.reseaux[modalIndex] = { ...donnees.reseaux[modalIndex], nom, crypto, fraisReseau };
+                    }
                     break;
+                }
+                case 'crypto': {
+                    if (!nom) { alert('Nom requis'); return; }
+                    if (modalMode === 'ajout') {
+                        if (!donnees.cryptos.includes(nom)) {
+                            donnees.cryptos.push(nom);
+                            donnees.taux[nom] = { achat: 0, vente: 0, variation: "0", couleur: "positive" };
+                        }
+                    } else {
+                        const ancienNom = donnees.cryptos[modalIndex];
+                        if (ancienNom !== nom) {
+                            donnees.taux[nom] = donnees.taux[ancienNom];
+                            delete donnees.taux[ancienNom];
+                        }
+                        donnees.cryptos[modalIndex] = nom;
+                    }
+                    break;
+                }
+                case 'taux': {
+                    const crypto = document.getElementById('modal-crypto')?.value;
+                    if (crypto) {
+                        donnees.taux[crypto] = {
+                            achat: parseFloat(document.getElementById('modal-taux-achat')?.value) || 0,
+                            vente: parseFloat(document.getElementById('modal-taux-vente')?.value) || 0,
+                            variation: document.getElementById('modal-variation')?.value || "0",
+                            couleur: document.getElementById('modal-couleur')?.value || "positive"
+                        };
+                    }
+                    break;
+                }
+                case 'utilisateur': {
+                    const email = document.getElementById('modal-email')?.value;
+                    if (donnees.utilisateurs[modalIndex]) {
+                        donnees.utilisateurs[modalIndex].nom = nom;
+                        donnees.utilisateurs[modalIndex].email = email;
+                        // Plus de modification de mot de passe ici
+                    }
+                    break;
+                }
+                case 'pin': {
+                    const pin = document.getElementById('modal-pin')?.value;
+                    const bloque = document.getElementById('modal-bloque')?.checked;
+                    const actif = document.getElementById('modal-actif')?.checked;
+                    
+                    if (donnees.utilisateurs[modalIndex]) {
+                        if (!donnees.utilisateurs[modalIndex].codePIN) {
+                            donnees.utilisateurs[modalIndex].codePIN = {};
+                        }
+                        
+                        if (pin && pin.length === 6 && /^\d+$/.test(pin)) {
+                            donnees.utilisateurs[modalIndex].codePIN.hash = btoa(pin);
+                        }
+                        
+                        donnees.utilisateurs[modalIndex].codePIN.bloque = bloque || false;
+                        donnees.utilisateurs[modalIndex].codePIN.actif = actif || false;
+                        donnees.utilisateurs[modalIndex].codePIN.dateModification = new Date().toISOString();
+                    }
+                    break;
+                }
             }
-            
-            await sauvegarderDonnees();
+            sauvegarderDonnees();
             fermerModal();
         }
 
-        async function supprimer(type, index) {
+        function supprimer(type, index) {
             if (!confirm('Supprimer ?')) return;
             switch(type) {
                 case 'portefeuille': donnees.portefeuilles.splice(index, 1); break;
                 case 'operateur': donnees.operateurs.splice(index, 1); break;
-                case 'crypto': donnees.cryptos.splice(index, 1); break;
+                case 'reseau': donnees.reseaux.splice(index, 1); break;
+                case 'crypto': 
+                    const crypto = donnees.cryptos[index];
+                    donnees.cryptos.splice(index, 1);
+                    if (donnees.taux && donnees.taux[crypto]) {
+                        delete donnees.taux[crypto];
+                    }
+                    break;
             }
-            await sauvegarderDonnees();
+            sauvegarderDonnees();
         }
 
-        function filtrerUtilisateurs() {
-            afficherUtilisateurs();
+        function ecouterChangements() {
+            database.ref('donnees').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const anciennesDonnees = JSON.stringify(donnees);
+                    const nouvellesDonnees = JSON.stringify(data);
+                    
+                    if (anciennesDonnees !== nouvellesDonnees) {
+                        console.log('🔄 Mise à jour en temps réel détectée');
+                        console.log('📊 Nouvelles données reçues:', data);
+                        console.log('📝 Nouvelles demandes:', data.demandes?.length || 0);
+                        
+                        donnees = data;
+                        mettreAJourStats();
+                        afficherTout();
+                        mettreAJourPauseUI();
+                        
+                        // Si on est sur l'onglet Demandes, rafraîchir l'affichage
+                        if (document.getElementById('demandes-tab').style.display === 'block') {
+                            console.log('🔄 Rafraîchissement de l\'affichage des demandes');
+                            afficherDemandes();
+                        }
+                        
+                        // Si on est sur l'onglet News, rafraîchir l'affichage
+                        if (document.getElementById('news-tab').style.display === 'block') {
+                            afficherNewsAdmin();
+                        }
+                    }
+                } else {
+                    console.log('⚠️ Aucune donnée dans Firebase');
+                }
+            }, (error) => {
+                console.error('❌ Erreur écoute Firebase:', error);
+            });
         }
+
+        // Initialisation
+        ecouterChangements();
     </script>
 </body>
 </html>
