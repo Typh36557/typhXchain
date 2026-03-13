@@ -17,6 +17,7 @@
             --danger: #DC2626; --text-primary: #F0F4FA; --text-secondary: #B0C4DE;
             --gray-200: #2D4B73; --gray-300: #3D5C86; --white: #FFFFFF;
             --shadow: 0 4px 6px -1px rgba(0,0,0,0.3); --radius-lg: 20px; --radius-xl: 24px;
+            --binance: #F0B90B; --news-bg: #1a3650; --news-border: #3B82F6;
         }
         body {
             font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary);
@@ -100,52 +101,161 @@
         .btn-pause { background: var(--warning); }
         .btn-play { background: var(--success); }
         .btn-refresh { background: var(--accent); }
+        .btn-binance { background: var(--binance); color: var(--bg-dark); }
+        .btn-success { background: var(--success); }
+        .btn-view { background: var(--accent); }
+        .btn-filter { background: var(--gray-200); }
         
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 14px;
-            border-radius: 40px;
-            font-size: 0.85rem;
+        /* Mode toggle */
+        .mode-toggle {
+            display: flex; gap: 10px; margin-bottom: 20px; background: var(--primary);
+            padding: 10px; border-radius: 40px; border: 1px solid var(--gray-300);
+        }
+        .mode-option {
+            flex: 1; text-align: center; padding: 12px; border-radius: 40px; cursor: pointer;
+            transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .mode-option.active {
+            background: var(--accent); color: white;
+        }
+        .mode-option i { font-size: 1.2rem; }
+        
+        /* Taux card simplifié */
+        .taux-card {
+            background: var(--primary); border-radius: 20px; padding: 20px; margin-bottom: 15px;
+            border: 1px solid var(--gray-300); border-left: 4px solid var(--binance);
+        }
+        .taux-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
+        }
+        .taux-symbole {
+            font-size: 1.3rem; font-weight: 700; color: var(--white);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .taux-symbole i { color: var(--binance); }
+        .taux-valeur-principale {
+            font-size: 2rem; font-weight: 700; color: var(--white); margin: 15px 0;
+            text-align: center; background: var(--bg-dark); padding: 15px; border-radius: 20px;
+        }
+        .taux-details {
+            display: flex; justify-content: space-between; align-items: center; margin-top: 10px;
+            color: var(--text-secondary); font-size: 0.9rem;
+        }
+        .taux-variation {
+            display: flex; align-items: center; gap: 5px;
+        }
+        .taux-variation.positive { color: var(--success); }
+        .taux-variation.negative { color: var(--danger); }
+        .taux-source {
+            background: var(--gray-200); padding: 4px 10px; border-radius: 40px; font-size: 0.8rem;
+        }
+        .taux-source.binance { background: var(--binance); color: var(--bg-dark); }
+        
+        /* News Styles */
+        .news-item-admin {
+            background: var(--primary); border-radius: 20px; padding: 18px; margin-bottom: 15px;
+            border-left: 4px solid var(--news-border); transition: all 0.2s;
+        }
+        .news-item-admin:hover { transform: translateX(5px); background: var(--gray-200); }
+        .news-header-admin {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+        }
+        .news-titre-admin {
+            font-size: 1.1rem; font-weight: 600; color: var(--white);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .news-titre-admin i { color: var(--accent); }
+        .news-contenu-admin {
+            color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; margin-bottom: 10px;
+            white-space: pre-wrap;
+        }
+        .news-date-admin {
+            font-size: 0.75rem; color: var(--text-secondary); background: var(--bg-dark);
+            padding: 4px 12px; border-radius: 40px; display: inline-block;
+        }
+        .news-footer-admin {
+            display: flex; justify-content: space-between; align-items: center; margin-top: 15px;
+        }
+        .news-author {
+            color: var(--accent); font-weight: 500; font-size: 0.85rem;
+        }
+        .news-important {
+            background: var(--warning); color: var(--white); padding: 2px 8px;
+            border-radius: 40px; font-size: 0.7rem; font-weight: 600;
+        }
+        .news-statut-badge {
+            display: inline-block; padding: 4px 12px; border-radius: 40px; font-size: 0.8rem;
             font-weight: 600;
         }
+        .news-statut-active {
+            background: #065f46; color: var(--success);
+        }
+        .news-statut-archive {
+            background: #7f1d1d; color: var(--danger);
+        }
+        .no-news {
+            background: var(--primary); border-radius: 20px; padding: 30px; text-align: center;
+            color: var(--text-secondary); border: 1px dashed var(--gray-300);
+        }
+        .no-news i { font-size: 2rem; color: var(--accent); margin-bottom: 10px; }
+
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px; margin-bottom: 20px;
+        }
+        .stat-card {
+            background: var(--primary); border-radius: 28px; padding: 20px; text-align: center;
+            border: 1px solid var(--gray-300);
+        }
+        .stat-value { font-size: 2rem; font-weight: 700; color: var(--accent); margin-bottom: 5px; }
+        .stat-label { font-size: 0.85rem; color: var(--text-secondary); }
         
-        .status-active {
-            background: #065f46;
-            color: var(--success);
+        .user-item {
+            background: var(--primary); border-radius: 20px; padding: 15px; margin-bottom: 10px;
+            border: 1px solid var(--gray-300);
+        }
+        .user-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+        }
+        .user-name { font-weight: 600; color: var(--white); font-size: 1.1rem; }
+        .user-email { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px; }
+        
+        .pin-info {
+            background: var(--bg-dark); border-radius: 16px; padding: 12px; margin: 10px 0;
+            border-left: 4px solid var(--warning);
+        }
+        .pin-status {
+            display: inline-block; padding: 4px 12px; border-radius: 40px; font-size: 0.8rem;
+            font-weight: 600; margin-left: 10px;
+        }
+        .pin-actif { background: #065f46; color: var(--success); }
+        .pin-bloque { background: #7f1d1d; color: var(--danger); }
+        .pin-inactif { background: #92400e; color: var(--warning); }
+        
+        .numero-mini-item {
+            background: var(--bg-dark); border-radius: 16px; padding: 8px 12px; margin: 5px 0;
+            display: flex; justify-content: space-between; align-items: center;
         }
         
-        .status-paused {
-            background: #7f1d1d;
-            color: var(--danger);
-        }
-        
-        .pause-controls {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            margin-bottom: 20px;
-            background: var(--primary);
-            padding: 20px;
-            border-radius: var(--radius-xl);
+        .frais-item {
+            background: var(--primary); border-radius: 20px; padding: 15px; margin-bottom: 10px;
             border: 1px solid var(--gray-300);
         }
         
-        .pause-info {
-            flex: 1;
+        .reseau-item {
+            background: var(--primary); border-radius: 20px; padding: 15px; margin-bottom: 10px;
+            border: 1px solid var(--gray-300);
         }
         
-        .pause-title {
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: var(--white);
+        .sync-status {
+            background: var(--primary); border-radius: 16px; padding: 15px; margin: 15px 0;
+            display: flex; align-items: center; justify-content: space-between;
         }
-        
-        .pause-status {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
+        .sync-badge {
+            background: var(--success); color: white; padding: 5px 15px; border-radius: 40px;
+            font-size: 0.8rem; font-weight: 600;
         }
+        .sync-badge.warning { background: var(--warning); }
         
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -168,6 +278,7 @@
         }
         .modal-content textarea { min-height: 100px; border-radius: 24px; }
         .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
+        
         .tabs {
             display: flex; gap: 8px; margin-bottom: 24px; background: var(--bg-card);
             padding: 6px; border-radius: 40px; border: 1px solid var(--gray-300);
@@ -181,6 +292,7 @@
         }
         .tab i { font-size: 1.1rem; }
         .tab.active { background: var(--accent); color: white; }
+        
         .filter-bar {
             display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;
         }
@@ -188,27 +300,11 @@
             padding: 14px; background: var(--primary); border: 1px solid var(--gray-300);
             border-radius: 40px; color: var(--white); font-size: 0.95rem; width: 100%;
         }
+        
         .request-item {
             background: var(--primary); border-radius: 28px; padding: 20px; margin-bottom: 15px;
-            border: 1px solid var(--gray-300);
-            border-left: 4px solid transparent;
+            border: 1px solid var(--gray-300); border-left: 4px solid transparent;
         }
-        .request-header {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
-            flex-wrap: wrap; gap: 8px;
-        }
-        .request-type {
-            padding: 6px 14px; border-radius: 40px; font-size: 0.8rem; font-weight: 600;
-            background: var(--bg-dark);
-        }
-        .type-ACHAT { color: var(--success); }
-        .type-VENTE { color: var(--warning); }
-        .request-status {
-            padding: 6px 14px; border-radius: 40px; font-size: 0.8rem; font-weight: 600;
-        }
-        .status-en_attente { background: #92400e; color: var(--warning); }
-        .status-confirme { background: #065f46; color: var(--success); }
-        .status-rejete { background: #7f1d1d; color: var(--danger); }
         
         .numero-item {
             background: var(--primary); border-radius: 20px; padding: 15px; margin-bottom: 10px;
@@ -217,12 +313,8 @@
         .numero-header {
             display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
         }
-        .numero-user {
-            font-weight: 600; color: var(--white); font-size: 1rem;
-        }
-        .numero-info {
-            color: var(--text-secondary); margin-bottom: 8px;
-        }
+        .numero-user { font-weight: 600; color: var(--white); font-size: 1rem; }
+        .numero-info { color: var(--text-secondary); margin-bottom: 8px; }
         .numero-status-badge {
             display: inline-block; padding: 4px 10px; border-radius: 40px; font-size: 0.75rem;
             font-weight: 600; margin-left: 10px;
@@ -230,297 +322,137 @@
         .badge-attente { background: #92400e; color: var(--warning); }
         .badge-approuve { background: #065f46; color: var(--success); }
         .badge-rejete { background: #7f1d1d; color: var(--danger); }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
         
-        .stat-card {
-            background: var(--primary);
-            border-radius: 28px;
-            padding: 20px;
-            text-align: center;
-            border: 1px solid var(--gray-300);
-        }
-        
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--accent);
-            margin-bottom: 5px;
-        }
-        
-        .stat-label {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-        
-        .user-item {
-            background: var(--primary);
-            border-radius: 20px;
-            padding: 15px;
-            margin-bottom: 10px;
-            border: 1px solid var(--gray-300);
-        }
-        
-        .user-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .user-name {
-            font-weight: 600;
-            color: var(--white);
-            font-size: 1.1rem;
-        }
-        
-        .user-email {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-bottom: 8px;
-        }
-        
-        .user-detail {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-top: 8px;
-            flex-wrap: wrap;
-        }
-        
-        .user-detail i {
-            color: var(--accent);
-            width: 20px;
-        }
-        
-        .pin-info {
-            background: var(--bg-dark);
-            border-radius: 16px;
-            padding: 12px;
-            margin: 10px 0;
-            border-left: 4px solid var(--warning);
-        }
-        
-        .pin-status {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 40px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-left: 10px;
-        }
-        
-        .pin-actif { background: #065f46; color: var(--success); }
-        .pin-bloque { background: #7f1d1d; color: var(--danger); }
-        .pin-inactif { background: #92400e; color: var(--warning); }
-        
-        .numero-mini-item {
-            background: var(--bg-dark);
-            border-radius: 16px;
-            padding: 8px 12px;
-            margin: 5px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .taux-item {
-            background: var(--primary);
-            border-radius: 20px;
-            padding: 15px;
-            margin-bottom: 10px;
-            border: 1px solid var(--gray-300);
-        }
-        
-        .taux-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .taux-symbole {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--accent);
-        }
-        
-        .taux-valeur {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--white);
-            margin: 10px 0;
-        }
-        
-        .taux-change {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--text-secondary);
-        }
-        
-        .positive { color: var(--success); }
-        .negative { color: var(--danger); }
-        
-        .frais-item {
-            background: var(--primary);
-            border-radius: 20px;
-            padding: 15px;
-            margin-bottom: 10px;
-            border: 1px solid var(--gray-300);
-        }
-        
-        .reseau-item {
-            background: var(--primary);
-            border-radius: 20px;
-            padding: 15px;
-            margin-bottom: 10px;
-            border: 1px solid var(--gray-300);
-        }
-        
-        .reseau-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .btn-config {
-            background: var(--accent);
-            padding: 8px 16px;
-            border-radius: 40px;
-            font-size: 0.85rem;
-        }
-        
-        /* Login page styles */
         #login-page {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--bg-dark);
-            padding: 20px;
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            background: var(--bg-dark); padding: 20px;
         }
-        
         .login-card {
-            background: var(--bg-card);
-            border-radius: var(--radius-xl);
-            padding: 40px;
-            max-width: 400px;
-            width: 100%;
-            border: 1px solid var(--gray-300);
-            text-align: center;
+            background: var(--bg-card); border-radius: var(--radius-xl); padding: 40px;
+            max-width: 400px; width: 100%; border: 1px solid var(--gray-300); text-align: center;
         }
-        
-        .login-title {
-            font-size: 2rem;
-            margin-bottom: 30px;
-            color: var(--white);
-        }
-        
+        .login-title { font-size: 2rem; margin-bottom: 30px; color: var(--white); }
         .login-input {
-            width: 100%;
-            padding: 16px;
-            margin: 10px 0;
-            background: var(--primary);
-            border: 1px solid var(--gray-300);
-            border-radius: 50px;
-            color: var(--white);
-            font-size: 1rem;
+            width: 100%; padding: 16px; margin: 10px 0; background: var(--primary);
+            border: 1px solid var(--gray-300); border-radius: 50px; color: var(--white); font-size: 1rem;
         }
-        
         .login-btn {
-            width: 100%;
-            padding: 16px;
-            margin-top: 20px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+            width: 100%; padding: 16px; margin-top: 20px; background: var(--accent);
+            color: white; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
         }
+        .login-error { color: var(--danger); margin: 10px 0; display: none; }
+        .login-info { color: var(--text-secondary); margin-top: 20px; font-size: 0.9rem; }
         
-        .login-btn:hover {
-            background: var(--accent-dark);
-        }
-        
-        .login-error {
-            color: var(--danger);
-            margin: 10px 0;
-            display: none;
-        }
-        
-        .login-info {
-            color: var(--text-secondary);
-            margin-top: 20px;
-            font-size: 0.9rem;
-        }
-
-        /* Styles pour les NEWS */
-        .news-item-admin {
-            background: var(--primary);
-            border-radius: 20px;
-            padding: 15px;
-            margin-bottom: 10px;
+        .pause-controls {
+            display: flex; gap: 10px; align-items: center; margin-bottom: 20px;
+            background: var(--primary); padding: 20px; border-radius: var(--radius-xl);
             border: 1px solid var(--gray-300);
         }
+        .pause-info { flex: 1; }
+        .pause-title { font-weight: 600; margin-bottom: 5px; color: var(--white); }
+        .pause-status { font-size: 0.9rem; color: var(--text-secondary); }
         
-        .news-header-admin {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            color: var(--text-secondary); display: block; margin-bottom: 5px;
         }
         
-        .news-titre-admin {
-            font-weight: 600;
-            color: var(--white);
-            font-size: 1.1rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+        /* Styles pour l'onglet Transactions */
+        .filter-row {
+            display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;
         }
-        
-        .news-statut-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 40px;
-            font-size: 0.8rem;
-            font-weight: 600;
+        .filter-item {
+            flex: 1; min-width: 150px;
         }
-        
-        .news-statut-active {
-            background: #065f46;
-            color: var(--success);
+        .filter-item select, .filter-item input {
+            width: 100%; padding: 12px; background: var(--primary); border: 1px solid var(--gray-300);
+            border-radius: 40px; color: var(--white); font-size: 0.95rem;
         }
-        
-        .news-statut-archive {
-            background: #7f1d1d;
-            color: var(--danger);
+        .transaction-item {
+            background: var(--primary); border-radius: 28px; padding: 20px; margin-bottom: 15px;
+            border: 1px solid var(--gray-300); cursor: pointer; transition: all 0.2s;
         }
-        
-        .news-contenu-admin {
-            color: var(--text-secondary);
-            margin: 10px 0;
-            line-height: 1.5;
+        .transaction-item:hover {
+            transform: translateX(5px); border-color: var(--accent);
         }
-        
-        .news-date-admin {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            margin-top: 5px;
+        .transaction-item.en_attente { border-left: 4px solid var(--warning); }
+        .transaction-item.confirme { border-left: 4px solid var(--success); }
+        .transaction-item.rejete { border-left: 4px solid var(--danger); }
+        .transaction-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
+            flex-wrap: wrap; gap: 10px;
+        }
+        .badge-type {
+            padding: 6px 16px; border-radius: 40px; font-size: 0.85rem; font-weight: 600;
+        }
+        .badge-type.ACHAT { background: #065f46; color: var(--success); }
+        .badge-type.VENTE { background: #92400e; color: var(--warning); }
+        .badge-statut {
+            padding: 4px 12px; border-radius: 40px; font-size: 0.8rem; font-weight: 600;
+        }
+        .badge-statut.en_attente { background: #92400e; color: var(--warning); }
+        .badge-statut.confirme { background: #065f46; color: var(--success); }
+        .badge-statut.rejete { background: #7f1d1d; color: var(--danger); }
+        .transaction-date {
+            color: var(--text-secondary); font-size: 0.85rem;
+        }
+        .transaction-user {
+            font-weight: 600; color: var(--white); margin-bottom: 10px;
+        }
+        .transaction-details {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px; margin: 15px 0; padding: 15px; background: var(--bg-dark);
+            border-radius: 20px;
+        }
+        .detail-item {
+            display: flex; flex-direction: column; gap: 5px;
+        }
+        .detail-label {
+            color: var(--text-secondary); font-size: 0.8rem;
+        }
+        .detail-value {
+            color: var(--white); font-weight: 600; font-size: 1rem;
+        }
+        .detail-value i { color: var(--accent); margin-right: 5px; }
+        .transaction-txid {
+            color: var(--text-secondary); font-size: 0.85rem; word-break: break-all;
+            background: var(--gray-200); padding: 10px; border-radius: 16px; margin-top: 10px;
+        }
+        .transaction-footer {
+            display: flex; gap: 10px; margin-top: 15px;
+        }
+        .stats-transactions {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;
+        }
+        .stat-transaction {
+            background: var(--primary); border-radius: 20px; padding: 15px; text-align: center;
+        }
+        .stat-transaction .number {
+            font-size: 1.5rem; font-weight: 700; color: var(--accent);
+        }
+        .stat-transaction .label {
+            color: var(--text-secondary); font-size: 0.8rem;
+        }
+        .info-row {
+            display: flex; margin-bottom: 12px; padding: 8px 0;
+            border-bottom: 1px solid var(--gray-300);
+        }
+        .info-label {
+            width: 120px; color: var(--text-secondary); font-weight: 500;
+        }
+        .info-value {
+            flex: 1; color: var(--white); font-weight: 500;
+        }
+        .historique-item {
+            padding: 10px; background: var(--bg-dark); border-radius: 16px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .historique-date {
+            color: var(--text-secondary); font-size: 0.8rem;
+        }
+        .historique-action {
+            font-weight: 600; color: var(--white);
         }
         
         @media (min-width: 768px) {
@@ -535,21 +467,15 @@
         <div class="login-card">
             <div class="logo" style="font-size: 2rem; margin-bottom: 20px;">Typh X-chain</div>
             <h3 class="login-title">🔐 Administration</h3>
-            
             <input type="text" id="admin-username" class="login-input" placeholder="Nom d'utilisateur" value="Admin">
-            <input type="password" id="admin-password" class="login-input" placeholder="Mot de passe" value="ERREUR">
-            
+            <input type="password" id="admin-password" class="login-input" placeholder="Mot de passe" value="">
             <div class="login-error" id="admin-error">
                 <i class="fas fa-exclamation-triangle"></i> Identifiants incorrects
             </div>
-            
             <button class="login-btn" onclick="loginAdmin()">
                 <i class="fas fa-sign-in-alt"></i> Accéder à l'administration
             </button>
-            
-            <p class="login-info">
-                <i class="fas fa-info-circle"></i> Identifiants: Admin - T'yph Exchange 
-            </p>
+            <p class="login-info"><i class="fas fa-info-circle"></i> Utilisez vos identifiants</p>
         </div>
     </div>
 
@@ -587,32 +513,28 @@
 
             <div class="tabs">
                 <div class="tab active" onclick="switchTab('gestion')"><i class="fas fa-database"></i> Gestion</div>
-                <div class="tab" onclick="switchTab('taux')"><i class="fas fa-chart-line"></i> Taux & Frais</div>
+                <div class="tab" onclick="switchTab('taux')"><i class="fas fa-chart-line"></i> Taux Binance</div>
                 <div class="tab" onclick="switchTab('pause')"><i class="fas fa-pause-circle"></i> Pause/Activer</div>
                 <div class="tab" onclick="switchTab('utilisateurs')"><i class="fas fa-users"></i> Utilisateurs</div>
                 <div class="tab" onclick="switchTab('numeros')"><i class="fas fa-phone-alt"></i> Approbations</div>
                 <div class="tab" onclick="switchTab('demandes')"><i class="fas fa-clipboard-list"></i> Demandes</div>
-                <div class="tab" onclick="switchTab('news')"><i class="fas fa-newspaper"></i> News</div> <!-- NOUVEL ONGLET -->
+                <div class="tab" onclick="switchTab('news')"><i class="fas fa-newspaper"></i> Actualités</div>
+                <div class="tab" onclick="switchTab('transactions')"><i class="fas fa-exchange-alt"></i> Transactions</div>
             </div>
 
             <!-- GESTION DES DONNÉES -->
             <div id="gestion-tab" style="display: block;">
                 <div class="admin-grid">
-                    <!-- PORTEFEUILLES -->
                     <div class="admin-card">
                         <h2><i class="fas fa-briefcase"></i> Portefeuilles + Réseaux</h2>
                         <div id="portefeuilles-liste" class="item-list"></div>
                         <button class="btn btn-add" onclick="ouvrirModal('portefeuille')"><i class="fas fa-plus"></i> Nouveau portefeuille</button>
                     </div>
-
-                    <!-- OPÉRATEURS -->
                     <div class="admin-card">
                         <h2><i class="fas fa-mobile-alt"></i> Opérateurs + Message</h2>
                         <div id="operateurs-liste" class="item-list"></div>
                         <button class="btn btn-add" onclick="ouvrirModal('operateur')"><i class="fas fa-plus"></i> Nouvel opérateur</button>
                     </div>
-                    
-                    <!-- RÉSEAUX CRYPTO -->
                     <div class="admin-card">
                         <h2><i class="fas fa-network-wired"></i> Réseaux Crypto</h2>
                         <div id="reseaux-liste" class="item-list"></div>
@@ -621,19 +543,55 @@
                 </div>
             </div>
 
-            <!-- GESTION DES TAUX CRYPTO ET FRAIS -->
+            <!-- GESTION DES TAUX BINANCE -->
             <div id="taux-tab" style="display: none;">
+                <!-- Mode de fonctionnement -->
                 <div class="admin-card">
-                    <h2><i class="fas fa-coins"></i> Cryptomonnaies</h2>
-                    <div id="cryptos-liste" class="item-list"></div>
+                    <h2><i class="fas fa-sliders-h"></i> Mode de fonctionnement</h2>
+                    <div class="mode-toggle" id="mode-toggle">
+                        <div class="mode-option active" onclick="setTauxMode('auto')" id="mode-auto">
+                            <i class="fas fa-sync-alt"></i> Automatique (Binance)
+                        </div>
+                        <div class="mode-option" onclick="setTauxMode('manual')" id="mode-manual">
+                            <i class="fas fa-pencil-alt"></i> Manuel
+                        </div>
+                    </div>
+                    
+                    <!-- Statut synchronisation Binance -->
+                    <div class="sync-status" id="binance-status">
+                        <span><i class="fab fa-binance" style="color: var(--binance);"></i> Synchronisation Binance</span>
+                        <span class="sync-badge" id="sync-badge">Actif</span>
+                    </div>
+                    
+                    <!-- Taux USD/MGA -->
+                    <div class="frais-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <span><i class="fas fa-dollar-sign"></i> Taux USD/MGA</span>
+                            <span style="font-size: 1.5rem; font-weight: 700; color: var(--white);" id="usd-mga-display">4 700</span>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" id="usd-mga-input" placeholder="Nouveau taux" step="10" min="1000" max="10000" style="flex: 1;">
+                            <button class="btn btn-edit" onclick="mettreAJourTauxUSD()">Modifier</button>
+                            <button class="btn btn-binance" onclick="syncTauxUSD()"><i class="fas fa-sync-alt"></i> Auto</button>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 0.8rem; color: var(--text-secondary);" id="usd-mga-lastupdate">
+                            Dernière mise à jour: ...
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Liste des cryptos avec taux simplifiés -->
+                <div class="admin-card">
+                    <h2><i class="fas fa-coins"></i> Cryptomonnaies - Prix en direct</h2>
+                    <div class="sync-status">
+                        <span><i class="fas fa-clock"></i> Prochaine synchro dans</span>
+                        <span class="sync-badge" id="next-sync">30s</span>
+                    </div>
+                    <div id="taux-liste" class="item-list"></div>
                     <button class="btn btn-add" onclick="ouvrirModal('crypto')"><i class="fas fa-plus"></i> Ajouter crypto</button>
                 </div>
                 
-                <div class="admin-card">
-                    <h2><i class="fas fa-chart-line"></i> Gestion des taux</h2>
-                    <div id="taux-liste" class="item-list"></div>
-                </div>
-                
+                <!-- Frais de transaction -->
                 <div class="admin-card">
                     <h2><i class="fas fa-percent"></i> Frais de transaction</h2>
                     <div class="frais-item">
@@ -663,7 +621,6 @@
             <div id="pause-tab" style="display: none;">
                 <div class="admin-card">
                     <h2><i class="fas fa-pause-circle"></i> Contrôle des transactions</h2>
-                    
                     <div class="pause-controls">
                         <div class="pause-info">
                             <div class="pause-title">État des ACHATS</div>
@@ -673,7 +630,6 @@
                             <i class="fas fa-pause"></i> Mettre en PAUSE
                         </button>
                     </div>
-                    
                     <div class="pause-controls">
                         <div class="pause-info">
                             <div class="pause-title">État des VENTES</div>
@@ -682,15 +638,6 @@
                         <button class="btn" id="btn-pause-vente" onclick="togglePause('vente')">
                             <i class="fas fa-pause"></i> Mettre en PAUSE
                         </button>
-                    </div>
-                    
-                    <div style="background: var(--primary); padding: 20px; border-radius: var(--radius-xl); margin-top: 20px;">
-                        <h3 style="color: var(--white); margin-bottom: 10px;">⚠️ Important</h3>
-                        <p style="color: var(--text-secondary);">
-                            Lorsqu'une section est en PAUSE, les utilisateurs ne peuvent pas effectuer de transactions.
-                            Ils verront un message indiquant que le service est temporairement indisponible.
-                            Vous devez manuellement réactiver la section en cliquant sur le bouton "ACTIVER".
-                        </p>
                     </div>
                 </div>
             </div>
@@ -712,19 +659,16 @@
                     <h2><i class="fas fa-phone-alt"></i> Demandes d'approbation de numéros</h2>
                     <div id="numeros-attente-liste" class="item-list"></div>
                 </div>
-                
                 <div class="admin-card">
                     <h2><i class="fas fa-check-circle"></i> Numéros approuvés</h2>
                     <div id="numeros-approuves-liste" class="item-list"></div>
                 </div>
             </div>
 
-            <!-- GESTION DES DEMANDES DES CLIENTS (AVEC TXID) -->
+            <!-- GESTION DES DEMANDES -->
             <div id="demandes-tab" style="display: none;">
                 <div class="admin-card">
                     <h2><i class="fas fa-clipboard-list"></i> Demandes des clients</h2>
-                    
-                    <!-- Bouton de rafraîchissement manuel -->
                     <div style="display: flex; gap: 10px; margin-bottom: 20px;">
                         <button class="btn btn-refresh" onclick="verifierConnexionFirebase()" style="flex: 1;">
                             <i class="fas fa-plug"></i> Vérifier connexion
@@ -733,7 +677,6 @@
                             <i class="fas fa-sync"></i> Rafraîchir
                         </button>
                     </div>
-                    
                     <div class="filter-bar">
                         <select id="filtre-type" onchange="afficherDemandes()">
                             <option value="all">Tous types</option>
@@ -751,12 +694,12 @@
                 </div>
             </div>
 
-            <!-- NOUVELLE SECTION GESTION DES NEWS -->
+            <!-- GESTION DES ACTUALITÉS (NEWS) -->
             <div id="news-tab" style="display: none;">
                 <div class="admin-card">
                     <h2><i class="fas fa-newspaper"></i> Gestion des actualités</h2>
                     
-                    <!-- Formulaire d'ajout/modification -->
+                    <!-- Formulaire d'ajout/modification intégré -->
                     <div style="margin-bottom: 30px; padding: 20px; background: var(--primary); border-radius: var(--radius-xl);">
                         <h3 style="color: var(--white); margin-bottom: 20px;" id="news-form-title">
                             <i class="fas fa-plus-circle"></i> Ajouter une actualité
@@ -764,22 +707,28 @@
                         
                         <input type="hidden" id="news-editing-id" value="">
                         
-                        <div class="form-group" style="margin-bottom: 15px;">
-                            <label style="color: var(--text-secondary); display: block; margin-bottom: 5px;">Titre</label>
+                        <div class="form-group">
+                            <label>Titre</label>
                             <input type="text" id="news-titre" placeholder="Titre de l'actualité" style="width: 100%; padding: 14px; background: var(--bg-dark); border: 1px solid var(--gray-300); border-radius: 40px; color: var(--white);">
                         </div>
                         
-                        <div class="form-group" style="margin-bottom: 15px;">
-                            <label style="color: var(--text-secondary); display: block; margin-bottom: 5px;">Contenu</label>
+                        <div class="form-group">
+                            <label>Contenu</label>
                             <textarea id="news-contenu" placeholder="Contenu détaillé..." rows="4" style="width: 100%; padding: 14px; background: var(--bg-dark); border: 1px solid var(--gray-300); border-radius: 24px; color: var(--white);"></textarea>
                         </div>
                         
-                        <div class="form-group" style="margin-bottom: 15px;">
-                            <label style="color: var(--text-secondary); display: block; margin-bottom: 5px;">Statut</label>
-                            <select id="news-statut" style="width: 100%; padding: 14px; background: var(--bg-dark); border: 1px solid var(--gray-300); border-radius: 40px; color: var(--white);">
-                                <option value="active">Active (visible)</option>
-                                <option value="archive">Archivée (cachée)</option>
-                            </select>
+                        <div class="form-group">
+                            <label>Auteur</label>
+                            <input type="text" id="news-auteur" placeholder="Auteur" value="Typh Exchange" style="width: 100%; padding: 14px; background: var(--bg-dark); border: 1px solid var(--gray-300); border-radius: 40px; color: var(--white);">
+                        </div>
+                        
+                        <div style="display: flex; gap: 20px; margin: 15px 0;">
+                            <label style="display: flex; align-items: center; gap: 10px; color: var(--text-secondary);">
+                                <input type="checkbox" id="news-important"> Marquer comme important
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; color: var(--text-secondary);">
+                                <input type="checkbox" id="news-statut" checked> Actif (visible)
+                            </label>
                         </div>
                         
                         <div style="display: flex; gap: 10px; margin-top: 20px;">
@@ -796,7 +745,69 @@
                     <h3 style="color: var(--white); margin: 30px 0 15px 0;">
                         <i class="fas fa-list"></i> Liste des actualités
                     </h3>
-                    <div id="news-liste-admin" class="item-list"></div>
+                    <div id="news-liste" class="item-list"></div>
+                </div>
+            </div>
+
+            <!-- NOUVEL ONGLET TRANSACTIONS -->
+            <div id="transactions-tab" style="display: none;">
+                <div class="admin-card">
+                    <h2><i class="fas fa-chart-bar"></i> Statistiques des transactions</h2>
+                    <div class="stats-transactions" id="transactions-stats">
+                        <div class="stat-transaction">
+                            <div class="number" id="stats-total">0</div>
+                            <div class="label">Total</div>
+                        </div>
+                        <div class="stat-transaction">
+                            <div class="number" id="stats-volume-ar">0</div>
+                            <div class="label">Volume Ar</div>
+                        </div>
+                        <div class="stat-transaction">
+                            <div class="number" id="stats-volume-crypto">0</div>
+                            <div class="label">Volume Crypto</div>
+                        </div>
+                        <div class="stat-transaction">
+                            <div class="number" id="stats-en-attente">0</div>
+                            <div class="label">En attente</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <h2><i class="fas fa-filter"></i> Filtres</h2>
+                    <div class="filter-row">
+                        <div class="filter-item">
+                            <select id="filtre-type-transaction" onchange="filtrerTransactions()">
+                                <option value="all">Tous types</option>
+                                <option value="ACHAT">ACHAT</option>
+                                <option value="VENTE">VENTE</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <select id="filtre-statut-transaction" onchange="filtrerTransactions()">
+                                <option value="all">Tous statuts</option>
+                                <option value="en_attente">En attente</option>
+                                <option value="confirme">Confirmé</option>
+                                <option value="rejete">Rejeté</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <input type="text" id="recherche-transaction" placeholder="Rechercher (email, txid, nom...)" oninput="filtrerTransactions()">
+                        </div>
+                        <div class="filter-item">
+                            <select id="filtre-date-transaction" onchange="filtrerTransactions()">
+                                <option value="all">Toutes les dates</option>
+                                <option value="today">Aujourd'hui</option>
+                                <option value="week">Cette semaine</option>
+                                <option value="month">Ce mois</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <h2><i class="fas fa-list"></i> Liste des transactions</h2>
+                    <div id="transactions-liste" class="item-list"></div>
                 </div>
             </div>
         </div>
@@ -810,6 +821,39 @@
                 <div class="nav-item" onclick="exporterDonnees()"><i class="fas fa-download"></i><span>Export</span></div>
                 <div class="nav-item" onclick="logoutAdmin()"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></div>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL DÉTAILS TRANSACTION -->
+    <div id="modal-details-transaction" class="modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modal-transaction-titre">
+                <i class="fas fa-info-circle"></i> Détails de la transaction
+            </div>
+            <div id="details-transaction-complete" style="margin-bottom: 20px;"></div>
+            <div style="margin: 20px 0;">
+                <h3 style="color: var(--white); margin-bottom: 10px;">Historique</h3>
+                <div id="historique-transaction"></div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <select id="modal-changer-statut" style="flex: 2; padding: 12px; background: var(--primary); border: 1px solid var(--gray-300); border-radius: 40px; color: var(--white);">
+                    <option value="en_attente">En attente</option>
+                    <option value="confirme">Confirmer</option>
+                    <option value="rejete">Rejeter</option>
+                </select>
+                <button class="btn btn-confirm" onclick="changerStatutTransaction()" style="flex: 1;">
+                    <i class="fas fa-check"></i>
+                </button>
+            </div>
+            <div style="margin-top: 20px;">
+                <textarea id="modal-note-transaction" placeholder="Ajouter une note..." style="width: 100%; padding: 14px; background: var(--primary); border: 1px solid var(--gray-300); border-radius: 24px; color: var(--white);"></textarea>
+                <button class="btn btn-edit" onclick="ajouterNoteTransaction()" style="margin-top: 10px; width: 100%;">
+                    <i class="fas fa-sticky-note"></i> Ajouter note
+                </button>
+            </div>
+            <button class="btn btn-cancel" onclick="fermerModalTransaction()" style="margin-top: 20px;">
+                <i class="fas fa-times"></i> Fermer
+            </button>
         </div>
     </div>
 
@@ -847,13 +891,15 @@
             utilisateurs: [],
             portefeuilles: [],
             operateurs: [],
-            cryptos: [],
+            cryptos: ["USDT", "BTC", "ETH", "BNB", "LTC", "SOL", "TRX", "DOGE", "MATIC", "SUI", "XRP"],
             taux: {},
             reseaux: [],
             frais: { achat: 1.5, vente: 2.0 },
             pause: { achat: false, vente: false },
             demandes: [],
-            news: [] // Ajout du tableau news
+            news: [],
+            tauxMode: 'auto',
+            usdMGA: 4700
         };
 
         let modalMode = 'ajout';
@@ -861,9 +907,28 @@
         let modalIndex = -1;
         let modalCryptoNom = null;
         let rechercheUtilisateurs = '';
-
-        // Variables pour la gestion des news
         let newsEnEdition = null;
+        
+        // Variables pour les transactions
+        let transactionsFiltrees = [];
+        let transactionSelectionneeId = null;
+        
+        // Variables pour Binance
+        let binanceInterval = null;
+        let tauxUSD_MGA = 4700;
+        let pairesBinance = {
+            'USDT': 'USDTUSDT',
+            'BTC': 'BTCUSDT',
+            'ETH': 'ETHUSDT',
+            'BNB': 'BNBUSDT',
+            'LTC': 'LTCUSDT',
+            'SOL': 'SOLUSDT',
+            'TRX': 'TRXUSDT',
+            'DOGE': 'DOGEUSDT',
+            'MATIC': 'MATICUSDT',
+            'SUI': 'SUIUSDT',
+            'XRP': 'XRPUSDT'
+        };
 
         function loginAdmin() {
             const username = document.getElementById('admin-username').value;
@@ -874,6 +939,7 @@
                 document.getElementById('admin-interface').style.display = 'block';
                 sessionStorage.setItem('adminLoggedIn', 'true');
                 chargerDonnees();
+                demarrerSyncBinance();
             } else {
                 document.getElementById('admin-error').style.display = 'block';
             }
@@ -883,227 +949,291 @@
             sessionStorage.removeItem('adminLoggedIn');
             document.getElementById('login-page').style.display = 'flex';
             document.getElementById('admin-interface').style.display = 'none';
+            if (binanceInterval) clearInterval(binanceInterval);
         }
 
-        // Vérifier si déjà connecté
         if (sessionStorage.getItem('adminLoggedIn') === 'true') {
             document.getElementById('login-page').style.display = 'none';
             document.getElementById('admin-interface').style.display = 'block';
             chargerDonnees();
+            demarrerSyncBinance();
         }
 
-        function obtenirDonneesParDefaut() {
-            return {
-                utilisateurs: [
-                    { 
-                        nom: "Jean Rakoto", 
-                        email: "jean.rakoto@email.com",
-                        motDePasse: "pass123",
-                        dateInscription: new Date().toISOString(),
-                        numeros: [
-                            { nom: "Jean Rakoto", numero: "0341234567", statut: "approuve" }
-                        ],
-                        codePIN: {
-                            hash: btoa("123456"),
-                            actif: true,
-                            tentativeEchouees: 0,
-                            bloque: false,
-                            dateModification: new Date().toISOString()
-                        }
-                    },
-                    { 
-                        nom: "Marie Claire", 
-                        email: "marie.claire@email.com",
-                        motDePasse: "pass456",
-                        dateInscription: new Date().toISOString(),
-                        numeros: [
-                            { nom: "Marie Claire", numero: "0339876543", statut: "approuve" }
-                        ],
-                        codePIN: {
-                            hash: btoa("789012"),
-                            actif: true,
-                            tentativeEchouees: 2,
-                            bloque: false,
-                            dateModification: new Date().toISOString()
-                        }
-                    }
-                ],
-                portefeuilles: [
-                    { 
-                        nom: "Principal", 
-                        reponse: "Portefeuille principal",
-                        messageConfirmation: "Envoyez à l'email: principal@typh.com",
-                        reseau: "BEP20"
-                    },
-                    { 
-                        nom: "Épargne", 
-                        reponse: "Portefeuille épargne",
-                        messageConfirmation: "Envoyez à l'ID: epargne123",
-                        reseau: "ERC20"
-                    }
-                ],
-                operateurs: [
-                    { nom: "MVola", messageConfirmation: "Envoyez au 034 51 547 81" },
-                    { nom: "Orange Money", messageConfirmation: "Envoyez au 034 99 999 99" },
-                    { nom: "Airtel Money", messageConfirmation: "Envoyez au 033 88 888 88" }
-                ],
-                cryptos: ["USDT", "BTC", "ETH", "BNB"],
-                reseaux: [
-                    { nom: "BEP20", crypto: "USDT", fraisReseau: 0.5 },
-                    { nom: "ERC20", crypto: "USDT", fraisReseau: 1.2 },
-                    { nom: "TRC20", crypto: "USDT", fraisReseau: 0.8 },
-                    { nom: "BEP20", crypto: "BNB", fraisReseau: 0.3 }
-                ],
-                frais: { achat: 1.5, vente: 2.0 },
-                pause: { achat: false, vente: false },
-                taux: {
-                    "USDT": { achat: 4950, vente: 4850, variation: "+0.1", couleur: "positive" },
-                    "BTC": { achat: 78500000, vente: 77000000, variation: "+2.4", couleur: "positive" },
-                    "ETH": { achat: 4200000, vente: 4100000, variation: "-1.2", couleur: "negative" },
-                    "BNB": { achat: 1250000, vente: 1200000, variation: "+1.8", couleur: "positive" }
-                },
-                demandes: [],
-                news: [
-                    {
-                        id: "NEWS-" + Date.now() + "-1",
-                        titre: "Bienvenue sur TYPH X-CHAIN",
-                        contenu: "Nous sommes ravis de vous accueillir sur notre plateforme d'échange crypto !",
-                        statut: "active",
-                        dateCreation: new Date().toISOString()
-                    },
-                    {
-                        id: "NEWS-" + Date.now() + "-2",
-                        titre: "Nouveaux taux disponibles",
-                        contenu: "Les taux USDT et BTC ont été mis à jour. Consultez-les en direct !",
-                        statut: "active",
-                        dateCreation: new Date().toISOString()
-                    }
-                ]
-            };
-        }
-
-        function chargerDonnees() {
-            document.body.style.opacity = '0.7';
+        // Fonctions Binance
+        async function demarrerSyncBinance() {
+            if (binanceInterval) clearInterval(binanceInterval);
+            await syncBinance();
+            binanceInterval = setInterval(syncBinance, 30000);
             
-            database.ref('donnees').once('value')
-                .then((snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        donnees = data;
-                        console.log('✅ Données chargées depuis Firebase');
-                        console.log('📊 Total demandes reçues:', donnees.demandes?.length || 0);
-                        
-                        if (!donnees.taux) donnees.taux = obtenirDonneesParDefaut().taux;
-                        if (!donnees.reseaux) donnees.reseaux = obtenirDonneesParDefaut().reseaux;
-                        if (!donnees.frais) donnees.frais = obtenirDonneesParDefaut().frais;
-                        if (!donnees.pause) donnees.pause = { achat: false, vente: false };
-                        if (!donnees.news) donnees.news = obtenirDonneesParDefaut().news; // Ajout
+            // Timer pour l'affichage
+            let tempsRestant = 30;
+            setInterval(() => {
+                tempsRestant--;
+                if (tempsRestant < 0) tempsRestant = 30;
+                document.getElementById('next-sync').textContent = tempsRestant + 's';
+            }, 1000);
+        }
+
+        async function getTauxMGA() {
+            try {
+                const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                const data = await response.json();
+                if (data.rates && data.rates.MGA) {
+                    tauxUSD_MGA = data.rates.MGA;
+                    document.getElementById('usd-mga-display').textContent = tauxUSD_MGA.toLocaleString();
+                    document.getElementById('usd-mga-lastupdate').innerHTML = 'Dernière mise à jour: ' + new Date().toLocaleTimeString();
+                    
+                    if (donnees.tauxMode === 'auto') {
+                        donnees.usdMGA = tauxUSD_MGA;
+                    }
+                    return tauxUSD_MGA;
+                }
+            } catch (error) {
+                console.error('Erreur taux MGA:', error);
+            }
+            return donnees.usdMGA || 4700;
+        }
+
+        async function syncBinance() {
+            if (donnees.tauxMode !== 'auto') return;
+            
+            try {
+                document.getElementById('sync-badge').textContent = 'Synchronisation...';
+                document.getElementById('sync-badge').style.background = 'var(--warning)';
+                
+                const tauxMGA = await getTauxMGA();
+                
+                // Récupérer tous les prix
+                const response = await fetch('https://api.binance.com/api/v3/ticker/price');
+                const prices = await response.json();
+                
+                let updates = {};
+                
+                // Mettre à jour chaque crypto
+                Object.entries(pairesBinance).forEach(([crypto, paire]) => {
+                    if (crypto === 'USDT') {
+                        // USDT est spécial - toujours 1 USD
+                        updates[`donnees/taux/${crypto}`] = {
+                            prixUSD: 1,
+                            prixMGA: tauxMGA,
+                            variation: '0',
+                            couleur: 'positive',
+                            lastUpdate: new Date().toISOString(),
+                            source: 'binance'
+                        };
                     } else {
-                        console.log('📦 Aucune donnée trouvée, création des données par défaut');
-                        donnees = obtenirDonneesParDefaut();
-                        sauvegarderDonnees();
+                        const ticker = prices.find(p => p.symbol === paire);
+                        if (ticker) {
+                            const prixUSD = parseFloat(ticker.price);
+                            const prixMGA = Math.round(prixUSD * tauxMGA);
+                            
+                            // Calculer variation (simulée pour l'exemple)
+                            const variation = (Math.random() * 4 - 2).toFixed(1);
+                            
+                            updates[`donnees/taux/${crypto}`] = {
+                                prixUSD: prixUSD,
+                                prixMGA: prixMGA,
+                                variation: (variation > 0 ? '+' : '') + variation,
+                                couleur: variation >= 0 ? 'positive' : 'negative',
+                                lastUpdate: new Date().toISOString(),
+                                source: 'binance'
+                            };
+                        }
                     }
-                    
-                    document.body.style.opacity = '1';
-                    mettreAJourStats();
-                    afficherTout();
-                    mettreAJourPauseUI();
-                    
-                    // Si on est sur l'onglet demandes, forcer l'affichage
-                    if (document.getElementById('demandes-tab').style.display === 'block') {
-                        afficherDemandes();
-                    }
-                    
-                    // Si on est sur l'onglet news, afficher les news
-                    if (document.getElementById('news-tab').style.display === 'block') {
-                        afficherNewsAdmin();
-                    }
-                })
-                .catch((error) => {
-                    console.error('❌ Erreur chargement Firebase:', error);
-                    alert('Erreur de connexion à Firebase. Utilisation des données locales.');
-                    
-                    const saved = localStorage.getItem('typhData');
-                    if (saved) {
-                        donnees = JSON.parse(saved);
-                        console.log('📦 Données chargées depuis localStorage');
-                        if (!donnees.reseaux) donnees.reseaux = obtenirDonneesParDefaut().reseaux;
-                        if (!donnees.frais) donnees.frais = obtenirDonneesParDefaut().frais;
-                        if (!donnees.pause) donnees.pause = { achat: false, vente: false };
-                        if (!donnees.news) donnees.news = obtenirDonneesParDefaut().news; // Ajout
-                    } else {
-                        donnees = obtenirDonneesParDefaut();
-                    }
-                    
-                    document.body.style.opacity = '1';
-                    mettreAJourStats();
-                    afficherTout();
-                    mettreAJourPauseUI();
                 });
-        }
-
-        function sauvegarderDonnees() {
-            database.ref('donnees').set(donnees)
-                .then(() => {
-                    console.log('✅ Données synchronisées avec Firebase');
-                    localStorage.setItem('typhData', JSON.stringify(donnees));
-                })
-                .catch((error) => {
-                    console.error('❌ Erreur synchronisation Firebase:', error);
-                    localStorage.setItem('typhData', JSON.stringify(donnees));
-                });
-            
-            mettreAJourStats();
-            afficherTout();
-            mettreAJourPauseUI();
-            
-            // Rafraîchir l'affichage des news si l'onglet est actif
-            if (document.getElementById('news-tab').style.display === 'block') {
-                afficherNewsAdmin();
+                
+                await database.ref().update(updates);
+                
+                // Recharger les données
+                const snapshot = await database.ref('donnees/taux').once('value');
+                if (snapshot.val()) {
+                    donnees.taux = snapshot.val();
+                }
+                
+                document.getElementById('sync-badge').textContent = 'Actif';
+                document.getElementById('sync-badge').style.background = 'var(--success)';
+                
+                afficherTauxSimplifies();
+                
+            } catch (error) {
+                console.error('Erreur sync Binance:', error);
+                document.getElementById('sync-badge').textContent = 'Erreur';
+                document.getElementById('sync-badge').style.background = 'var(--danger)';
             }
         }
 
-        // NOUVELLES FONCTIONS POUR LES NEWS
-        function afficherNewsAdmin() {
-            const liste = document.getElementById('news-liste-admin');
-            if (!liste) return;
+        function setTauxMode(mode) {
+            donnees.tauxMode = mode;
+            document.getElementById('mode-auto').classList.toggle('active', mode === 'auto');
+            document.getElementById('mode-manual').classList.toggle('active', mode === 'manual');
+            sauvegarderDonnees();
             
-            if (!donnees.news || donnees.news.length === 0) {
-                liste.innerHTML = '<div class="item-row">Aucune actualité</div>';
+            if (mode === 'auto') {
+                syncBinance();
+            }
+        }
+
+        function mettreAJourTauxUSD() {
+            const input = document.getElementById('usd-mga-input');
+            const valeur = parseFloat(input.value);
+            
+            if (isNaN(valeur) || valeur < 1000 || valeur > 10000) {
+                alert('Veuillez entrer un taux valide (1000-10000)');
                 return;
             }
             
-            liste.innerHTML = donnees.news
-                .sort((a, b) => new Date(b.dateCreation) - new Date(a.dateCreation))
-                .map((news, index) => `
-                    <div class="news-item-admin">
-                        <div class="news-header-admin">
-                            <div class="news-titre-admin">
-                                <i class="fas fa-newspaper" style="color: var(--accent);"></i> 
-                                ${news.titre}
-                            </div>
-                            <div class="item-actions">
-                                <button class="btn btn-edit" onclick="editerNews('${news.id}')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-delete" onclick="supprimerNews('${news.id}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
+            donnees.usdMGA = valeur;
+            tauxUSD_MGA = valeur;
+            
+            document.getElementById('usd-mga-display').textContent = valeur.toLocaleString();
+            document.getElementById('usd-mga-lastupdate').innerHTML = 'Dernière mise à jour: ' + new Date().toLocaleTimeString() + ' (manuel)';
+            
+            input.value = '';
+            sauvegarderDonnees();
+            
+            if (donnees.tauxMode === 'manual') {
+                // Mettre à jour tous les prix MGA manuellement
+                Object.keys(donnees.taux || {}).forEach(crypto => {
+                    if (donnees.taux[crypto] && donnees.taux[crypto].prixUSD) {
+                        donnees.taux[crypto].prixMGA = Math.round(donnees.taux[crypto].prixUSD * valeur);
+                    }
+                });
+                sauvegarderDonnees();
+                afficherTauxSimplifies();
+            }
+        }
+
+        async function syncTauxUSD() {
+            await getTauxMGA();
+            alert(`✅ Taux USD/MGA mis à jour: ${tauxUSD_MGA.toLocaleString()} Ar`);
+        }
+
+        function afficherTauxSimplifies() {
+            const liste = document.getElementById('taux-liste');
+            if (!liste) return;
+            
+            if (!donnees.taux) donnees.taux = {};
+            
+            const cryptos = donnees.cryptos || [];
+            
+            if (cryptos.length === 0) {
+                liste.innerHTML = '<div class="item-row">Aucune crypto</div>';
+                return;
+            }
+            
+            liste.innerHTML = cryptos.map(crypto => {
+                const taux = donnees.taux[crypto] || { 
+                    prixUSD: crypto === 'USDT' ? 1 : 0, 
+                    prixMGA: crypto === 'USDT' ? donnees.usdMGA : 0, 
+                    variation: "0", 
+                    couleur: "positive",
+                    source: 'manual'
+                };
+                
+                const variationClass = taux.couleur === 'positive' ? 'positive' : 'negative';
+                const variationIcon = taux.couleur === 'positive' ? 'arrow-up' : 'arrow-down';
+                
+                // Déterminer le symbole d'affichage
+                let symboleAffiche = crypto;
+                if (crypto === 'MATIC') symboleAffiche = 'POL';
+                if (crypto === 'LTC') symboleAffiche = 'LTC';
+                if (crypto === 'SOL') symboleAffiche = 'SOL';
+                if (crypto === 'TRX') symboleAffiche = 'TRX';
+                if (crypto === 'DOGE') symboleAffiche = 'DOGE';
+                if (crypto === 'SUI') symboleAffiche = 'SUI';
+                if (crypto === 'XRP') symboleAffiche = 'XRP';
+                
+                return `
+                <div class="taux-card">
+                    <div class="taux-header">
+                        <span class="taux-symbole">
+                            <i class="fas fa-coins"></i> ${symboleAffiche}
+                        </span>
+                        <div class="item-actions">
+                            <button class="btn btn-edit" onclick="ouvrirModal('taux', null, '${crypto}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
                         </div>
-                        <div class="news-contenu-admin">
-                            ${news.contenu}
+                    </div>
+                    
+                    <div class="taux-valeur-principale">
+                        ${taux.prixMGA.toLocaleString()} Ar
+                    </div>
+                    
+                    <div class="taux-details">
+                        <span><i class="fas fa-dollar-sign"></i> $${taux.prixUSD.toFixed(2)}</span>
+                        <span class="taux-variation ${variationClass}">
+                            <i class="fas fa-${variationIcon}"></i> ${taux.variation}%
+                        </span>
+                        <span class="taux-source ${taux.source}">
+                            ${taux.source === 'binance' ? '<i class="fab fa-binance"></i> Binance' : '<i class="fas fa-pencil-alt"></i> Manuel'}
+                        </span>
+                    </div>
+                    
+                    <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 10px; text-align: right;">
+                        <i class="far fa-clock"></i> ${taux.lastUpdate ? new Date(taux.lastUpdate).toLocaleTimeString() : ''}
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        // FONCTIONS POUR LES NEWS
+        function afficherNews() {
+            const liste = document.getElementById('news-liste');
+            if (!liste) return;
+            
+            if (!donnees.news || donnees.news.length === 0) {
+                liste.innerHTML = '<div class="no-news"><i class="fas fa-newspaper"></i><p>Aucune actualité publiée</p></div>';
+                return;
+            }
+            
+            // Trier par date (plus récent en premier)
+            const newsTriees = [...donnees.news].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            liste.innerHTML = newsTriees.map((news, index) => {
+                const dateObj = new Date(news.date);
+                const dateFormatee = dateObj.toLocaleDateString('fr-FR') + ' à ' + dateObj.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+                const statut = news.statut !== false ? 'active' : 'archive';
+                
+                return `
+                <div class="news-item-admin">
+                    <div class="news-header-admin">
+                        <div class="news-titre-admin">
+                            <i class="fas ${news.important ? 'fa-exclamation-circle' : 'fa-newspaper'}" style="color: var(--accent);"></i> 
+                            ${news.titre}
                         </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                            <div class="news-date-admin">
-                                <i class="far fa-calendar-alt"></i> ${new Date(news.dateCreation).toLocaleDateString()}
-                            </div>
-                            <span class="news-statut-badge ${news.statut === 'active' ? 'news-statut-active' : 'news-statut-archive'}">
-                                ${news.statut === 'active' ? '✓ Visible' : '🗄️ Archivée'}
+                        <div class="item-actions">
+                            <button class="btn btn-edit" onclick="editerNews('${news.id}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-delete" onclick="supprimerNews('${news.id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="news-contenu-admin">
+                        ${news.contenu}
+                    </div>
+                    
+                    <div class="news-footer-admin">
+                        <div>
+                            <span class="news-author">
+                                <i class="fas fa-user-shield"></i> ${news.auteur || 'Typh Exchange'}
+                            </span>
+                            <span class="news-date-admin" style="margin-left: 10px;">
+                                <i class="far fa-calendar-alt"></i> ${dateFormatee}
+                            </span>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            ${news.important ? '<span class="news-important"><i class="fas fa-star"></i> IMPORTANT</span>' : ''}
+                            <span class="news-statut-badge ${statut === 'active' ? 'news-statut-active' : 'news-statut-archive'}">
+                                ${statut === 'active' ? '✓ Visible' : '🗄️ Archivée'}
                             </span>
                         </div>
                     </div>
-                `).join('');
+                </div>
+            `}).join('');
         }
 
         function editerNews(id) {
@@ -1114,7 +1244,9 @@
             document.getElementById('news-editing-id').value = id;
             document.getElementById('news-titre').value = news.titre;
             document.getElementById('news-contenu').value = news.contenu;
-            document.getElementById('news-statut').value = news.statut;
+            document.getElementById('news-auteur').value = news.auteur || 'Typh Exchange';
+            document.getElementById('news-important').checked = news.important || false;
+            document.getElementById('news-statut').checked = news.statut !== false;
             
             document.getElementById('news-form-title').innerHTML = '<i class="fas fa-edit"></i> Modifier l\'actualité';
             document.getElementById('btn-annuler-news').style.display = 'block';
@@ -1125,7 +1257,9 @@
             document.getElementById('news-editing-id').value = '';
             document.getElementById('news-titre').value = '';
             document.getElementById('news-contenu').value = '';
-            document.getElementById('news-statut').value = 'active';
+            document.getElementById('news-auteur').value = 'Typh Exchange';
+            document.getElementById('news-important').checked = false;
+            document.getElementById('news-statut').checked = true;
             
             document.getElementById('news-form-title').innerHTML = '<i class="fas fa-plus-circle"></i> Ajouter une actualité';
             document.getElementById('btn-annuler-news').style.display = 'none';
@@ -1134,7 +1268,9 @@
         function sauvegarderNews() {
             const titre = document.getElementById('news-titre').value.trim();
             const contenu = document.getElementById('news-contenu').value.trim();
-            const statut = document.getElementById('news-statut').value;
+            const auteur = document.getElementById('news-auteur').value.trim() || 'Typh Exchange';
+            const important = document.getElementById('news-important').checked;
+            const actif = document.getElementById('news-statut').checked;
             
             if (!titre || !contenu) {
                 alert('Veuillez remplir tous les champs');
@@ -1153,707 +1289,38 @@
                         ...donnees.news[index],
                         titre,
                         contenu,
-                        statut,
+                        auteur,
+                        important,
+                        statut: actif,
                         dateModification: new Date().toISOString()
                     };
                 }
             } else {
                 // Nouvelle news
                 const nouvelleNews = {
-                    id: 'NEWS-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+                    id: 'NEWS-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
                     titre,
                     contenu,
-                    statut,
-                    dateCreation: new Date().toISOString()
+                    auteur,
+                    important,
+                    statut: actif,
+                    date: new Date().toISOString()
                 };
                 donnees.news.push(nouvelleNews);
             }
             
             sauvegarderDonnees();
             annulerEditionNews();
-            afficherNewsAdmin();
+            afficherNews();
             alert('✅ Actualité enregistrée avec succès');
         }
 
         function supprimerNews(id) {
-            if (!confirm('Supprimer cette actualité ?')) return;
-            
+            if (!confirm('❌ Supprimer cette actualité ?')) return;
             donnees.news = donnees.news.filter(n => n.id !== id);
             sauvegarderDonnees();
-            afficherNewsAdmin();
-        }
-
-        function verifierConnexionFirebase() {
-            console.log('🔍 Vérification connexion Firebase...');
-            
-            database.ref('.info/connected').once('value')
-                .then((snap) => {
-                    if (snap.val() === true) {
-                        alert('✅ Connecté à Firebase Realtime Database');
-                        console.log('✅ Connecté à Firebase');
-                        
-                        // Recharger les données
-                        chargerDonnees();
-                    } else {
-                        alert('❌ Déconnecté de Firebase');
-                        console.log('❌ Déconnecté de Firebase');
-                    }
-                })
-                .catch((error) => {
-                    alert('❌ Erreur de connexion: ' + error.message);
-                    console.error('❌ Erreur:', error);
-                });
-        }
-
-        function mettreAJourPauseUI() {
-            // Mettre à jour l'affichage des statuts de pause
-            const achatStatus = document.getElementById('achat-status-text');
-            const venteStatus = document.getElementById('vente-status-text');
-            const btnAchat = document.getElementById('btn-pause-achat');
-            const btnVente = document.getElementById('btn-pause-vente');
-            
-            if (achatStatus) {
-                if (donnees.pause.achat) {
-                    achatStatus.innerHTML = 'Actuellement: <span style="color: var(--danger);">EN PAUSE</span>';
-                    btnAchat.innerHTML = '<i class="fas fa-play"></i> ACTIVER';
-                    btnAchat.className = 'btn btn-play';
-                } else {
-                    achatStatus.innerHTML = 'Actuellement: <span style="color: var(--success);">Actif</span>';
-                    btnAchat.innerHTML = '<i class="fas fa-pause"></i> Mettre en PAUSE';
-                    btnAchat.className = 'btn btn-pause';
-                }
-            }
-            
-            if (venteStatus) {
-                if (donnees.pause.vente) {
-                    venteStatus.innerHTML = 'Actuellement: <span style="color: var(--danger);">EN PAUSE</span>';
-                    btnVente.innerHTML = '<i class="fas fa-play"></i> ACTIVER';
-                    btnVente.className = 'btn btn-play';
-                } else {
-                    venteStatus.innerHTML = 'Actuellement: <span style="color: var(--success);">Actif</span>';
-                    btnVente.innerHTML = '<i class="fas fa-pause"></i> Mettre en PAUSE';
-                    btnVente.className = 'btn btn-pause';
-                }
-            }
-        }
-
-        function togglePause(type) {
-            donnees.pause[type] = !donnees.pause[type];
-            sauvegarderDonnees();
-            mettreAJourPauseUI();
-            
-            const etat = donnees.pause[type] ? 'EN PAUSE' : 'ACTIVÉ';
-            alert(`✅ Section ${type.toUpperCase()} ${etat} avec succès`);
-        }
-
-        function mettreAJourStats() {
-            const stats = {
-                utilisateurs: donnees.utilisateurs?.length || 0,
-                numerosAttente: 0,
-                demandes: donnees.demandes?.length || 0,
-                transactions: donnees.demandes?.filter(d => d.statut === 'confirme').length || 0
-            };
-
-            donnees.utilisateurs?.forEach(user => {
-                if (user.numeros) {
-                    stats.numerosAttente += user.numeros.filter(n => n.statut === 'en_attente').length;
-                }
-            });
-
-            document.getElementById('stats-utilisateurs').textContent = stats.utilisateurs;
-            document.getElementById('stats-numeros-attente').textContent = stats.numerosAttente;
-            document.getElementById('stats-demandes').textContent = stats.demandes;
-            document.getElementById('stats-transactions').textContent = stats.transactions;
-        }
-
-        function filtrerUtilisateurs() {
-            rechercheUtilisateurs = document.getElementById('recherche-utilisateur')?.value.toLowerCase() || '';
-            afficherUtilisateurs();
-        }
-
-        function afficherUtilisateurs() {
-            const liste = document.getElementById('utilisateurs-liste');
-            if (!liste) return;
-
-            let utilisateursFiltres = donnees.utilisateurs || [];
-            if (rechercheUtilisateurs) {
-                utilisateursFiltres = utilisateursFiltres.filter(u => 
-                    u.nom.toLowerCase().includes(rechercheUtilisateurs) || 
-                    (u.email && u.email.toLowerCase().includes(rechercheUtilisateurs))
-                );
-            }
-
-            if (utilisateursFiltres.length === 0) {
-                liste.innerHTML = '<div class="item-row">Aucun utilisateur</div>';
-                return;
-            }
-
-            liste.innerHTML = utilisateursFiltres.map((user, index) => {
-                const pinStatus = user.codePIN ? 
-                    (user.codePIN.bloque ? 'bloque' : (user.codePIN.actif ? 'actif' : 'inactif')) : 
-                    'inactif';
-                
-                return `
-                <div class="user-item">
-                    <div class="user-header">
-                        <span class="user-name"><i class="fas fa-user-circle" style="color:var(--accent);"></i> ${user.nom}</span>
-                        <div class="item-actions">
-                            <button class="btn btn-edit" onclick="editerUtilisateur(${index})"><i class="fas fa-edit"></i></button>
-                            <button class="btn ${pinStatus === 'bloque' ? 'btn-debloquer' : 'btn-edit'}" onclick="gererCodePIN(${index})">
-                                <i class="fas fa-key"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="user-email"><i class="fas fa-envelope"></i> ${user.email || 'Email non renseigné'}</div>
-                    
-                    <div class="pin-info">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-                            <i class="fas fa-lock" style="color: var(--warning);"></i>
-                            <span style="font-weight: 600;">Code PIN</span>
-                            <span class="pin-status pin-${pinStatus}">${pinStatus}</span>
-                        </div>
-                        <div style="font-size: 0.9rem; color: var(--text-secondary);">
-                            Tentatives échouées: ${user.codePIN?.tentativeEchouees || 0}/3
-                        </div>
-                        ${user.codePIN?.bloque ? `
-                            <button class="btn btn-success" style="margin-top: 10px; padding: 8px;" onclick="debloquerCodePIN(${index})">
-                                <i class="fas fa-unlock"></i> Débloquer
-                            </button>
-                        ` : ''}
-                        ${!user.codePIN?.actif ? `
-                            <button class="btn btn-warning" style="margin-top: 10px; padding: 8px;" onclick="reinitialiserCodePIN(${index})">
-                                <i class="fas fa-sync"></i> Réinitialiser
-                            </button>
-                        ` : ''}
-                    </div>
-                    
-                    <div class="user-detail">
-                        <span><i class="fas fa-calendar"></i> Inscrit le: ${new Date(user.dateInscription).toLocaleDateString()}</span>
-                        <span><i class="fas fa-phone"></i> ${user.numeros?.length || 0} numéro(s)</span>
-                    </div>
-                    
-                    ${user.numeros && user.numeros.length > 0 ? `
-                        <div style="margin-top: 10px;">
-                            ${user.numeros.map(num => `
-                                <div class="numero-mini-item">
-                                    <span><i class="fas fa-phone"></i> ${num.numero} (${num.nom})</span>
-                                    <span class="numero-status-badge badge-${num.statut}">${num.statut}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : ''}
-                </div>
-            `}).join('');
-        }
-
-        function editerUtilisateur(index) {
-            const user = donnees.utilisateurs[index];
-            if (user) {
-                modalType = 'utilisateur';
-                modalIndex = index;
-                modalMode = 'modification';
-                
-                const modal = document.getElementById('modal-admin');
-                const titre = document.getElementById('modal-titre');
-                titre.innerHTML = '<i class="fas fa-user-edit"></i> Modifier utilisateur';
-                
-                // Ne plus afficher le champ mot de passe
-                document.getElementById('modal-champs').innerHTML = `
-                    <input type="text" id="modal-nom" placeholder="Nom complet" value="${user.nom}">
-                    <input type="email" id="modal-email" placeholder="Email" value="${user.email || ''}">
-                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 10px 0;">
-                        <i class="fas fa-info-circle"></i> Pour modifier le mot de passe, utilisez la gestion des utilisateurs.
-                    </p>
-                `;
-                
-                modal.classList.add('active');
-            }
-        }
-
-        function gererCodePIN(index) {
-            const user = donnees.utilisateurs[index];
-            modalType = 'pin';
-            modalIndex = index;
-            modalMode = 'modification';
-            
-            const modal = document.getElementById('modal-admin');
-            const titre = document.getElementById('modal-titre');
-            titre.innerHTML = '<i class="fas fa-key"></i> Gérer code PIN';
-            
-            document.getElementById('modal-champs').innerHTML = `
-                <p style="margin-bottom: 15px; color: var(--text-secondary);">
-                    Utilisateur: <strong>${user.nom}</strong>
-                </p>
-                <input type="text" id="modal-pin" placeholder="Nouveau code PIN (6 chiffres)" maxlength="6" pattern="[0-9]{6}">
-                <div style="display: flex; gap: 10px;">
-                    <label style="display: flex; align-items: center; gap: 5px;">
-                        <input type="checkbox" id="modal-bloque" ${user.codePIN?.bloque ? 'checked' : ''}> Bloqué
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 5px;">
-                        <input type="checkbox" id="modal-actif" ${user.codePIN?.actif ? 'checked' : ''}> Actif
-                    </label>
-                </div>
-                <p style="margin-top: 10px; font-size: 0.9rem; color: var(--warning);">
-                    <i class="fas fa-info-circle"></i> Laissez vide pour ne pas changer le code
-                </p>
-            `;
-            
-            modal.classList.add('active');
-        }
-
-        function debloquerCodePIN(index) {
-            if (donnees.utilisateurs[index]?.codePIN) {
-                donnees.utilisateurs[index].codePIN.bloque = false;
-                donnees.utilisateurs[index].codePIN.tentativeEchouees = 0;
-                sauvegarderDonnees();
-                alert('✅ Code PIN débloqué avec succès');
-            }
-        }
-
-        function reinitialiserCodePIN(index) {
-            if (confirm('Réinitialiser le code PIN ? L\'utilisateur devra en créer un nouveau.')) {
-                if (donnees.utilisateurs[index]) {
-                    delete donnees.utilisateurs[index].codePIN;
-                    sauvegarderDonnees();
-                    alert('✅ Code PIN réinitialisé');
-                }
-            }
-        }
-
-        function supprimerUtilisateur(index) {
-            if (!confirm('Supprimer cet utilisateur ?')) return;
-            donnees.utilisateurs.splice(index, 1);
-            sauvegarderDonnees();
-        }
-
-        function exporterDonnees() {
-            const dataStr = JSON.stringify(donnees, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            const exportFileDefaultName = 'typh-data-export.json';
-            
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
-        }
-
-        function modifierFrais(type) {
-            const input = document.getElementById(`frais-${type}-input`);
-            const valeur = parseFloat(input.value);
-            
-            if (isNaN(valeur) || valeur < 0 || valeur > 100) {
-                alert('Veuillez entrer un pourcentage valide (0-100)');
-                return;
-            }
-            
-            donnees.frais[type] = valeur;
-            sauvegarderDonnees();
-            document.getElementById(`frais-${type}-display`).textContent = valeur + '%';
-            input.value = '';
-            alert(`✅ Frais ${type} modifié à ${valeur}%`);
-        }
-
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('gestion-tab').style.display = 'none';
-            document.getElementById('taux-tab').style.display = 'none';
-            document.getElementById('pause-tab').style.display = 'none';
-            document.getElementById('utilisateurs-tab').style.display = 'none';
-            document.getElementById('numeros-tab').style.display = 'none';
-            document.getElementById('demandes-tab').style.display = 'none';
-            document.getElementById('news-tab').style.display = 'none'; // Ajout
-            
-            if (tab === 'gestion') {
-                document.querySelectorAll('.tab')[0].classList.add('active');
-                document.getElementById('gestion-tab').style.display = 'block';
-            } else if (tab === 'taux') {
-                document.querySelectorAll('.tab')[1].classList.add('active');
-                document.getElementById('taux-tab').style.display = 'block';
-                afficherTaux();
-            } else if (tab === 'pause') {
-                document.querySelectorAll('.tab')[2].classList.add('active');
-                document.getElementById('pause-tab').style.display = 'block';
-                mettreAJourPauseUI();
-            } else if (tab === 'utilisateurs') {
-                document.querySelectorAll('.tab')[3].classList.add('active');
-                document.getElementById('utilisateurs-tab').style.display = 'block';
-                afficherUtilisateurs();
-            } else if (tab === 'numeros') {
-                document.querySelectorAll('.tab')[4].classList.add('active');
-                document.getElementById('numeros-tab').style.display = 'block';
-                afficherNumerosAttente();
-                afficherNumerosApprouves();
-            } else if (tab === 'demandes') {
-                document.querySelectorAll('.tab')[5].classList.add('active');
-                document.getElementById('demandes-tab').style.display = 'block';
-                afficherDemandes();
-            } else if (tab === 'news') {
-                document.querySelectorAll('.tab')[6].classList.add('active');
-                document.getElementById('news-tab').style.display = 'block';
-                afficherNewsAdmin();
-                annulerEditionNews();
-            }
-        }
-
-        function afficherTout() {
-            afficherPortefeuilles();
-            afficherOperateurs();
-            afficherReseaux();
-            afficherTaux();
-            afficherNumerosAttente();
-            afficherNumerosApprouves();
-            afficherDemandes();
-            afficherUtilisateurs();
-            afficherNewsAdmin(); // Ajout
-            
-            if (donnees.frais) {
-                document.getElementById('frais-achat-display').textContent = donnees.frais.achat + '%';
-                document.getElementById('frais-vente-display').textContent = donnees.frais.vente + '%';
-            }
-        }
-
-        function afficherPortefeuilles() {
-            const liste = document.getElementById('portefeuilles-liste');
-            if (!liste) return;
-            liste.innerHTML = (donnees.portefeuilles || []).map((p, index) => `
-                <div class="item-row">
-                    <div class="item-info">
-                        <div class="item-nom"><i class="fas fa-wallet" style="color:var(--accent);"></i> ${p.nom}</div>
-                        <div class="item-reponse">${(p.reponse || '').substring(0,50)}...</div>
-                        <div style="font-size:0.8rem; margin-top:5px; color:var(--warning);">
-                            <i class="fas fa-comment"></i> Message: ${p.messageConfirmation || 'Aucun'}
-                        </div>
-                        <div style="font-size:0.8rem; margin-top:5px; color:var(--accent);">
-                            <i class="fas fa-network-wired"></i> Réseau: ${p.reseau || 'Non défini'}
-                        </div>
-                    </div>
-                    <div class="item-actions">
-                        <button class="btn btn-edit" onclick="ouvrirModal('portefeuille', ${index})"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-delete" onclick="supprimer('portefeuille', ${index})"><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>
-            `).join('') || '<div class="item-row">Aucun portefeuille</div>';
-        }
-
-        function afficherOperateurs() {
-            const liste = document.getElementById('operateurs-liste');
-            if (!liste) return;
-            liste.innerHTML = (donnees.operateurs || []).map((op, index) => `
-                <div class="item-row">
-                    <div class="item-info">
-                        <div class="item-nom"><i class="fas fa-sim-card" style="color:var(--accent);"></i> ${op.nom}</div>
-                        <div style="font-size:0.8rem; margin-top:5px; color:var(--warning);">
-                            <i class="fas fa-comment"></i> Message: ${op.messageConfirmation || 'Aucun'}
-                        </div>
-                    </div>
-                    <div class="item-actions">
-                        <button class="btn btn-edit" onclick="ouvrirModal('operateur', ${index})"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-delete" onclick="supprimer('operateur', ${index})"><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>
-            `).join('') || '<div class="item-row">Aucun opérateur</div>';
-        }
-
-        function afficherReseaux() {
-            const liste = document.getElementById('reseaux-liste');
-            if (!liste) return;
-            liste.innerHTML = (donnees.reseaux || []).map((reseau, index) => `
-                <div class="reseau-item">
-                    <div class="reseau-header">
-                        <span><i class="fas fa-network-wired" style="color:var(--accent);"></i> <strong>${reseau.nom}</strong></span>
-                        <div class="item-actions">
-                            <button class="btn btn-edit" onclick="ouvrirModal('reseau', ${index})"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-delete" onclick="supprimer('reseau', ${index})"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                    <div style="margin-top: 8px;">
-                        <span style="color: var(--text-secondary);">Crypto: </span>${reseau.crypto}<br>
-                        <span style="color: var(--text-secondary);">Frais réseau: </span>${reseau.fraisReseau || 0}%
-                    </div>
-                </div>
-            `).join('') || '<div class="item-row">Aucun réseau configuré</div>';
-        }
-
-        function afficherTaux() {
-            const liste = document.getElementById('taux-liste');
-            if (!liste) return;
-            
-            if (!donnees.taux) donnees.taux = {};
-            
-            liste.innerHTML = (donnees.cryptos || []).map(crypto => {
-                const taux = donnees.taux[crypto] || { achat: 0, vente: 0, variation: "0", couleur: "positive" };
-                return `
-                <div class="taux-item">
-                    <div class="taux-header">
-                        <span class="taux-symbole"><i class="fas fa-coins"></i> ${crypto}</span>
-                        <div class="item-actions">
-                            <button class="btn btn-edit" onclick="ouvrirModal('taux', null, '${crypto}')">
-                                <i class="fas fa-edit"></i> Modifier taux
-                            </button>
-                        </div>
-                    </div>
-                    <div class="taux-valeur">Achat: ${taux.achat.toLocaleString()} Ar</div>
-                    <div class="taux-valeur">Vente: ${taux.vente.toLocaleString()} Ar</div>
-                    <div class="taux-change ${taux.couleur}">
-                        <i class="fas fa-${taux.couleur === 'positive' ? 'arrow-up' : 'arrow-down'}"></i>
-                        Variation: ${taux.variation}%
-                    </div>
-                </div>
-            `}).join('') || '<div class="item-row">Aucune crypto</div>';
-            
-            const cryptoListe = document.getElementById('cryptos-liste');
-            if (cryptoListe) {
-                cryptoListe.innerHTML = (donnees.cryptos || []).map((crypto, index) => `
-                    <div class="item-row">
-                        <div class="item-info">
-                            <div class="item-nom"><i class="fas fa-coins" style="color:var(--accent);"></i> ${crypto}</div>
-                        </div>
-                        <div class="item-actions">
-                            <button class="btn btn-edit" onclick="ouvrirModal('crypto', ${index})"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-delete" onclick="supprimer('crypto', ${index})"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                `).join('') || '<div class="item-row">Aucune crypto</div>';
-            }
-        }
-
-        function afficherNumerosAttente() {
-            const liste = document.getElementById('numeros-attente-liste');
-            if (!liste) return;
-            
-            let html = '';
-            (donnees.utilisateurs || []).forEach((user) => {
-                if (user.numeros) {
-                    user.numeros.forEach((num, numIndex) => {
-                        if (num.statut === 'en_attente') {
-                            html += `
-                                <div class="numero-item">
-                                    <div class="numero-header">
-                                        <span class="numero-user"><i class="fas fa-user"></i> ${user.nom}</span>
-                                        <span class="numero-status-badge badge-attente">En attente</span>
-                                    </div>
-                                    <div class="numero-info">
-                                        <div><i class="fas fa-user-tag"></i> Nom: ${num.nom}</div>
-                                        <div><i class="fas fa-phone"></i> ${num.numero}</div>
-                                        <div><i class="fas fa-envelope"></i> ${user.email || 'Email non renseigné'}</div>
-                                    </div>
-                                    <div style="display: flex; gap: 10px; margin-top: 10px;">
-                                        <button class="btn btn-approuver" onclick="approuverNumero('${user.email}', ${numIndex})">
-                                            <i class="fas fa-check"></i> Approuver
-                                        </button>
-                                        <button class="btn btn-rejeter" onclick="rejeterNumero('${user.email}', ${numIndex})">
-                                            <i class="fas fa-times"></i> Rejeter
-                                        </button>
-                                    </div>
-                                </div>
-                            `;
-                        }
-                    });
-                }
-            });
-            
-            liste.innerHTML = html || '<div class="item-row">Aucune demande en attente</div>';
-        }
-
-        function afficherNumerosApprouves() {
-            const liste = document.getElementById('numeros-approuves-liste');
-            if (!liste) return;
-            
-            let html = '';
-            (donnees.utilisateurs || []).forEach(user => {
-                if (user.numeros) {
-                    user.numeros.forEach(num => {
-                        if (num.statut === 'approuve') {
-                            html += `
-                                <div class="numero-item">
-                                    <div class="numero-header">
-                                        <span class="numero-user"><i class="fas fa-user"></i> ${user.nom}</span>
-                                        <span class="numero-status-badge badge-approuve">Approuvé</span>
-                                    </div>
-                                    <div class="numero-info">
-                                        <div><i class="fas fa-user-tag"></i> ${num.nom}</div>
-                                        <div><i class="fas fa-phone"></i> ${num.numero}</div>
-                                        <div><i class="fas fa-envelope"></i> ${user.email}</div>
-                                    </div>
-                                </div>
-                            `;
-                        }
-                    });
-                }
-            });
-            
-            liste.innerHTML = html || '<div class="item-row">Aucun numéro approuvé</div>';
-        }
-
-        function approuverNumero(userEmail, numIndex) {
-            const user = donnees.utilisateurs.find(u => u.email === userEmail);
-            if (user && user.numeros && user.numeros[numIndex]) {
-                user.numeros[numIndex].statut = 'approuve';
-                sauvegarderDonnees();
-                alert('✅ Numéro approuvé avec succès !');
-                afficherNumerosAttente();
-                afficherNumerosApprouves();
-            }
-        }
-
-        function rejeterNumero(userEmail, numIndex) {
-            if (!confirm('❌ Rejeter ce numéro ?')) return;
-            const user = donnees.utilisateurs.find(u => u.email === userEmail);
-            if (user && user.numeros && user.numeros[numIndex]) {
-                user.numeros[numIndex].statut = 'rejete';
-                sauvegarderDonnees();
-                alert('Numéro rejeté');
-                afficherNumerosAttente();
-                afficherNumerosApprouves();
-            }
-        }
-
-        function afficherDemandes() {
-            console.log('📝 Affichage des demandes...');
-            console.log('📊 Données actuelles:', donnees);
-            console.log('📝 Demandes dans les données:', donnees.demandes);
-            
-            const type = document.getElementById('filtre-type')?.value || 'all';
-            const statut = document.getElementById('filtre-statut')?.value || 'all';
-            let demandesFiltrees = donnees.demandes || [];
-            
-            console.log('📝 Nombre total de demandes avant filtre:', demandesFiltrees.length);
-            
-            if (type !== 'all') demandesFiltrees = demandesFiltrees.filter(d => d.type === type);
-            if (statut !== 'all') demandesFiltrees = demandesFiltrees.filter(d => d.statut === statut);
-
-            console.log('📝 Nombre de demandes après filtre:', demandesFiltrees.length);
-
-            const liste = document.getElementById('demandes-liste');
-            if (!liste) return;
-            
-            if (demandesFiltrees.length === 0) {
-                liste.innerHTML = '<div class="item-row">Aucune demande</div>';
-                return;
-            }
-            
-            liste.innerHTML = demandesFiltrees.sort((a,b)=>new Date(b.date)-new Date(a.date)).map((d, index) => {
-                // Déterminer la valeur de l'adresse ou du numéro selon le type
-                let infoDestinataire = '';
-                if (d.type === 'ACHAT' && d.adresse) {
-                    infoDestinataire = `
-                        <div style="background: var(--bg-dark); padding: 12px; border-radius: 16px; margin: 10px 0; border-left: 4px solid var(--accent);">
-                            <div style="color: var(--accent); margin-bottom: 5px;"><i class="fas fa-qrcode"></i> ADRESSE DE RÉCEPTION (ACHAT):</div>
-                            <div style="font-family: monospace; word-break: break-all; color: var(--white); background: var(--primary); padding: 10px; border-radius: 12px;">${d.adresse}</div>
-                        </div>
-                    `;
-                } else if (d.type === 'VENTE' && d.numero) {
-                    infoDestinataire = `
-                        <div style="background: var(--bg-dark); padding: 12px; border-radius: 16px; margin: 10px 0; border-left: 4px solid var(--warning);">
-                            <div style="color: var(--warning); margin-bottom: 5px;"><i class="fas fa-user"></i> BÉNÉFICIAIRE (VENTE):</div>
-                            <div style="background: var(--primary); padding: 10px; border-radius: 12px;">
-                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-                                    <i class="fas fa-user-circle" style="color: var(--accent);"></i>
-                                    <span style="font-weight: 600; color: var(--white);">${d.nomNumero || d.utilisateur}</span>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <i class="fas fa-phone-alt" style="color: var(--success);"></i>
-                                    <span style="font-family: monospace; font-size: 1.1rem; color: var(--white);">${d.numero}</span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-                
-                return `
-                <div class="request-item" style="border-left-color: ${d.statut === 'en_attente' ? 'var(--warning)' : d.statut === 'confirme' ? 'var(--success)' : 'var(--danger)'};">
-                    <div class="request-header">
-                        <div>
-                            <span class="request-type type-${d.type}"><i class="fas ${d.type==='ACHAT'?'fa-arrow-down':'fa-arrow-up'}"></i> ${d.type}</span>
-                            <span class="request-status status-${d.statut}">${d.statut}</span>
-                        </div>
-                        <span style="color: var(--text-secondary); font-size: 0.8rem;">
-                            <i class="far fa-clock"></i> ${new Date(d.date).toLocaleString()}
-                        </span>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0;">
-                        <div>
-                            <div style="color: var(--text-secondary); font-size: 0.8rem;">Client</div>
-                            <div style="font-weight: 600;">${d.utilisateur}</div>
-                            <div style="font-size: 0.9rem;">📧 ${d.email || 'N/A'}</div>
-                            ${d.avecPIN ? '<div style="color: var(--success);"><i class="fas fa-check-circle"></i> Validé par PIN</div>' : ''}
-                        </div>
-                        <div>
-                            <div style="color: var(--text-secondary); font-size: 0.8rem;">Transaction</div>
-                            <div style="font-weight: 600;">${d.montant} ${d.type === 'ACHAT' ? 'Ar' : d.crypto}</div>
-                            <div style="font-size: 0.9rem;">Réseau: ${d.reseau || 'N/A'}</div>
-                            ${d.operateur ? `<div style="font-size: 0.9rem;"><i class="fas fa-sim-card"></i> Opérateur: ${d.operateur}</div>` : ''}
-                            ${d.portefeuille ? `<div style="font-size: 0.9rem;"><i class="fas fa-wallet"></i> Portefeuille: ${d.portefeuille}</div>` : ''}
-                        </div>
-                    </div>
-                    
-                    <!-- Affichage de l'adresse pour ACHAT ou du numéro pour VENTE -->
-                    ${infoDestinataire}
-                    
-                    <!-- Affichage du TXID saisi par l'utilisateur -->
-                    ${d.txid ? `
-                    <div style="background: var(--bg-dark); padding: 12px; border-radius: 16px; margin: 10px 0; border-left: 4px solid var(--accent);">
-                        <div style="color: var(--accent); margin-bottom: 5px;"><i class="fas fa-hashtag"></i> TXID de transaction:</div>
-                        <div style="font-family: monospace; word-break: break-all; color: var(--white); background: var(--primary); padding: 10px; border-radius: 12px;">${d.txid}</div>
-                    </div>
-                    ` : ''}
-                    
-                    ${d.messagePaiement ? `
-                    <div style="background: var(--primary); padding: 12px; border-radius: 16px; margin: 10px 0; border: 1px solid var(--gray-300);">
-                        <div style="color: var(--warning); margin-bottom: 5px;"><i class="fas fa-comment"></i> Message de paiement:</div>
-                        <div style="word-break: break-all;">${d.messagePaiement}</div>
-                    </div>
-                    ` : ''}
-                    
-                    ${d.statut === 'en_attente' ? `
-                    <div style="display: flex; gap: 10px; margin-top: 15px;">
-                        <button class="btn btn-approuver" onclick="approuverDemande('${d.id}')">
-                            <i class="fas fa-check-circle"></i> APPROUVER
-                        </button>
-                        <button class="btn btn-rejeter" onclick="rejeterDemande('${d.id}')">
-                            <i class="fas fa-times-circle"></i> REJETER
-                        </button>
-                    </div>
-                    ` : `
-                    <div style="margin-top: 10px; text-align: right;">
-                        <span style="color: var(--text-secondary); font-size: 0.9rem;">
-                            Traité le ${new Date(d.dateModification || d.date).toLocaleString()}
-                        </span>
-                    </div>
-                    `}
-                </div>
-            `}).join('');
-        }
-
-        function approuverDemande(id) {
-            if (!confirm('✅ Approuver cette demande ? Le client sera notifié.')) return;
-            
-            const demande = donnees.demandes.find(d => d.id === id);
-            if (demande) {
-                demande.statut = 'confirme';
-                demande.dateModification = new Date().toISOString();
-                
-                sauvegarderDonnees();
-                afficherDemandes();
-                
-                alert('Demande approuvée avec succès !');
-            }
-        }
-
-        function rejeterDemande(id) {
-            if (!confirm('❌ Rejeter cette demande ? Le client sera notifié.')) return;
-            
-            const demande = donnees.demandes.find(d => d.id === id);
-            if (demande) {
-                demande.statut = 'rejete';
-                demande.dateModification = new Date().toISOString();
-                
-                sauvegarderDonnees();
-                afficherDemandes();
-                
-                alert('Demande rejetée.');
-            }
+            afficherNews();
+            alert('✅ Actualité supprimée');
         }
 
         function ouvrirModal(type, index = -1, cryptoNom = null) {
@@ -1935,7 +1402,7 @@
                     
                 case 'taux':
                     const crypto = cryptoNom || (modalMode === 'modification' ? Object.keys(donnees.taux)[index] : '');
-                    const taux = crypto && donnees.taux[crypto] ? donnees.taux[crypto] : { achat: 0, vente: 0, variation: "0", couleur: "positive" };
+                    const taux = crypto && donnees.taux[crypto] ? donnees.taux[crypto] : { prixUSD: 0, prixMGA: 0, variation: "0", couleur: "positive" };
                     
                     titre.innerHTML = `<i class="fas fa-chart-line"></i> Modifier taux ${crypto}`;
                     html = `
@@ -1943,8 +1410,18 @@
                         <div style="margin-bottom: 15px; color: var(--text-secondary);">
                             Crypto: <strong>${crypto}</strong>
                         </div>
-                        <input type="number" id="modal-taux-achat" placeholder="Taux achat (Ar)" value="${taux.achat || 0}">
-                        <input type="number" id="modal-taux-vente" placeholder="Taux vente (Ar)" value="${taux.vente || 0}">
+                        <div style="background: var(--bg-dark); padding: 15px; border-radius: 20px; margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span>Prix USD:</span>
+                                <span style="font-weight: 600;">$${taux.prixUSD.toFixed(2)}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Prix MGA:</span>
+                                <span style="font-weight: 600; color: var(--warning);">${taux.prixMGA.toLocaleString()} Ar</span>
+                            </div>
+                        </div>
+                        <input type="number" id="modal-prix-usd" placeholder="Prix USD" step="0.01" value="${taux.prixUSD || 0}">
+                        <input type="number" id="modal-prix-mga" placeholder="Prix MGA" value="${taux.prixMGA || 0}">
                         <input type="text" id="modal-variation" placeholder="Variation %" value="${taux.variation || '0'}">
                         <select id="modal-couleur">
                             <option value="positive" ${taux.couleur === 'positive' ? 'selected' : ''}>Positif (+)</option>
@@ -1993,7 +1470,6 @@
                     if (!nom) { alert('Nom requis'); return; }
                     const crypto = document.getElementById('modal-crypto')?.value;
                     const fraisReseau = parseFloat(document.getElementById('modal-frais-reseau')?.value) || 0;
-                    
                     if (modalMode === 'ajout') {
                         if (!donnees.reseaux) donnees.reseaux = [];
                         donnees.reseaux.push({ nom, crypto, fraisReseau });
@@ -2007,11 +1483,19 @@
                     if (modalMode === 'ajout') {
                         if (!donnees.cryptos.includes(nom)) {
                             donnees.cryptos.push(nom);
-                            donnees.taux[nom] = { achat: 0, vente: 0, variation: "0", couleur: "positive" };
+                            if (!donnees.taux[nom]) {
+                                donnees.taux[nom] = { 
+                                    prixUSD: nom === 'USDT' ? 1 : 0, 
+                                    prixMGA: nom === 'USDT' ? donnees.usdMGA : 0, 
+                                    variation: "0", 
+                                    couleur: "positive",
+                                    source: 'manual'
+                                };
+                            }
                         }
                     } else {
                         const ancienNom = donnees.cryptos[modalIndex];
-                        if (ancienNom !== nom) {
+                        if (ancienNom !== nom && donnees.taux[ancienNom]) {
                             donnees.taux[nom] = donnees.taux[ancienNom];
                             delete donnees.taux[ancienNom];
                         }
@@ -2022,47 +1506,571 @@
                 case 'taux': {
                     const crypto = document.getElementById('modal-crypto')?.value;
                     if (crypto) {
+                        const prixUSD = parseFloat(document.getElementById('modal-prix-usd')?.value) || 0;
+                        const prixMGA = parseFloat(document.getElementById('modal-prix-mga')?.value) || 0;
+                        
                         donnees.taux[crypto] = {
-                            achat: parseFloat(document.getElementById('modal-taux-achat')?.value) || 0,
-                            vente: parseFloat(document.getElementById('modal-taux-vente')?.value) || 0,
+                            prixUSD: prixUSD,
+                            prixMGA: prixMGA,
                             variation: document.getElementById('modal-variation')?.value || "0",
-                            couleur: document.getElementById('modal-couleur')?.value || "positive"
+                            couleur: document.getElementById('modal-couleur')?.value || "positive",
+                            lastUpdate: new Date().toISOString(),
+                            source: 'manual'
                         };
-                    }
-                    break;
-                }
-                case 'utilisateur': {
-                    const email = document.getElementById('modal-email')?.value;
-                    if (donnees.utilisateurs[modalIndex]) {
-                        donnees.utilisateurs[modalIndex].nom = nom;
-                        donnees.utilisateurs[modalIndex].email = email;
-                        // Plus de modification de mot de passe ici
-                    }
-                    break;
-                }
-                case 'pin': {
-                    const pin = document.getElementById('modal-pin')?.value;
-                    const bloque = document.getElementById('modal-bloque')?.checked;
-                    const actif = document.getElementById('modal-actif')?.checked;
-                    
-                    if (donnees.utilisateurs[modalIndex]) {
-                        if (!donnees.utilisateurs[modalIndex].codePIN) {
-                            donnees.utilisateurs[modalIndex].codePIN = {};
-                        }
                         
-                        if (pin && pin.length === 6 && /^\d+$/.test(pin)) {
-                            donnees.utilisateurs[modalIndex].codePIN.hash = btoa(pin);
+                        // Si mode automatique, passer en manuel
+                        if (donnees.tauxMode === 'auto') {
+                            setTauxMode('manual');
                         }
-                        
-                        donnees.utilisateurs[modalIndex].codePIN.bloque = bloque || false;
-                        donnees.utilisateurs[modalIndex].codePIN.actif = actif || false;
-                        donnees.utilisateurs[modalIndex].codePIN.dateModification = new Date().toISOString();
                     }
                     break;
                 }
             }
             sauvegarderDonnees();
             fermerModal();
+        }
+
+        function chargerDonnees() {
+            document.body.style.opacity = '0.7';
+            
+            database.ref('donnees').once('value')
+                .then((snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        donnees = data;
+                        if (!donnees.taux) donnees.taux = {};
+                        if (!donnees.news) donnees.news = [];
+                        if (!donnees.tauxMode) donnees.tauxMode = 'auto';
+                        if (!donnees.usdMGA) donnees.usdMGA = 4700;
+                        
+                        tauxUSD_MGA = donnees.usdMGA;
+                    } else {
+                        donnees = obtenirDonneesParDefaut();
+                        sauvegarderDonnees();
+                    }
+                    
+                    document.body.style.opacity = '1';
+                    mettreAJourStats();
+                    afficherTout();
+                    
+                    document.getElementById('usd-mga-display').textContent = donnees.usdMGA.toLocaleString();
+                    
+                })
+                .catch((error) => {
+                    console.error('❌ Erreur chargement Firebase:', error);
+                    donnees = obtenirDonneesParDefaut();
+                    document.body.style.opacity = '1';
+                    afficherTout();
+                });
+        }
+
+        function obtenirDonneesParDefaut() {
+            return {
+                utilisateurs: [],
+                portefeuilles: [
+                    { nom: "Principal", reponse: "Portefeuille principal", messageConfirmation: "Envoyez à principal@typh.com", reseau: "BEP20" },
+                    { nom: "Épargne", reponse: "Portefeuille épargne", messageConfirmation: "Envoyez à epargne123", reseau: "ERC20" }
+                ],
+                operateurs: [
+                    { nom: "MVola", messageConfirmation: "034 51 547 81" },
+                    { nom: "Orange Money", messageConfirmation: "034 99 999 99" },
+                    { nom: "Airtel Money", messageConfirmation: "033 88 888 88" }
+                ],
+                cryptos: ["USDT", "BTC", "ETH", "BNB", "LTC", "SOL", "TRX", "DOGE", "MATIC", "SUI", "XRP"],
+                reseaux: [
+                    { nom: "BEP20", crypto: "USDT", fraisReseau: 0.5 },
+                    { nom: "ERC20", crypto: "USDT", fraisReseau: 1.2 },
+                    { nom: "TRC20", crypto: "USDT", fraisReseau: 0.8 }
+                ],
+                frais: { achat: 1.5, vente: 2.0 },
+                pause: { achat: false, vente: false },
+                taux: {},
+                demandes: [],
+                news: [
+                    {
+                        id: 'NEWS-' + Date.now() + '-welcome',
+                        titre: 'Bienvenue sur TYPH X-CHAIN',
+                        contenu: 'Nous sommes ravis de vous accueillir sur notre plateforme d\'échange crypto. Profitez de nos meilleurs taux en direct depuis Binance !',
+                        date: new Date().toISOString(),
+                        auteur: 'Typh Exchange',
+                        important: true,
+                        statut: true
+                    }
+                ],
+                tauxMode: 'auto',
+                usdMGA: 4700
+            };
+        }
+
+        function sauvegarderDonnees() {
+            database.ref('donnees').set(donnees)
+                .then(() => {
+                    console.log('✅ Données synchronisées avec Firebase');
+                    localStorage.setItem('typhData', JSON.stringify(donnees));
+                })
+                .catch((error) => {
+                    console.error('❌ Erreur synchronisation Firebase:', error);
+                    localStorage.setItem('typhData', JSON.stringify(donnees));
+                });
+            
+            mettreAJourStats();
+            afficherTout();
+        }
+
+        function afficherTout() {
+            afficherPortefeuilles();
+            afficherOperateurs();
+            afficherReseaux();
+            afficherTauxSimplifies();
+            afficherNumerosAttente();
+            afficherNumerosApprouves();
+            afficherDemandes();
+            afficherUtilisateurs();
+            afficherNews();
+            afficherTransactions(); // Nouvelle fonction
+            
+            if (donnees.frais) {
+                document.getElementById('frais-achat-display').textContent = donnees.frais.achat + '%';
+                document.getElementById('frais-vente-display').textContent = donnees.frais.vente + '%';
+            }
+            
+            document.getElementById('mode-auto').classList.toggle('active', donnees.tauxMode === 'auto');
+            document.getElementById('mode-manual').classList.toggle('active', donnees.tauxMode === 'manual');
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('gestion-tab').style.display = 'none';
+            document.getElementById('taux-tab').style.display = 'none';
+            document.getElementById('pause-tab').style.display = 'none';
+            document.getElementById('utilisateurs-tab').style.display = 'none';
+            document.getElementById('numeros-tab').style.display = 'none';
+            document.getElementById('demandes-tab').style.display = 'none';
+            document.getElementById('news-tab').style.display = 'none';
+            document.getElementById('transactions-tab').style.display = 'none';
+            
+            if (tab === 'gestion') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('gestion-tab').style.display = 'block';
+            } else if (tab === 'taux') {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('taux-tab').style.display = 'block';
+                afficherTauxSimplifies();
+            } else if (tab === 'pause') {
+                document.querySelectorAll('.tab')[2].classList.add('active');
+                document.getElementById('pause-tab').style.display = 'block';
+                mettreAJourPauseUI();
+            } else if (tab === 'utilisateurs') {
+                document.querySelectorAll('.tab')[3].classList.add('active');
+                document.getElementById('utilisateurs-tab').style.display = 'block';
+                afficherUtilisateurs();
+            } else if (tab === 'numeros') {
+                document.querySelectorAll('.tab')[4].classList.add('active');
+                document.getElementById('numeros-tab').style.display = 'block';
+                afficherNumerosAttente();
+                afficherNumerosApprouves();
+            } else if (tab === 'demandes') {
+                document.querySelectorAll('.tab')[5].classList.add('active');
+                document.getElementById('demandes-tab').style.display = 'block';
+                afficherDemandes();
+            } else if (tab === 'news') {
+                document.querySelectorAll('.tab')[6].classList.add('active');
+                document.getElementById('news-tab').style.display = 'block';
+                afficherNews();
+                annulerEditionNews();
+            } else if (tab === 'transactions') {
+                document.querySelectorAll('.tab')[7].classList.add('active');
+                document.getElementById('transactions-tab').style.display = 'block';
+                afficherTransactions();
+                calculerStatsTransactions();
+            }
+        }
+
+        function afficherPortefeuilles() {
+            const liste = document.getElementById('portefeuilles-liste');
+            if (!liste) return;
+            liste.innerHTML = (donnees.portefeuilles || []).map((p, index) => `
+                <div class="item-row">
+                    <div class="item-info">
+                        <div class="item-nom"><i class="fas fa-wallet" style="color:var(--accent);"></i> ${p.nom}</div>
+                        <div class="item-reponse">${(p.reponse || '').substring(0,50)}...</div>
+                        <div style="font-size:0.8rem; margin-top:5px; color:var(--warning);">
+                            <i class="fas fa-comment"></i> Message: ${p.messageConfirmation || 'Aucun'}
+                        </div>
+                        <div style="font-size:0.8rem; margin-top:5px; color:var(--accent);">
+                            <i class="fas fa-network-wired"></i> Réseau: ${p.reseau || 'Non défini'}
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn btn-edit" onclick="ouvrirModal('portefeuille', ${index})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-delete" onclick="supprimer('portefeuille', ${index})"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('') || '<div class="item-row">Aucun portefeuille</div>';
+        }
+
+        function afficherOperateurs() {
+            const liste = document.getElementById('operateurs-liste');
+            if (!liste) return;
+            liste.innerHTML = (donnees.operateurs || []).map((op, index) => `
+                <div class="item-row">
+                    <div class="item-info">
+                        <div class="item-nom"><i class="fas fa-sim-card" style="color:var(--accent);"></i> ${op.nom}</div>
+                        <div style="font-size:0.8rem; margin-top:5px; color:var(--warning);">
+                            <i class="fas fa-comment"></i> Message: ${op.messageConfirmation || 'Aucun'}
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn btn-edit" onclick="ouvrirModal('operateur', ${index})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-delete" onclick="supprimer('operateur', ${index})"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('') || '<div class="item-row">Aucun opérateur</div>';
+        }
+
+        function afficherReseaux() {
+            const liste = document.getElementById('reseaux-liste');
+            if (!liste) return;
+            liste.innerHTML = (donnees.reseaux || []).map((reseau, index) => `
+                <div class="reseau-item">
+                    <div class="reseau-header">
+                        <span><i class="fas fa-network-wired" style="color:var(--accent);"></i> <strong>${reseau.nom}</strong></span>
+                        <div class="item-actions">
+                            <button class="btn btn-edit" onclick="ouvrirModal('reseau', ${index})"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-delete" onclick="supprimer('reseau', ${index})"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <div style="margin-top: 8px;">
+                        <span style="color: var(--text-secondary);">Crypto: </span>${reseau.crypto}<br>
+                        <span style="color: var(--text-secondary);">Frais réseau: </span>${reseau.fraisReseau || 0}%
+                    </div>
+                </div>
+            `).join('') || '<div class="item-row">Aucun réseau configuré</div>';
+        }
+
+        function afficherNumerosAttente() {
+            const liste = document.getElementById('numeros-attente-liste');
+            if (!liste) return;
+            
+            let html = '';
+            (donnees.utilisateurs || []).forEach((user) => {
+                if (user.numeros) {
+                    user.numeros.forEach((num, numIndex) => {
+                        if (num.statut === 'en_attente') {
+                            html += `
+                                <div class="numero-item">
+                                    <div class="numero-header">
+                                        <span class="numero-user"><i class="fas fa-user"></i> ${user.nom}</span>
+                                        <span class="numero-status-badge badge-attente">En attente</span>
+                                    </div>
+                                    <div class="numero-info">
+                                        <div><i class="fas fa-user-tag"></i> Nom: ${num.nom}</div>
+                                        <div><i class="fas fa-phone"></i> ${num.numero}</div>
+                                        <div><i class="fas fa-envelope"></i> ${user.email || 'Email non renseigné'}</div>
+                                    </div>
+                                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                        <button class="btn btn-approuver" onclick="approuverNumero('${user.email}', ${numIndex})">
+                                            <i class="fas fa-check"></i> Approuver
+                                        </button>
+                                        <button class="btn btn-rejeter" onclick="rejeterNumero('${user.email}', ${numIndex})">
+                                            <i class="fas fa-times"></i> Rejeter
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+            });
+            
+            liste.innerHTML = html || '<div class="item-row">Aucune demande en attente</div>';
+        }
+
+        function afficherNumerosApprouves() {
+            const liste = document.getElementById('numeros-approuves-liste');
+            if (!liste) return;
+            
+            let html = '';
+            (donnees.utilisateurs || []).forEach(user => {
+                if (user.numeros) {
+                    user.numeros.forEach(num => {
+                        if (num.statut === 'approuve') {
+                            html += `
+                                <div class="numero-item">
+                                    <div class="numero-header">
+                                        <span class="numero-user"><i class="fas fa-user"></i> ${user.nom}</span>
+                                        <span class="numero-status-badge badge-approuve">Approuvé</span>
+                                    </div>
+                                    <div class="numero-info">
+                                        <div><i class="fas fa-user-tag"></i> ${num.nom}</div>
+                                        <div><i class="fas fa-phone"></i> ${num.numero}</div>
+                                        <div><i class="fas fa-envelope"></i> ${user.email}</div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+            });
+            
+            liste.innerHTML = html || '<div class="item-row">Aucun numéro approuvé</div>';
+        }
+
+        function approuverNumero(userEmail, numIndex) {
+            const user = donnees.utilisateurs?.find(u => u.email === userEmail);
+            if (user && user.numeros && user.numeros[numIndex]) {
+                user.numeros[numIndex].statut = 'approuve';
+                sauvegarderDonnees();
+                alert('✅ Numéro approuvé !');
+                afficherNumerosAttente();
+                afficherNumerosApprouves();
+            }
+        }
+
+        function rejeterNumero(userEmail, numIndex) {
+            if (!confirm('❌ Rejeter ce numéro ?')) return;
+            const user = donnees.utilisateurs?.find(u => u.email === userEmail);
+            if (user && user.numeros && user.numeros[numIndex]) {
+                user.numeros[numIndex].statut = 'rejete';
+                sauvegarderDonnees();
+                alert('Numéro rejeté');
+                afficherNumerosAttente();
+                afficherNumerosApprouves();
+            }
+        }
+
+        function afficherDemandes() {
+            const liste = document.getElementById('demandes-liste');
+            if (!liste) return;
+            
+            const demandes = donnees.demandes || [];
+            
+            if (demandes.length === 0) {
+                liste.innerHTML = '<div class="item-row">Aucune demande</div>';
+                return;
+            }
+            
+            liste.innerHTML = demandes.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(d => `
+                <div class="request-item">
+                    <div class="request-header">
+                        <div>
+                            <span class="request-type type-${d.type}"><i class="fas ${d.type==='ACHAT'?'fa-arrow-down':'fa-arrow-up'}"></i> ${d.type}</span>
+                            <span class="request-status status-${d.statut}">${d.statut}</span>
+                        </div>
+                        <span style="color: var(--text-secondary); font-size: 0.8rem;">
+                            <i class="far fa-clock"></i> ${new Date(d.date).toLocaleString()}
+                        </span>
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <div>Client: <strong>${d.utilisateur}</strong></div>
+                        <div>Montant: ${d.montant} ${d.type === 'ACHAT' ? 'Ar' : d.crypto}</div>
+                        ${d.txid ? `<div style="font-size:0.8rem;">TXID: ${d.txid.substring(0,20)}...</div>` : ''}
+                    </div>
+                    ${d.statut === 'en_attente' ? `
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button class="btn btn-approuver" onclick="approuverDemande('${d.id}')">Approuver</button>
+                        <button class="btn btn-rejeter" onclick="rejeterDemande('${d.id}')">Rejeter</button>
+                    </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function approuverDemande(id) {
+            if (!confirm('✅ Approuver cette demande ?')) return;
+            const demande = donnees.demandes?.find(d => d.id === id);
+            if (demande) {
+                demande.statut = 'confirme';
+                demande.dateModification = new Date().toISOString();
+                if (!demande.historique) demande.historique = [];
+                demande.historique.push({
+                    date: new Date().toISOString(),
+                    action: 'APPROUVEE_PAR_ADMIN',
+                    details: 'Demande approuvée par admin'
+                });
+                sauvegarderDonnees();
+                afficherDemandes();
+                alert('Demande approuvée !');
+            }
+        }
+
+        function rejeterDemande(id) {
+            if (!confirm('❌ Rejeter cette demande ?')) return;
+            const demande = donnees.demandes?.find(d => d.id === id);
+            if (demande) {
+                demande.statut = 'rejete';
+                demande.dateModification = new Date().toISOString();
+                if (!demande.historique) demande.historique = [];
+                demande.historique.push({
+                    date: new Date().toISOString(),
+                    action: 'REJETEE_PAR_ADMIN',
+                    details: 'Demande rejetée par admin'
+                });
+                sauvegarderDonnees();
+                afficherDemandes();
+                alert('Demande rejetée.');
+            }
+        }
+
+        function afficherUtilisateurs() {
+            const liste = document.getElementById('utilisateurs-liste');
+            if (!liste) return;
+
+            let utilisateursFiltres = donnees.utilisateurs || [];
+            if (rechercheUtilisateurs) {
+                utilisateursFiltres = utilisateursFiltres.filter(u => 
+                    u.nom.toLowerCase().includes(rechercheUtilisateurs) || 
+                    (u.email && u.email.toLowerCase().includes(rechercheUtilisateurs))
+                );
+            }
+
+            if (utilisateursFiltres.length === 0) {
+                liste.innerHTML = '<div class="item-row">Aucun utilisateur</div>';
+                return;
+            }
+
+            liste.innerHTML = utilisateursFiltres.map((user, index) => {
+                const pinStatus = user.codePIN ? 
+                    (user.codePIN.bloque ? 'bloque' : (user.codePIN.actif ? 'actif' : 'inactif')) : 'inactif';
+                
+                return `
+                <div class="user-item">
+                    <div class="user-header">
+                        <span class="user-name"><i class="fas fa-user-circle" style="color:var(--accent);"></i> ${user.nom}</span>
+                        <div class="item-actions">
+                            <button class="btn btn-edit" onclick="editerUtilisateur(${index})"><i class="fas fa-edit"></i></button>
+                        </div>
+                    </div>
+                    <div class="user-email"><i class="fas fa-envelope"></i> ${user.email || 'Email non renseigné'}</div>
+                    <div class="user-detail">
+                        <span><i class="fas fa-calendar"></i> ${new Date(user.dateInscription).toLocaleDateString()}</span>
+                        <span><i class="fas fa-phone"></i> ${user.numeros?.length || 0} numéro(s)</span>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function editerUtilisateur(index) {
+            const user = donnees.utilisateurs?.[index];
+            if (user) {
+                modalType = 'utilisateur';
+                modalIndex = index;
+                modalMode = 'modification';
+                
+                const modal = document.getElementById('modal-admin');
+                const titre = document.getElementById('modal-titre');
+                titre.innerHTML = '<i class="fas fa-user-edit"></i> Modifier utilisateur';
+                
+                document.getElementById('modal-champs').innerHTML = `
+                    <input type="text" id="modal-nom" placeholder="Nom complet" value="${user.nom}">
+                    <input type="email" id="modal-email" placeholder="Email" value="${user.email || ''}">
+                `;
+                
+                modal.classList.add('active');
+            }
+        }
+
+        function mettreAJourStats() {
+            const stats = {
+                utilisateurs: donnees.utilisateurs?.length || 0,
+                numerosAttente: 0,
+                demandes: donnees.demandes?.length || 0,
+                transactions: donnees.demandes?.filter(d => d.statut === 'confirme').length || 0
+            };
+
+            donnees.utilisateurs?.forEach(user => {
+                if (user.numeros) {
+                    stats.numerosAttente += user.numeros.filter(n => n.statut === 'en_attente').length;
+                }
+            });
+
+            document.getElementById('stats-utilisateurs').textContent = stats.utilisateurs;
+            document.getElementById('stats-numeros-attente').textContent = stats.numerosAttente;
+            document.getElementById('stats-demandes').textContent = stats.demandes;
+            document.getElementById('stats-transactions').textContent = stats.transactions;
+        }
+
+        function filtrerUtilisateurs() {
+            rechercheUtilisateurs = document.getElementById('recherche-utilisateur')?.value.toLowerCase() || '';
+            afficherUtilisateurs();
+        }
+
+        function mettreAJourPauseUI() {
+            const achatStatus = document.getElementById('achat-status-text');
+            const venteStatus = document.getElementById('vente-status-text');
+            const btnAchat = document.getElementById('btn-pause-achat');
+            const btnVente = document.getElementById('btn-pause-vente');
+            
+            if (achatStatus) {
+                if (donnees.pause?.achat) {
+                    achatStatus.innerHTML = 'Actuellement: <span style="color: var(--danger);">EN PAUSE</span>';
+                    btnAchat.innerHTML = '<i class="fas fa-play"></i> ACTIVER';
+                    btnAchat.className = 'btn btn-play';
+                } else {
+                    achatStatus.innerHTML = 'Actuellement: <span style="color: var(--success);">Actif</span>';
+                    btnAchat.innerHTML = '<i class="fas fa-pause"></i> Mettre en PAUSE';
+                    btnAchat.className = 'btn btn-pause';
+                }
+            }
+            
+            if (venteStatus) {
+                if (donnees.pause?.vente) {
+                    venteStatus.innerHTML = 'Actuellement: <span style="color: var(--danger);">EN PAUSE</span>';
+                    btnVente.innerHTML = '<i class="fas fa-play"></i> ACTIVER';
+                    btnVente.className = 'btn btn-play';
+                } else {
+                    venteStatus.innerHTML = 'Actuellement: <span style="color: var(--success);">Actif</span>';
+                    btnVente.innerHTML = '<i class="fas fa-pause"></i> Mettre en PAUSE';
+                    btnVente.className = 'btn btn-pause';
+                }
+            }
+        }
+
+        function togglePause(type) {
+            if (!donnees.pause) donnees.pause = { achat: false, vente: false };
+            donnees.pause[type] = !donnees.pause[type];
+            sauvegarderDonnees();
+            mettreAJourPauseUI();
+            alert(`✅ Section ${type.toUpperCase()} ${donnees.pause[type] ? 'EN PAUSE' : 'ACTIVÉE'}`);
+        }
+
+        function modifierFrais(type) {
+            const input = document.getElementById(`frais-${type}-input`);
+            const valeur = parseFloat(input.value);
+            
+            if (isNaN(valeur) || valeur < 0 || valeur > 100) {
+                alert('Veuillez entrer un pourcentage valide (0-100)');
+                return;
+            }
+            
+            donnees.frais[type] = valeur;
+            sauvegarderDonnees();
+            document.getElementById(`frais-${type}-display`).textContent = valeur + '%';
+            input.value = '';
+            alert(`✅ Frais ${type} modifié à ${valeur}%`);
+        }
+
+        function verifierConnexionFirebase() {
+            database.ref('.info/connected').once('value')
+                .then((snap) => {
+                    if (snap.val() === true) {
+                        alert('✅ Connecté à Firebase');
+                    } else {
+                        alert('❌ Déconnecté de Firebase');
+                    }
+                })
+                .catch((error) => {
+                    alert('❌ Erreur: ' + error.message);
+                });
+        }
+
+        function exporterDonnees() {
+            const dataStr = JSON.stringify(donnees, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', 'typh-data-export.json');
+            linkElement.click();
         }
 
         function supprimer(type, index) {
@@ -2082,6 +2090,375 @@
             sauvegarderDonnees();
         }
 
+        // NOUVELLES FONCTIONS POUR L'ONGLET TRANSACTIONS
+        function afficherTransactions() {
+            const liste = document.getElementById('transactions-liste');
+            if (!liste) return;
+
+            const demandes = donnees.demandes || [];
+            
+            if (demandes.length === 0) {
+                liste.innerHTML = '<div class="item-row">Aucune transaction</div>';
+                return;
+            }
+
+            // Appliquer les filtres
+            let transactionsFiltrees = filtrerTransactionsListe(demandes);
+
+            liste.innerHTML = transactionsFiltrees.sort((a, b) => new Date(b.date) - new Date(a.date)).map(tx => {
+                // Calculer les montants pour affichage
+                const montantRecu = tx.type === 'ACHAT' 
+                    ? `${(parseFloat(tx.montant) / (donnees.taux[tx.crypto]?.prixMGA || 1)).toFixed(4)} ${tx.crypto}`
+                    : `${(parseFloat(tx.montant) * (donnees.taux[tx.crypto]?.prixMGA || 1)).toLocaleString()} Ar`;
+
+                return `
+                <div class="transaction-item ${tx.statut}" onclick="voirDetailsTransaction('${tx.id}')">
+                    <div class="transaction-header">
+                        <span class="badge-type ${tx.type}">
+                            <i class="fas ${tx.type === 'ACHAT' ? 'fa-arrow-down' : 'fa-arrow-up'}"></i> ${tx.type}
+                        </span>
+                        <span class="badge-statut ${tx.statut}">${tx.statut}</span>
+                        <span class="transaction-date">
+                            <i class="far fa-clock"></i> ${new Date(tx.date).toLocaleString()}
+                        </span>
+                    </div>
+                    
+                    <div class="transaction-user">
+                        <i class="fas fa-user"></i> ${tx.utilisateur} (${tx.email})
+                    </div>
+                    
+                    <div class="transaction-details">
+                        ${tx.type === 'ACHAT' ? `
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-phone-alt"></i> Opérateur</span>
+                                <span class="detail-value">${tx.operateur || 'N/A'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-coins"></i> Montant envoyé</span>
+                                <span class="detail-value">${tx.montant} Ar</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-coins"></i> Crypto reçue</span>
+                                <span class="detail-value">${montantRecu}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-network-wired"></i> Réseau</span>
+                                <span class="detail-value">${tx.reseau || 'N/A'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-qrcode"></i> Adresse</span>
+                                <span class="detail-value">${tx.adresse ? tx.adresse.substring(0,15)+'...' : 'N/A'}</span>
+                            </div>
+                        ` : `
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-coins"></i> Crypto envoyée</span>
+                                <span class="detail-value">${tx.montant} ${tx.crypto}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-network-wired"></i> Réseau</span>
+                                <span class="detail-value">${tx.reseau || 'N/A'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-phone-alt"></i> Opérateur</span>
+                                <span class="detail-value">${tx.operateur || 'N/A'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-arrow-right"></i> Montant reçu</span>
+                                <span class="detail-value">${montantRecu}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-user"></i> Bénéficiaire</span>
+                                <span class="detail-value">${tx.nomNumero || tx.utilisateur}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-phone-alt"></i> Numéro</span>
+                                <span class="detail-value">${tx.numero || 'N/A'}</span>
+                            </div>
+                        `}
+                    </div>
+                    
+                    <div class="transaction-txid">
+                        <i class="fas fa-hashtag"></i> TXID: ${tx.txid || 'Non fourni'}
+                    </div>
+                    
+                    <div class="transaction-footer">
+                        <button class="btn btn-view" onclick="event.stopPropagation(); voirDetailsTransaction('${tx.id}')">
+                            <i class="fas fa-eye"></i> Voir détails
+                        </button>
+                        ${tx.statut === 'en_attente' ? `
+                            <button class="btn btn-success" onclick="event.stopPropagation(); approuverDemande('${tx.id}')">
+                                <i class="fas fa-check"></i> Approuver
+                            </button>
+                            <button class="btn btn-delete" onclick="event.stopPropagation(); rejeterDemande('${tx.id}')">
+                                <i class="fas fa-times"></i> Rejeter
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function filtrerTransactionsListe(demandes) {
+            const type = document.getElementById('filtre-type-transaction')?.value || 'all';
+            const statut = document.getElementById('filtre-statut-transaction')?.value || 'all';
+            const recherche = (document.getElementById('recherche-transaction')?.value || '').toLowerCase();
+            const periode = document.getElementById('filtre-date-transaction')?.value || 'all';
+
+            let filtrees = [...demandes];
+
+            // Filtre par type
+            if (type !== 'all') {
+                filtrees = filtrees.filter(tx => tx.type === type);
+            }
+
+            // Filtre par statut
+            if (statut !== 'all') {
+                filtrees = filtrees.filter(tx => tx.statut === statut);
+            }
+
+            // Filtre par recherche
+            if (recherche) {
+                filtrees = filtrees.filter(tx => 
+                    (tx.utilisateur && tx.utilisateur.toLowerCase().includes(recherche)) ||
+                    (tx.email && tx.email.toLowerCase().includes(recherche)) ||
+                    (tx.txid && tx.txid.toLowerCase().includes(recherche)) ||
+                    (tx.montant && tx.montant.toString().includes(recherche))
+                );
+            }
+
+            // Filtre par date
+            const maintenant = new Date();
+            const debutAujourdhui = new Date(maintenant.setHours(0,0,0,0));
+            const debutSemaine = new Date(maintenant.setDate(maintenant.getDate() - maintenant.getDay()));
+            const debutMois = new Date(maintenant.getFullYear(), maintenant.getMonth(), 1);
+
+            if (periode === 'today') {
+                filtrees = filtrees.filter(tx => new Date(tx.date) >= debutAujourdhui);
+            } else if (periode === 'week') {
+                filtrees = filtrees.filter(tx => new Date(tx.date) >= debutSemaine);
+            } else if (periode === 'month') {
+                filtrees = filtrees.filter(tx => new Date(tx.date) >= debutMois);
+            }
+
+            return filtrees;
+        }
+
+        function calculerStatsTransactions() {
+            const demandes = donnees.demandes || [];
+            
+            const total = demandes.length;
+            const enAttente = demandes.filter(d => d.statut === 'en_attente').length;
+            
+            // Calculer les volumes
+            let volumeAr = 0;
+            let volumeCrypto = 0;
+            
+            demandes.forEach(d => {
+                if (d.type === 'ACHAT') {
+                    volumeAr += parseFloat(d.montant) || 0;
+                } else {
+                    volumeCrypto += parseFloat(d.montant) || 0;
+                }
+            });
+
+            document.getElementById('stats-total').textContent = total;
+            document.getElementById('stats-volume-ar').textContent = volumeAr.toLocaleString() + ' Ar';
+            document.getElementById('stats-volume-crypto').textContent = volumeCrypto.toFixed(2);
+            document.getElementById('stats-en-attente').textContent = enAttente;
+        }
+
+        function filtrerTransactions() {
+            afficherTransactions();
+            calculerStatsTransactions();
+        }
+
+        function voirDetailsTransaction(id) {
+            const transaction = donnees.demandes?.find(d => d.id === id);
+            if (!transaction) return;
+
+            transactionSelectionneeId = id;
+
+            const montantRecu = transaction.type === 'ACHAT' 
+                ? `${(parseFloat(transaction.montant) / (donnees.taux[transaction.crypto]?.prixMGA || 1)).toFixed(4)} ${transaction.crypto}`
+                : `${(parseFloat(transaction.montant) * (donnees.taux[transaction.crypto]?.prixMGA || 1)).toLocaleString()} Ar`;
+
+            let detailsHtml = `
+                <div class="info-row">
+                    <span class="info-label">ID:</span>
+                    <span class="info-value">${transaction.id}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Type:</span>
+                    <span class="info-value" style="color: ${transaction.type === 'ACHAT' ? 'var(--success)' : 'var(--warning)'}">
+                        <i class="fas ${transaction.type === 'ACHAT' ? 'fa-arrow-down' : 'fa-arrow-up'}"></i> ${transaction.type}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Statut:</span>
+                    <span class="info-value badge-statut ${transaction.statut}">${transaction.statut}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Client:</span>
+                    <span class="info-value">${transaction.utilisateur}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">${transaction.email}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Date:</span>
+                    <span class="info-value">${new Date(transaction.date).toLocaleString()}</span>
+                </div>
+            `;
+
+            if (transaction.type === 'ACHAT') {
+                detailsHtml += `
+                    <div class="info-row">
+                        <span class="info-label">Opérateur:</span>
+                        <span class="info-value">${transaction.operateur || 'N/A'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Montant envoyé:</span>
+                        <span class="info-value">${transaction.montant} Ar</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Crypto reçue:</span>
+                        <span class="info-value">${montantRecu}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Réseau:</span>
+                        <span class="info-value">${transaction.reseau || 'N/A'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Portefeuille:</span>
+                        <span class="info-value">${transaction.portefeuille || 'N/A'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Adresse:</span>
+                        <span class="info-value" style="word-break: break-all;">${transaction.adresse || 'N/A'}</span>
+                    </div>
+                `;
+            } else {
+                detailsHtml += `
+                    <div class="info-row">
+                        <span class="info-label">Crypto envoyée:</span>
+                        <span class="info-value">${transaction.montant} ${transaction.crypto}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Réseau:</span>
+                        <span class="info-value">${transaction.reseau || 'N/A'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Opérateur:</span>
+                        <span class="info-value">${transaction.operateur || 'N/A'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Portefeuille:</span>
+                        <span class="info-value">${transaction.portefeuille || 'N/A'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Montant reçu:</span>
+                        <span class="info-value">${montantRecu}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Bénéficiaire:</span>
+                        <span class="info-value">${transaction.nomNumero || transaction.utilisateur}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Numéro:</span>
+                        <span class="info-value">${transaction.numero || 'N/A'}</span>
+                    </div>
+                `;
+            }
+
+            detailsHtml += `
+                <div class="info-row">
+                    <span class="info-label">TXID:</span>
+                    <span class="info-value" style="word-break: break-all;">${transaction.txid || 'Non fourni'}</span>
+                </div>
+                ${transaction.messagePaiement ? `
+                <div class="info-row">
+                    <span class="info-label">Message:</span>
+                    <span class="info-value">${transaction.messagePaiement}</span>
+                </div>
+                ` : ''}
+            `;
+
+            // Afficher l'historique
+            let historiqueHtml = '';
+            if (transaction.historique && transaction.historique.length > 0) {
+                historiqueHtml = transaction.historique.sort((a,b) => new Date(b.date) - new Date(a.date)).map(h => `
+                    <div class="historique-item">
+                        <span class="historique-date">${new Date(h.date).toLocaleString()}</span>
+                        <span class="historique-action">${h.action}</span>
+                    </div>
+                `).join('');
+            } else {
+                historiqueHtml = '<div class="historique-item">Aucun historique</div>';
+            }
+
+            document.getElementById('details-transaction-complete').innerHTML = detailsHtml;
+            document.getElementById('historique-transaction').innerHTML = historiqueHtml;
+            document.getElementById('modal-changer-statut').value = transaction.statut;
+            document.getElementById('modal-note-transaction').value = transaction.notes || '';
+            document.getElementById('modal-details-transaction').classList.add('active');
+        }
+
+        function fermerModalTransaction() {
+            document.getElementById('modal-details-transaction').classList.remove('active');
+            transactionSelectionneeId = null;
+        }
+
+        function changerStatutTransaction() {
+            if (!transactionSelectionneeId) return;
+            
+            const nouveauStatut = document.getElementById('modal-changer-statut').value;
+            const transaction = donnees.demandes?.find(d => d.id === transactionSelectionneeId);
+            
+            if (transaction) {
+                const ancienStatut = transaction.statut;
+                transaction.statut = nouveauStatut;
+                transaction.dateModification = new Date().toISOString();
+                
+                if (!transaction.historique) transaction.historique = [];
+                transaction.historique.push({
+                    date: new Date().toISOString(),
+                    action: `STATUT_CHANGE`,
+                    details: `Statut changé de ${ancienStatut} à ${nouveauStatut} par admin`
+                });
+                
+                sauvegarderDonnees();
+                alert(`✅ Statut changé à ${nouveauStatut}`);
+                voirDetailsTransaction(transactionSelectionneeId);
+                afficherTransactions();
+            }
+        }
+
+        function ajouterNoteTransaction() {
+            if (!transactionSelectionneeId) return;
+            
+            const note = document.getElementById('modal-note-transaction').value.trim();
+            if (!note) return;
+            
+            const transaction = donnees.demandes?.find(d => d.id === transactionSelectionneeId);
+            if (transaction) {
+                if (!transaction.notes) transaction.notes = '';
+                transaction.notes += (transaction.notes ? '\n' : '') + `[${new Date().toLocaleString()}] ${note}`;
+                
+                if (!transaction.historique) transaction.historique = [];
+                transaction.historique.push({
+                    date: new Date().toISOString(),
+                    action: 'NOTE_AJOUTEE',
+                    details: note
+                });
+                
+                sauvegarderDonnees();
+                document.getElementById('modal-note-transaction').value = '';
+                alert('✅ Note ajoutée');
+                voirDetailsTransaction(transactionSelectionneeId);
+            }
+        }
+
         function ecouterChangements() {
             database.ref('donnees').on('value', (snapshot) => {
                 const data = snapshot.val();
@@ -2090,35 +2467,30 @@
                     const nouvellesDonnees = JSON.stringify(data);
                     
                     if (anciennesDonnees !== nouvellesDonnees) {
-                        console.log('🔄 Mise à jour en temps réel détectée');
-                        console.log('📊 Nouvelles données reçues:', data);
-                        console.log('📝 Nouvelles demandes:', data.demandes?.length || 0);
-                        
+                        console.log('🔄 Mise à jour détectée');
                         donnees = data;
                         mettreAJourStats();
                         afficherTout();
                         mettreAJourPauseUI();
                         
-                        // Si on est sur l'onglet Demandes, rafraîchir l'affichage
                         if (document.getElementById('demandes-tab').style.display === 'block') {
-                            console.log('🔄 Rafraîchissement de l\'affichage des demandes');
                             afficherDemandes();
                         }
-                        
-                        // Si on est sur l'onglet News, rafraîchir l'affichage
                         if (document.getElementById('news-tab').style.display === 'block') {
-                            afficherNewsAdmin();
+                            afficherNews();
+                        }
+                        if (document.getElementById('taux-tab').style.display === 'block') {
+                            afficherTauxSimplifies();
+                        }
+                        if (document.getElementById('transactions-tab').style.display === 'block') {
+                            afficherTransactions();
+                            calculerStatsTransactions();
                         }
                     }
-                } else {
-                    console.log('⚠️ Aucune donnée dans Firebase');
                 }
-            }, (error) => {
-                console.error('❌ Erreur écoute Firebase:', error);
             });
         }
 
-        // Initialisation
         ecouterChangements();
     </script>
 </body>
