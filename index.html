@@ -2311,7 +2311,7 @@
                 
                 const pf = document.getElementById(`portefeuille-${t}`);
                 if (pf && donnees.portefeuilles) {
-                    pf.innerHTML = donnees.portefeuilles.map(p => `<option value="${p.nom}">${p.nom} (${p.reseau || 'N/A'})</option>`).join('');
+                    pf.innerHTML = donnees.portefeuilles.map(p => `<option value="${p.nom}">${p.nom} (${p.reseau || ' '})</option>`).join('');
                 }
             });
             
@@ -2564,7 +2564,7 @@
             document.getElementById('details-demande').innerHTML = `
                 <p><i class="fas fa-tag"></i> Type: <span>${transaction.type}</span></p>
                 <p><i class="fas fa-coins" style="color: var(--success);"></i> Vous recevez: <span style="color: var(--success); font-weight: 700;">${montantRecu}</span></p>
-                <p><i class="fas fa-network-wired"></i> Réseau: <span>${transaction.reseau || 'N/A'}</span></p>
+                <p><i class="fas fa-network-wired"></i> Réseau: <span>${transaction.reseau || ' '}</span></p>
                 ${infoDestinataire}
                 <p><i class="fas fa-hashtag"></i> TXID: <span>${transaction.txid || 'À fournir'}</span></p>
             `;
@@ -3056,7 +3056,7 @@
                 <p><i class="fas fa-user"></i> Client: <span>${demande.utilisateur}</span></p>
                 <p><i class="fas fa-coins"></i> Montant: <span>${demande.montant} ${demande.type === 'ACHAT' ? 'Ar' : demande.crypto}</span></p>
                 <p><i class="fas fa-coins" style="color: var(--success);"></i> Vous recevez: <span style="color: var(--success); font-weight: 700;">${demande.type === 'ACHAT' ? (demande.montantRecu ? demande.montantRecu.toFixed(4) + ' ' + demande.crypto : 'Calcul...') : (demande.montantRecu ? demande.montantRecu.toLocaleString() + ' Ar' : 'Calcul...')}</span></p>
-                <p><i class="fas fa-network-wired"></i> Réseau: <span>${demande.reseau || 'N/A'}</span></p>
+                <p><i class="fas fa-network-wired"></i> Réseau: <span>${demande.reseau || ' '}</span></p>
                 ${infoDestinataire}
                 <p><i class="fas fa-hashtag"></i> TXID: <span style="font-size: 0.8rem;">${demande.txid || 'Non fourni'}</span></p>
                 <p><i class="fas fa-info-circle"></i> Statut: <span>${demande.statut}</span></p>
