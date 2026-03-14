@@ -2320,10 +2320,14 @@
         }
 
         function mettreAJourReseaux(type) {
+            const crypto = document.getElementById(`crypto-${type}`)?.value;
             const selectReseau = document.getElementById(`reseau-${type}`);
             if (!selectReseau || !donnees.reseaux) return;
             
-            selectReseau.innerHTML = donnees.reseaux.map(r => 
+            // Filtrer les réseaux par crypto (comme avant)
+            const reseauxFiltres = donnees.reseaux.filter(r => r.crypto === crypto);
+            
+            selectReseau.innerHTML = reseauxFiltres.map(r => 
                 `<option value="${r.nom}" data-frais="${r.fraisReseau || 0}">${r.nom} (frais: ${r.fraisReseau || 0}%)</option>`
             ).join('');
             
@@ -3051,7 +3055,7 @@
                 <p><i class="fas fa-tag"></i> Type: <span>${demande.type}</span></p>
                 <p><i class="fas fa-user"></i> Client: <span>${demande.utilisateur}</span></p>
                 <p><i class="fas fa-coins"></i> Montant: <span>${demande.montant} ${demande.type === 'ACHAT' ? 'Ar' : demande.crypto}</span></p>
-                <p><i class="fas fa-coins" style="color: var(--success);"></i> Vous recevez: <span style="color: var(--success); font-weight: 700;">${demande.type === 'ACHAT' ? demande.montantRecu.toFixed(4) + ' ' + demande.crypto : demande.montantRecu.toLocaleString() + ' Ar'}</span></p>
+                <p><i class="fas fa-coins" style="color: var(--success);"></i> Vous recevez: <span style="color: var(--success); font-weight: 700;">${demande.type === 'ACHAT' ? (demande.montantRecu ? demande.montantRecu.toFixed(4) + ' ' + demande.crypto : 'Calcul...') : (demande.montantRecu ? demande.montantRecu.toLocaleString() + ' Ar' : 'Calcul...')}</span></p>
                 <p><i class="fas fa-network-wired"></i> Réseau: <span>${demande.reseau || 'N/A'}</span></p>
                 ${infoDestinataire}
                 <p><i class="fas fa-hashtag"></i> TXID: <span style="font-size: 0.8rem;">${demande.txid || 'Non fourni'}</span></p>
