@@ -1747,9 +1747,9 @@
             </div>
             
             <div class="form-group" style="margin: 20px 0;">
-                <label class="form-label"><i class="fas fa-hashtag"></i> TXID</label>
+                <label class="form-label"><i class="fas fa-hashtag"></i> TXID ou Adresse d'envoi</label>
                 <div class="input-wrapper">
-                    <input type="text" id="txid-input" placeholder="Entrez le TXID" style="flex: 1; padding: 16px 18px; background: var(--primary); border: none; color: var(--white); border-radius: 40px; width: 100%;">
+                    <input type="text" id="txid-input" placeholder="Entrez le TXID ou votre adresse d'envoi" style="flex: 1; padding: 16px 18px; background: var(--primary); border: none; color: var(--white); border-radius: 40px; width: 100%;">
                 </div>
             </div>
             
@@ -2277,7 +2277,7 @@
                 
                 const pf = document.getElementById(`portefeuille-${t}`);
                 if (pf && donnees.portefeuilles) {
-                    pf.innerHTML = donnees.portefeuilles.map(p => `<option value="${p.nom}">${p.nom} (${p.reseau || 'N/A'})</option>`).join('');
+                    pf.innerHTML = donnees.portefeuilles.map(p => `<option value="${p.nom}">${p.nom} (${p.reseau || ' '})</option>`).join('');
                 }
             });
             
@@ -2472,7 +2472,7 @@
                 <p><i class="fas fa-tag"></i> Type: <span>${transaction.type}</span></p>
                 <p><i class="fas fa-coins"></i> Montant: <span>${transaction.montant} ${transaction.type === 'ACHAT' ? 'Ar' : transaction.crypto}</span></p>
                 <p><i class="fas fa-coins"></i> Reçu: <span>${montantRecu}</span></p>
-                <p><i class="fas fa-network-wired"></i> Réseau: <span>${transaction.reseau || 'N/A'}</span></p>
+                <p><i class="fas fa-network-wired"></i> Réseau: <span>${transaction.reseau || ' '}</span></p>
                 ${infoDestinataire}
             `;
 
@@ -2960,7 +2960,7 @@
                 <p><i class="fas fa-tag"></i> Type: <span>${demande.type}</span></p>
                 <p><i class="fas fa-user"></i> Client: <span>${demande.utilisateur}</span></p>
                 <p><i class="fas fa-coins"></i> Montant: <span>${demande.montant} ${demande.type === 'ACHAT' ? 'Ar' : demande.crypto}</span></p>
-                <p><i class="fas fa-network-wired"></i> Réseau: <span>${demande.reseau || 'N/A'}</span></p>
+                <p><i class="fas fa-network-wired"></i> Réseau: <span>${demande.reseau || ' '}</span></p>
                 ${infoDestinataire}
                 <p><i class="fas fa-hashtag"></i> TXID: <span style="font-size: 0.8rem;">${demande.txid || 'Non fourni'}</span></p>
                 <p><i class="fas fa-info-circle"></i> Statut: <span>${demande.statut}</span></p>
