@@ -891,7 +891,7 @@
             utilisateurs: [],
             portefeuilles: [],
             operateurs: [],
-            cryptos: ["USDT", "BTC", "ETH", "BNB", "LTC", "SOL", "TRX", "DOGE", "MATIC", "SUI", "XRP"],
+            cryptos: ["USDT", "BTC", "ETH", "BNB", "LTC", "SOL", "TRX", "DOGE", "MATIC", "SUI", "XRP", "TON", "USDC"],
             taux: {},
             reseaux: [],
             frais: { achat: 1.5, vente: 2.0 },
@@ -927,7 +927,10 @@
             'DOGE': 'DOGEUSDT',
             'MATIC': 'MATICUSDT',
             'SUI': 'SUIUSDT',
-            'XRP': 'XRPUSDT'
+            'XRP': 'XRPUSDT',
+            'TON': 'TONUSDT',
+            'POL': 'POLUSDT',
+            'USDC': 'USDCUSDT'
         };
 
         function loginAdmin() {
@@ -1142,6 +1145,8 @@
                 if (crypto === 'DOGE') symboleAffiche = 'DOGE';
                 if (crypto === 'SUI') symboleAffiche = 'SUI';
                 if (crypto === 'XRP') symboleAffiche = 'XRP';
+                if (crypto === 'TON') symboleAffiche = 'TON';
+                if (crypto === 'USDC') symboleAffiche = 'USDC';
                 
                 return `
                 <div class="taux-card">
@@ -1576,7 +1581,7 @@
                     { nom: "Orange Money", messageConfirmation: "034 99 999 99" },
                     { nom: "Airtel Money", messageConfirmation: "033 88 888 88" }
                 ],
-                cryptos: ["USDT", "BTC", "ETH", "BNB", "LTC", "SOL", "TRX", "DOGE", "MATIC", "SUI", "XRP"],
+                cryptos: ["USDT", "BTC", "ETH", "BNB", "LTC", "SOL", "TRX", "DOGE", "MATIC", "SUI", "XRP", "TON", "USDC"],
                 reseaux: [
                     { nom: "BEP20", crypto: "USDT", fraisReseau: 0.5 },
                     { nom: "ERC20", crypto: "USDT", fraisReseau: 1.2 },
@@ -1864,6 +1869,7 @@
                     <div style="margin: 10px 0;">
                         <div>Client: <strong>${d.utilisateur}</strong></div>
                         <div>Montant: ${d.montant} ${d.type === 'ACHAT' ? 'Ar' : d.crypto}</div>
+                        <div style="color: var(--success); font-weight: 600;">Vous recevez: ${d.type === 'ACHAT' ? (d.montantRecu ? d.montantRecu.toFixed(4) + ' ' + d.crypto : 'Calcul...') : (d.montantRecu ? d.montantRecu.toLocaleString() + ' Ar' : 'Calcul...')}</div>
                         ${d.txid ? `<div style="font-size:0.8rem;">TXID: ${d.txid.substring(0,20)}...</div>` : ''}
                     </div>
                     ${d.statut === 'en_attente' ? `
@@ -2106,11 +2112,6 @@
             let transactionsFiltrees = filtrerTransactionsListe(demandes);
 
             liste.innerHTML = transactionsFiltrees.sort((a, b) => new Date(b.date) - new Date(a.date)).map(tx => {
-                // Calculer les montants pour affichage
-                const montantRecu = tx.type === 'ACHAT' 
-                    ? `${(parseFloat(tx.montant) / (donnees.taux[tx.crypto]?.prixMGA || 1)).toFixed(4)} ${tx.crypto}`
-                    : `${(parseFloat(tx.montant) * (donnees.taux[tx.crypto]?.prixMGA || 1)).toLocaleString()} Ar`;
-
                 return `
                 <div class="transaction-item ${tx.statut}" onclick="voirDetailsTransaction('${tx.id}')">
                     <div class="transaction-header">
@@ -2128,53 +2129,10 @@
                     </div>
                     
                     <div class="transaction-details">
-                        ${tx.type === 'ACHAT' ? `
-                            <div class="detail-item">
-                                <span class="detail-label"><i class="fas fa-phone-alt"></i> Opérateur</span>
-                                <span class="detail-value">${tx.operateur || 'N/A'}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label"><i class="fas fa-coins"></i> Montant envoyé</span>
-                                <span class="detail-value">${tx.montant} Ar</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label"><i class="fas fa-coins"></i> Crypto reçue</span>
-                                <span class="detail-value">${montantRecu}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label"><i class="fas fa-network-wired"></i> Réseau</span>
-                                <span class="detail-value">${tx.reseau || 'N/A'}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label"><i class="fas fa-qrcode"></i> Adresse</span>
-                                <span class="detail-value">${tx.adresse ? tx.adresse.substring(0,15)+'...' : 'N/A'}</span>
-                            </div>
-                        ` : `
-                            <div class="detail-item">
-                                <span class="detail-label"><i class="fas fa-coins"></i> Crypto envoyée</span>
-                                <span class="detail-value">${tx.montant} ${tx.crypto}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label"><i class="fas fa-network-wired"></i> Réseau</span>
-                                <span class="detail-value">${tx.reseau || 'N/A'}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label"><i class="fas fa-phone-alt"></i> Opérateur</span>
-                                <span class="detail-value">${tx.operateur || 'N/A'}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label"><i class="fas fa-arrow-right"></i> Montant reçu</span>
-                                <span class="detail-value">${montantRecu}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label"><i class="fas fa-user"></i> Bénéficiaire</span>
-                                <span class="detail-value">${tx.nomNumero || tx.utilisateur}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label"><i class="fas fa-phone-alt"></i> Numéro</span>
-                                <span class="detail-value">${tx.numero || 'N/A'}</span>
-                            </div>
-                        `}
+                        <div class="detail-item">
+                            <span class="detail-label">Vous recevez</span>
+                            <span class="detail-value" style="color: var(--success);">${tx.type === 'ACHAT' ? (tx.montantRecu ? tx.montantRecu.toFixed(4) + ' ' + tx.crypto : 'Calcul...') : (tx.montantRecu ? tx.montantRecu.toLocaleString() + ' Ar' : 'Calcul...')}</span>
+                        </div>
                     </div>
                     
                     <div class="transaction-txid">
@@ -2278,10 +2236,6 @@
 
             transactionSelectionneeId = id;
 
-            const montantRecu = transaction.type === 'ACHAT' 
-                ? `${(parseFloat(transaction.montant) / (donnees.taux[transaction.crypto]?.prixMGA || 1)).toFixed(4)} ${transaction.crypto}`
-                : `${(parseFloat(transaction.montant) * (donnees.taux[transaction.crypto]?.prixMGA || 1)).toLocaleString()} Ar`;
-
             let detailsHtml = `
                 <div class="info-row">
                     <span class="info-label">ID:</span>
@@ -2309,6 +2263,10 @@
                     <span class="info-label">Date:</span>
                     <span class="info-value">${new Date(transaction.date).toLocaleString()}</span>
                 </div>
+                <div class="info-row">
+                    <span class="info-label">Vous recevez:</span>
+                    <span class="info-value" style="color: var(--success); font-weight: 700;">${transaction.type === 'ACHAT' ? (transaction.montantRecu ? transaction.montantRecu.toFixed(4) + ' ' + transaction.crypto : 'Calcul...') : (transaction.montantRecu ? transaction.montantRecu.toLocaleString() + ' Ar' : 'Calcul...')}</span>
+                </div>
             `;
 
             if (transaction.type === 'ACHAT') {
@@ -2320,10 +2278,6 @@
                     <div class="info-row">
                         <span class="info-label">Montant envoyé:</span>
                         <span class="info-value">${transaction.montant} Ar</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Crypto reçue:</span>
-                        <span class="info-value">${montantRecu}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Réseau:</span>
@@ -2355,10 +2309,6 @@
                     <div class="info-row">
                         <span class="info-label">Portefeuille:</span>
                         <span class="info-value">${transaction.portefeuille || 'N/A'}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Montant reçu:</span>
-                        <span class="info-value">${montantRecu}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Bénéficiaire:</span>

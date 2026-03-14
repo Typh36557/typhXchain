@@ -684,9 +684,6 @@
             border-radius: 40px;
             padding: 16px 20px;
             border: 1px solid var(--gray-300);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             margin: 20px 0;
         }
 
@@ -1443,9 +1440,8 @@
                         <span class="frais-valeur" id="frais-achat-affichage">1.5%</span>
                     </div>
                     
-                    <div class="estimated-value">
-                        <span class="estimated-label"><i class="fas fa-calculator"></i> Vous recevez</span>
-                        <span class="estimated-amount" id="estimation-achat">0 USDT</span>
+                    <div class="estimated-value" id="estimation-achat-container">
+                        <!-- L'estimation sera insérée ici par JavaScript -->
                     </div>
                     
                     <button class="btn btn-success" onclick="verifierPINavantConfirmation('ACHAT')" id="btn-confirmer-achat">
@@ -1506,9 +1502,8 @@
                         <span class="frais-valeur" id="frais-vente-affichage">2.0%</span>
                     </div>
                     
-                    <div class="estimated-value">
-                        <span class="estimated-label"><i class="fas fa-calculator"></i> Vous recevez</span>
-                        <span class="estimated-amount" id="estimation-vente">0 Ar</span>
+                    <div class="estimated-value" id="estimation-vente-container">
+                        <!-- L'estimation sera insérée ici par JavaScript -->
                     </div>
                     
                     <div class="portfolio-response" id="reponse-portefeuille-vente-container">
@@ -1747,15 +1742,15 @@
             </div>
             
             <div class="form-group" style="margin: 20px 0;">
-                <label class="form-label"><i class="fas fa-hashtag"></i> TXID ou Adresse d'envoi</label>
+                <label class="form-label"><i class="fas fa-hashtag"></i> TXID</label>
                 <div class="input-wrapper">
-                    <input type="text" id="txid-input" placeholder="Entrez le TXID ou votre adresse d'envoi" style="flex: 1; padding: 16px 18px; background: var(--primary); border: none; color: var(--white); border-radius: 40px; width: 100%;">
+                    <input type="text" id="txid-input" placeholder="Entrez le TXID" style="flex: 1; padding: 16px 18px; background: var(--primary); border: none; color: var(--white); border-radius: 40px; width: 100%;">
                 </div>
             </div>
             
             <div class="warning-message" id="warning-message">
                 <i class="fas fa-exclamation-triangle"></i>
-                <span>Vérifiez bien le numéro ou adresse et aussi les informations avant d'envoyer !      Min de transaction : 2 000 Ar ≈ 0.4$ - Max de transaction : 100 000 Ar ≈ 24$  </span>
+                <span>Vérifiez bien le numéro ou adresse et aussi les informations avant d'envoyer ! Min de transaction : 2 000 Ar ≈ 0.4$ - Max de transaction : 100 000 Ar ≈ 24$</span>
             </div>
             
             <div class="modal-buttons">
@@ -1812,7 +1807,7 @@
             utilisateurs: [],
             portefeuilles: [],
             operateurs: [],
-            cryptos: ["USDT", "BTC", "ETH", "BNB", "LTC", "SOL", "TRX", "DOGE", "MATIC", "SUI", "XRP"],
+            cryptos: ["USDT", "BTC", "ETH", "BNB", "LTC", "SOL", "TRX", "DOGE", "MATIC", "SUI", "XRP", "TON", "USDC"],
             taux: {},
             reseaux: [],
             frais: { achat: 1.5, vente: 2.0 },
@@ -1834,6 +1829,12 @@
         let timerInterval = null;
         let tempsRestant = 900;
         
+        // Variables pour stocker les montants calculés (pour la cohérence estimation/confirmation)
+        let montantRecuAchat = 0;
+        let montantRecuVente = 0;
+        let cryptoAchat = '';
+        let cryptoVente = '';
+        
         // Variables pour Binance
         let binanceInterval = null;
         let tauxUSD_MGA = 4700;
@@ -1848,7 +1849,11 @@
             'DOGE': 'DOGEUSDT',
             'MATIC': 'MATICUSDT',
             'SUI': 'SUIUSDT',
-            'XRP': 'XRPUSDT'
+            'XRP': 'XRPUSDT',
+            // NOUVELLES CRYPTOS
+            'TON': 'TONUSDT',
+            'POL': 'POLUSDT',
+            'USDC': 'USDCUSDT'
         };
 
         function obtenirDonneesParDefaut() {
@@ -1863,7 +1868,7 @@
                     { nom: "Orange Money", messageConfirmation: "034 99 999 99" },
                     { nom: "Airtel Money", messageConfirmation: "033 88 888 88" }
                 ],
-                cryptos: ["USDT", "BTC", "ETH", "BNB", "LTC", "SOL", "TRX", "DOGE", "MATIC", "SUI", "XRP"],
+                cryptos: ["USDT", "BTC", "ETH", "BNB", "LTC", "SOL", "TRX", "DOGE", "MATIC", "SUI", "XRP", "TON", "USDC"],
                 reseaux: [
                     { nom: "BEP20", crypto: "USDT", fraisReseau: 0.5 },
                     { nom: "ERC20", crypto: "USDT", fraisReseau: 1.2 },
@@ -1938,6 +1943,7 @@
                             const prixUSD = parseFloat(ticker.price);
                             const prixMGA = Math.round(prixUSD * tauxMGA);
                             
+                            // Variation aléatoire pour l'exemple
                             const variation = (Math.random() * 4 - 2).toFixed(1);
                             
                             updates[`donnees/taux/${crypto}`] = {
@@ -1948,9 +1954,28 @@
                                 lastUpdate: new Date().toISOString(),
                                 source: 'binance'
                             };
+                        } else {
+                            console.warn(`Paire ${paire} non trouvée sur Binance`);
                         }
                     }
                 });
+                
+                // Ajouter POL si présent dans les cryptos
+                if (donnees.cryptos.includes('POL') && !pairesBinance['POL']) {
+                    const tickerPOL = prices.find(p => p.symbol === 'POLUSDT');
+                    if (tickerPOL) {
+                        const prixUSD = parseFloat(tickerPOL.price);
+                        const prixMGA = Math.round(prixUSD * tauxMGA);
+                        updates[`donnees/taux/POL`] = {
+                            prixUSD: prixUSD,
+                            prixMGA: prixMGA,
+                            variation: '+' + (Math.random() * 2).toFixed(1),
+                            couleur: 'positive',
+                            lastUpdate: new Date().toISOString(),
+                            source: 'binance'
+                        };
+                    }
+                }
                 
                 await database.ref().update(updates);
                 
@@ -1974,7 +1999,7 @@
                         donnees = data;
                         if (!donnees.taux) donnees.taux = {};
                         if (!donnees.news) donnees.news = [];
-                        if (!donnees.cryptos) donnees.cryptos = ["USDT", "BTC", "ETH", "BNB", "LTC", "SOL", "TRX", "DOGE", "MATIC", "SUI", "XRP"];
+                        if (!donnees.cryptos) donnees.cryptos = ["USDT", "BTC", "ETH", "BNB", "LTC", "SOL", "TRX", "DOGE", "MATIC", "SUI", "XRP", "TON", "USDC"];
                         if (!donnees.tauxMode) donnees.tauxMode = 'auto';
                         if (!donnees.usdMGA) donnees.usdMGA = 4700;
                         
@@ -2029,13 +2054,22 @@
                 
                 // Déterminer le symbole d'affichage
                 let symboleAffiche = crypto;
-                if (crypto === 'MATIC') symboleAffiche = 'POL';
-                if (crypto === 'LTC') symboleAffiche = 'LTC';
-                if (crypto === 'SOL') symboleAffiche = 'SOL';
-                if (crypto === 'TRX') symboleAffiche = 'TRX';
-                if (crypto === 'DOGE') symboleAffiche = 'DOGE';
-                if (crypto === 'SUI') symboleAffiche = 'SUI';
-                if (crypto === 'XRP') symboleAffiche = 'XRP';
+                const symbolesSpeciaux = {
+                    'MATIC': 'POL (ex-MATIC)',
+                    'POL': 'POL',
+                    'TON': 'TON',
+                    'USDC': 'USDC',
+                    'USDT': 'USDT',
+                    'BTC': 'BTC',
+                    'ETH': 'ETH',
+                    'BNB': 'BNB',
+                    'SOL': 'SOL',
+                    'XRP': 'XRP'
+                };
+                
+                if (symbolesSpeciaux[crypto]) {
+                    symboleAffiche = symbolesSpeciaux[crypto];
+                }
                 
                 return `
                     <div class="rate-card ${taux.source}">
@@ -2272,12 +2306,12 @@
                 
                 const cr = document.getElementById(`crypto-${t}`);
                 if (cr && donnees.cryptos) {
-                    cr.innerHTML = donnees.cryptos.map(c => `<option>${c}</option>`).join('');
+                    cr.innerHTML = donnees.cryptos.map(c => `<option value="${c}">${c}</option>`).join('');
                 }
                 
                 const pf = document.getElementById(`portefeuille-${t}`);
                 if (pf && donnees.portefeuilles) {
-                    pf.innerHTML = donnees.portefeuilles.map(p => `<option value="${p.nom}">${p.nom} (${p.reseau || ' '})</option>`).join('');
+                    pf.innerHTML = donnees.portefeuilles.map(p => `<option value="${p.nom}">${p.nom} (${p.reseau || 'N/A'})</option>`).join('');
                 }
             });
             
@@ -2286,12 +2320,10 @@
         }
 
         function mettreAJourReseaux(type) {
-            const crypto = document.getElementById(`crypto-${type}`)?.value;
             const selectReseau = document.getElementById(`reseau-${type}`);
             if (!selectReseau || !donnees.reseaux) return;
             
-            const reseauxFiltres = donnees.reseaux.filter(r => r.crypto === crypto);
-            selectReseau.innerHTML = reseauxFiltres.map(r => 
+            selectReseau.innerHTML = donnees.reseaux.map(r => 
                 `<option value="${r.nom}" data-frais="${r.fraisReseau || 0}">${r.nom} (frais: ${r.fraisReseau || 0}%)</option>`
             ).join('');
             
@@ -2367,25 +2399,71 @@
             const frais = donnees.frais?.achat || 1.5;
             const taux = donnees.taux[crypto]?.prixMGA || 0;
             
-            const montantApresFrais = montant * (1 - frais/100);
+            // Stocker la crypto pour la confirmation
+            cryptoAchat = crypto;
+            
+            // Calculs
+            const fraisEnAr = montant * (frais/100);
+            const montantApresFrais = montant - fraisEnAr;
             const estimation = taux > 0 ? montantApresFrais / taux : 0;
             
-            document.getElementById('estimation-achat').textContent = estimation.toFixed(4) + ' ' + crypto;
+            // Stocker le montant reçu pour la confirmation
+            montantRecuAchat = estimation;
+            
+            // Affichage avec frais
+            document.getElementById('estimation-achat-container').innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <div>
+                        <span class="estimated-label">Vous recevez:</span>
+                        <span class="estimated-amount">${estimation.toFixed(4)} ${crypto}</span>
+                    </div>
+                    <div style="color: var(--warning); font-size: 0.9rem;">
+                        <i class="fas fa-percent"></i> Taux de frais: ${frais}%
+                    </div>
+                </div>
+            `;
         }
 
         function estimerVente() {
             const montant = parseFloat(document.getElementById('montant-vente')?.value) || 0;
             const crypto = document.getElementById('crypto-vente')?.value;
             const reseauSelect = document.getElementById('reseau-vente');
-            const fraisReseau = reseauSelect?.selectedOptions[0]?.dataset?.frais ? parseFloat(reseauSelect.selectedOptions[0].dataset.frais) : 0;
+            const fraisReseau = reseauSelect?.selectedOptions[0]?.dataset?.frais ? 
+                parseFloat(reseauSelect.selectedOptions[0].dataset.frais) : 0;
             const fraisTransaction = donnees.frais?.vente || 2.0;
             const fraisTotal = fraisTransaction + fraisReseau;
             const taux = donnees.taux[crypto]?.prixMGA || 0;
             
-            const montantApresFrais = montant * (1 - fraisTotal/100);
-            const estimation = montantApresFrais * taux;
+            // Stocker la crypto pour la confirmation
+            cryptoVente = crypto;
             
-            document.getElementById('estimation-vente').textContent = estimation.toLocaleString() + ' Ar';
+            // Calculs
+            const montantBrutAr = montant * taux;
+            const fraisEnAr = montantBrutAr * (fraisTotal/100);
+            const montantNetAr = montantBrutAr - fraisEnAr;
+            
+            // Stocker le montant reçu pour la confirmation
+            montantRecuVente = montantNetAr;
+            
+            // Affichage des frais
+            let fraisAffichage = '';
+            if (fraisReseau > 0) {
+                fraisAffichage = `${fraisTransaction}% + ${fraisReseau}%`;
+            } else {
+                fraisAffichage = `${fraisTransaction}%`;
+            }
+            
+            document.getElementById('estimation-vente-container').innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <div>
+                        <span class="estimated-label">Vous recevez:</span>
+                        <span class="estimated-amount">${montantNetAr.toLocaleString()} Ar</span>
+                    </div>
+                    <div style="color: var(--warning); font-size: 0.9rem;">
+                        <i class="fas fa-percent"></i> Taux de frais: ${fraisAffichage}
+                    </div>
+                </div>
+            `;
         }
 
         function verifierPINavantConfirmation(type) {
@@ -2437,10 +2515,21 @@
             }
 
             transactionEnAttente = {
-                type, montant, crypto, operateur, portefeuille, reseau, adresse, numero, nomNumero,
+                type, 
+                montant, 
+                crypto, 
+                operateur, 
+                portefeuille, 
+                reseau, 
+                adresse, 
+                numero, 
+                nomNumero,
                 date: new Date().toISOString(),
                 utilisateur: utilisateurCourant.nom,
-                email: utilisateurCourant.email
+                email: utilisateurCourant.email,
+                // Inclure le montant reçu pour la confirmation
+                montantRecu: type === 'ACHAT' ? montantRecuAchat : montantRecuVente,
+                cryptoAffichee: type === 'ACHAT' ? crypto : 'Ar'
             };
 
             ouvrirModalConfirmation(transactionEnAttente);
@@ -2449,13 +2538,12 @@
         function ouvrirModalConfirmation(transaction) {
             transactionEnAttente = transaction;
             
+            // Utiliser le montant reçu stocké
             let montantRecu = '';
             if (transaction.type === 'ACHAT') {
-                const taux = donnees.taux[transaction.crypto]?.prixMGA || 1;
-                montantRecu = (parseFloat(transaction.montant) / taux).toFixed(4) + ' ' + transaction.crypto;
+                montantRecu = transaction.montantRecu.toFixed(4) + ' ' + transaction.crypto;
             } else {
-                const taux = donnees.taux[transaction.crypto]?.prixMGA || 1;
-                montantRecu = (parseFloat(transaction.montant) * taux).toLocaleString() + ' Ar';
+                montantRecu = transaction.montantRecu.toLocaleString() + ' Ar';
             }
             
             let infoDestinataire = '';
@@ -2468,12 +2556,13 @@
                 `;
             }
             
+            // Afficher le MÊME montant que dans l'estimation
             document.getElementById('details-demande').innerHTML = `
                 <p><i class="fas fa-tag"></i> Type: <span>${transaction.type}</span></p>
-                <p><i class="fas fa-coins"></i> Montant: <span>${transaction.montant} ${transaction.type === 'ACHAT' ? 'Ar' : transaction.crypto}</span></p>
-                <p><i class="fas fa-coins"></i> Reçu: <span>${montantRecu}</span></p>
-                <p><i class="fas fa-network-wired"></i> Réseau: <span>${transaction.reseau || ' '}</span></p>
+                <p><i class="fas fa-coins" style="color: var(--success);"></i> Vous recevez: <span style="color: var(--success); font-weight: 700;">${montantRecu}</span></p>
+                <p><i class="fas fa-network-wired"></i> Réseau: <span>${transaction.reseau || 'N/A'}</span></p>
                 ${infoDestinataire}
+                <p><i class="fas fa-hashtag"></i> TXID: <span>${transaction.txid || 'À fournir'}</span></p>
             `;
 
             let messagePaiement = '';
@@ -2662,7 +2751,9 @@
                 type, utilisateur: utilisateurCourant.nom, email: utilisateurCourant.email,
                 montant, crypto, operateur, portefeuille, reseau, adresse, numero, nomNumero,
                 messagePaiement, txid,
-                statut: 'en_attente', date: new Date().toISOString(), avecPIN: true
+                statut: 'en_attente', date: new Date().toISOString(), avecPIN: true,
+                // Stocker le montant reçu pour référence
+                montantRecu: transaction.montantRecu
             };
 
             if (!donnees.demandes) donnees.demandes = [];
@@ -2960,7 +3051,8 @@
                 <p><i class="fas fa-tag"></i> Type: <span>${demande.type}</span></p>
                 <p><i class="fas fa-user"></i> Client: <span>${demande.utilisateur}</span></p>
                 <p><i class="fas fa-coins"></i> Montant: <span>${demande.montant} ${demande.type === 'ACHAT' ? 'Ar' : demande.crypto}</span></p>
-                <p><i class="fas fa-network-wired"></i> Réseau: <span>${demande.reseau || ' '}</span></p>
+                <p><i class="fas fa-coins" style="color: var(--success);"></i> Vous recevez: <span style="color: var(--success); font-weight: 700;">${demande.type === 'ACHAT' ? demande.montantRecu.toFixed(4) + ' ' + demande.crypto : demande.montantRecu.toLocaleString() + ' Ar'}</span></p>
+                <p><i class="fas fa-network-wired"></i> Réseau: <span>${demande.reseau || 'N/A'}</span></p>
                 ${infoDestinataire}
                 <p><i class="fas fa-hashtag"></i> TXID: <span style="font-size: 0.8rem;">${demande.txid || 'Non fourni'}</span></p>
                 <p><i class="fas fa-info-circle"></i> Statut: <span>${demande.statut}</span></p>
