@@ -658,15 +658,17 @@
         .btn-copy {
             background: var(--accent);
             color: white;
-            padding: 8px 16px;
+            padding: 12px 20px;
             border-radius: 40px;
-            font-size: 0.85rem;
+            font-size: 0.95rem;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
+            gap: 8px;
             cursor: pointer;
             border: none;
-            margin-left: 10px;
+            width: 100%;
+            margin-top: 12px;
         }
 
         .btn-copy:hover {
@@ -905,9 +907,8 @@
             color: white;
             font-size: 1rem;
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
+            flex-direction: column;
+            gap: 12px;
         }
 
         .message-admin i {
@@ -915,8 +916,8 @@
         }
 
         .message-admin-content {
-            flex: 1;
             word-break: break-all;
+            line-height: 1.5;
         }
 
         .warning-message {
