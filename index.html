@@ -2530,24 +2530,52 @@
             }
         }
 
+        // NOUVELLE VERSION CORRIGÉE - Les sélections restent fixes
         function mettreAJourSelecteurs() {
+            // SAUVEGARDER les valeurs sélectionnées actuelles AVANT toute modification
+            const operateurAchat = document.getElementById('operateur-achat')?.value;
+            const cryptoAchat = document.getElementById('crypto-achat')?.value;
+            const portefeuilleAchat = document.getElementById('portefeuille-achat')?.value;
+            const reseauAchat = document.getElementById('reseau-achat')?.value;
+            
+            const cryptoVente = document.getElementById('crypto-vente')?.value;
+            const reseauVente = document.getElementById('reseau-vente')?.value;
+            const operateurVente = document.getElementById('operateur-vente')?.value;
+            const portefeuilleVente = document.getElementById('portefeuille-vente')?.value;
+
+            // Mettre à jour les options des sélecteurs
             ['achat', 'vente'].forEach(t => {
+                // Opérateurs
                 const op = document.getElementById(`operateur-${t}`);
                 if (op && donnees.operateurs) {
                     op.innerHTML = donnees.operateurs.map(o => `<option value="${o.nom}">${o.nom}</option>`).join('');
                 }
                 
+                // Cryptos
                 const cr = document.getElementById(`crypto-${t}`);
                 if (cr && donnees.cryptos) {
                     cr.innerHTML = donnees.cryptos.map(c => `<option value="${c}">${c}</option>`).join('');
                 }
                 
+                // Portefeuilles - MODIFICATION : Suppression des parenthèses
                 const pf = document.getElementById(`portefeuille-${t}`);
                 if (pf && donnees.portefeuilles) {
-                    pf.innerHTML = donnees.portefeuilles.map(p => `<option value="${p.nom}">${p.nom} (${p.reseau || ' '})</option>`).join('');
+                    pf.innerHTML = donnees.portefeuilles.map(p => `<option value="${p.nom}">${p.nom} ${p.reseau || ''}</option>`).join('');
                 }
             });
+
+            // RESTAURER les valeurs sélectionnées si elles existent
+            if (operateurAchat) document.getElementById('operateur-achat').value = operateurAchat;
+            if (cryptoAchat) document.getElementById('crypto-achat').value = cryptoAchat;
+            if (portefeuilleAchat) document.getElementById('portefeuille-achat').value = portefeuilleAchat;
+            if (reseauAchat) document.getElementById('reseau-achat').value = reseauAchat;
             
+            if (cryptoVente) document.getElementById('crypto-vente').value = cryptoVente;
+            if (reseauVente) document.getElementById('reseau-vente').value = reseauVente;
+            if (operateurVente) document.getElementById('operateur-vente').value = operateurVente;
+            if (portefeuilleVente) document.getElementById('portefeuille-vente').value = portefeuilleVente;
+            
+            // Mettre à jour les frais affichés
             document.getElementById('frais-achat-affichage').textContent = (donnees.frais?.achat || 1.5) + '%';
             document.getElementById('frais-vente-affichage').textContent = (donnees.frais?.vente || 2.0) + '%';
         }
@@ -2557,12 +2585,23 @@
             const selectReseau = document.getElementById(`reseau-${type}`);
             if (!selectReseau || !donnees.reseaux) return;
             
-            // Filtrer les réseaux par crypto (comme avant)
+            // Sauvegarder la valeur actuelle du réseau
+            const ancienneValeur = selectReseau.value;
+            
+            // Filtrer les réseaux par crypto
             const reseauxFiltres = donnees.reseaux.filter(r => r.crypto === crypto);
             
             selectReseau.innerHTML = reseauxFiltres.map(r => 
                 `<option value="${r.nom}" data-frais="${r.fraisReseau || 0}">${r.nom} (frais: ${r.fraisReseau || 0}%)</option>`
             ).join('');
+            
+            // Restaurer l'ancienne valeur si elle existe dans les nouvelles options
+            if (ancienneValeur) {
+                const optionExists = Array.from(selectReseau.options).some(opt => opt.value === ancienneValeur);
+                if (optionExists) {
+                    selectReseau.value = ancienneValeur;
+                }
+            }
             
             if (type === 'achat') estimerAchat();
             else estimerVente();
@@ -2599,6 +2638,9 @@
             
             const numerosApprouves = utilisateurCourant.numeros?.filter(num => num.statut === 'approuve') || [];
             
+            // Sauvegarder la valeur actuelle
+            const ancienneValeur = select.value;
+            
             if (numerosApprouves.length === 0) {
                 select.innerHTML = '<option value="">Aucun numéro approuvé</option>';
                 select.disabled = true;
@@ -2607,6 +2649,14 @@
                 select.innerHTML = numerosApprouves.map(num => 
                     `<option value="${num.numero}" data-nom="${num.nom}">${num.nom} - ${num.numero}</option>`
                 ).join('');
+                
+                // Restaurer l'ancienne valeur si elle existe
+                if (ancienneValeur) {
+                    const optionExists = Array.from(select.options).some(opt => opt.value === ancienneValeur);
+                    if (optionExists) {
+                        select.value = ancienneValeur;
+                    }
+                }
             }
         }
 
