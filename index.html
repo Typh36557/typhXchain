@@ -1390,6 +1390,39 @@
         .footer-copyright a:hover {
             text-decoration: underline;
         }
+
+        /* Styles pour les limites */
+        .limite-info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 16px;
+            padding: 12px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .limite-label {
+            color: var(--text-secondary);
+        }
+
+        .limite-valeur {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .limite-error {
+            color: var(--danger);
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .limite-error.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -1607,8 +1640,9 @@
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label"><i class="fas fa-coins"></i> Montant (Min: 2 000Ar)</label>
-                        <div class="input-wrapper"><input type="number" id="montant-achat" value="2000" oninput="estimerAchat()"></div>
+                        <label class="form-label"><i class="fas fa-coins"></i> Montant (Min: 2 000 Ar - Max: 100 000 Ar)</label>
+                        <div class="input-wrapper"><input type="number" id="montant-achat" value="2000" min="2000" max="100000" oninput="estimerAchat(); verifierLimitesAchat()"></div>
+                        <div class="limite-error" id="limite-error-achat">Le montant doit être entre 2 000 Ar et 100 000 Ar</div>
                     </div>
                     
                     <div class="form-group">
@@ -1617,8 +1651,8 @@
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label"><i class="fas fa-network-wired"></i> Réseau</label>
-                        <div class="input-wrapper"><select id="reseau-achat" onchange="estimerAchat()"></select></div>
+                        <label class="form-label"><i class="fas fa-network-wired"></i> Réseau <span class="frais-valeur" id="frais-reseau-achat-affichage" style="font-size:0.8rem;"></span></label>
+                        <div class="input-wrapper"><select id="reseau-achat" onchange="estimerAchat(); afficherFraisReseauAchat()"></select></div>
                     </div>
                     
                     <div class="form-group">
@@ -1631,9 +1665,9 @@
                         <div class="input-wrapper"><input type="text" placeholder="ID ou Email ou Adresse..." id="adresse-achat"></div>
                     </div>
                     
-                    <div class="frais-info">
-                        <span class="frais-label"><i class="fas fa-percent"></i> Frais de transaction</span>
-                        <span class="frais-valeur" id="frais-achat-affichage">1.5%</span>
+                    <div class="limite-info">
+                        <span class="limite-label"><i class="fas fa-info-circle"></i> Limites d'échange</span>
+                        <span class="limite-valeur">2 000 Ar - 100 000 Ar</span>
                     </div>
                     
                     <div class="estimated-value" id="estimation-achat-container">
@@ -1669,8 +1703,8 @@
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label"><i class="fas fa-network-wired"></i> Réseau</label>
-                        <div class="input-wrapper"><select id="reseau-vente" onchange="estimerVente()"></select></div>
+                        <label class="form-label"><i class="fas fa-network-wired"></i> Réseau <span class="frais-valeur" id="frais-reseau-vente-affichage" style="font-size:0.8rem;"></span></label>
+                        <div class="input-wrapper"><select id="reseau-vente" onchange="estimerVente(); afficherFraisReseauVente()"></select></div>
                     </div>
                     
                     <div class="form-group">
@@ -1693,10 +1727,11 @@
                         <div id="info-numero-selectionne" style="margin-top: 8px; font-size: 0.9rem; color: var(--text-secondary);"></div>
                     </div>
                     
-                    <div class="frais-info">
-                        <span class="frais-label"><i class="fas fa-percent"></i> Frais de transaction</span>
-                        <span class="frais-valeur" id="frais-vente-affichage">2.0%</span>
+                    <div class="limite-info">
+                        <span class="limite-label"><i class="fas fa-info-circle"></i> Limites d'échange</span>
+                        <span class="limite-valeur">2 000 Ar - 100 000 Ar</span>
                     </div>
+                    <div class="limite-error" id="limite-error-vente">La valeur doit être entre 2 000 Ar et 100 000 Ar</div>
                     
                     <div class="estimated-value" id="estimation-vente-container">
                         <!-- L'estimation sera insérée ici par JavaScript -->
@@ -1946,7 +1981,7 @@
             
             <div class="warning-message" id="warning-message">
                 <i class="fas fa-exclamation-triangle"></i>
-                <span>Vérifiez bien le numéro ou adresse et aussi les informations avant d'envoyer ! Min de transaction : 2 000 Ar ≈ 0.4$ - Max de transaction : 100 000 Ar ≈ 24$</span>
+                <span>Vérifiez bien le numéro ou adresse du portefeuille indiquer et aussi les informations avant d'envoyer !</span>
             </div>
             
             <div class="modal-buttons">
@@ -2088,6 +2123,10 @@
             'POL': 'POLUSDT',
             'USDC': 'USDCUSDT'
         };
+
+        // Constantes pour les limites
+        const MIN_MONTANT_AR = 2000;
+        const MAX_MONTANT_AR = 100000;
 
         function obtenirDonneesParDefaut() {
             return {
@@ -2575,9 +2614,9 @@
             if (operateurVente) document.getElementById('operateur-vente').value = operateurVente;
             if (portefeuilleVente) document.getElementById('portefeuille-vente').value = portefeuilleVente;
             
-            // Mettre à jour les frais affichés
-            document.getElementById('frais-achat-affichage').textContent = (donnees.frais?.achat || 1.5) + '%';
-            document.getElementById('frais-vente-affichage').textContent = (donnees.frais?.vente || 2.0) + '%';
+            // Afficher les frais de réseau après mise à jour
+            afficherFraisReseauAchat();
+            afficherFraisReseauVente();
         }
 
         function mettreAJourReseaux(type) {
@@ -2592,7 +2631,7 @@
             const reseauxFiltres = donnees.reseaux.filter(r => r.crypto === crypto);
             
             selectReseau.innerHTML = reseauxFiltres.map(r => 
-                `<option value="${r.nom}" data-frais="${r.fraisReseau || 0}">${r.nom} (frais: ${r.fraisReseau || 0}%)</option>`
+                `<option value="${r.nom}" data-frais="${r.fraisReseau || 0}">${r.nom}</option>`
             ).join('');
             
             // Restaurer l'ancienne valeur si elle existe dans les nouvelles options
@@ -2603,8 +2642,79 @@
                 }
             }
             
-            if (type === 'achat') estimerAchat();
-            else estimerVente();
+            if (type === 'achat') {
+                estimerAchat();
+                afficherFraisReseauAchat();
+            } else {
+                estimerVente();
+                afficherFraisReseauVente();
+            }
+        }
+
+        // Nouvelle fonction pour afficher les frais de réseau
+        function afficherFraisReseauAchat() {
+            const select = document.getElementById('reseau-achat');
+            const fraisSpan = document.getElementById('frais-reseau-achat-affichage');
+            if (select && fraisSpan) {
+                const selectedOption = select.options[select.selectedIndex];
+                if (selectedOption) {
+                    const frais = selectedOption.dataset.frais || '0';
+                    fraisSpan.innerHTML = `(frais réseau: ${frais}%)`;
+                }
+            }
+        }
+
+        function afficherFraisReseauVente() {
+            const select = document.getElementById('reseau-vente');
+            const fraisSpan = document.getElementById('frais-reseau-vente-affichage');
+            if (select && fraisSpan) {
+                const selectedOption = select.options[select.selectedIndex];
+                if (selectedOption) {
+                    const frais = selectedOption.dataset.frais || '0';
+                    fraisSpan.innerHTML = `(frais réseau: ${frais}%)`;
+                }
+            }
+        }
+
+        // Fonctions de vérification des limites
+        function verifierLimitesAchat() {
+            const montant = parseFloat(document.getElementById('montant-achat')?.value) || 0;
+            const errorDiv = document.getElementById('limite-error-achat');
+            const btn = document.getElementById('btn-confirmer-achat');
+            
+            if (montant < MIN_MONTANT_AR || montant > MAX_MONTANT_AR) {
+                errorDiv.classList.add('show');
+                btn.disabled = true;
+                btn.classList.add('btn-disabled');
+                return false;
+            } else {
+                errorDiv.classList.remove('show');
+                btn.disabled = false;
+                btn.classList.remove('btn-disabled');
+                return true;
+            }
+        }
+
+        function verifierLimitesVente() {
+            const montant = parseFloat(document.getElementById('montant-vente')?.value) || 0;
+            const crypto = document.getElementById('crypto-vente')?.value;
+            const taux = donnees.taux[crypto]?.prixMGA || 0;
+            const valeurAr = montant * taux;
+            
+            const errorDiv = document.getElementById('limite-error-vente');
+            const btn = document.getElementById('btn-confirmer-vente');
+            
+            if (valeurAr < MIN_MONTANT_AR || valeurAr > MAX_MONTANT_AR) {
+                errorDiv.classList.add('show');
+                btn.disabled = true;
+                btn.classList.add('btn-disabled');
+                return false;
+            } else {
+                errorDiv.classList.remove('show');
+                btn.disabled = false;
+                btn.classList.remove('btn-disabled');
+                return true;
+            }
         }
 
         function afficherReponseVente() {
@@ -2697,18 +2807,18 @@
             // Stocker le montant reçu pour la confirmation
             montantRecuAchat = estimation;
             
-            // Affichage avec frais
+            // Affichage SANS les frais de transaction
             document.getElementById('estimation-achat-container').innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                     <div>
                         <span class="estimated-label">Vous recevez:</span>
                         <span class="estimated-amount">${estimation.toFixed(4)} ${crypto}</span>
                     </div>
-                    <div style="color: var(--warning); font-size: 0.9rem;">
-                        <i class="fas fa-percent"></i> Taux de frais: ${frais}%
-                    </div>
                 </div>
             `;
+            
+            // Vérifier les limites
+            verifierLimitesAchat();
         }
 
         function estimerVente() {
@@ -2732,25 +2842,18 @@
             // Stocker le montant reçu pour la confirmation
             montantRecuVente = montantNetAr;
             
-            // Affichage des frais
-            let fraisAffichage = '';
-            if (fraisReseau > 0) {
-                fraisAffichage = `${fraisTransaction}% + ${fraisReseau}%`;
-            } else {
-                fraisAffichage = `${fraisTransaction}%`;
-            }
-            
+            // Affichage SANS les frais de transaction
             document.getElementById('estimation-vente-container').innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                     <div>
                         <span class="estimated-label">Vous recevez:</span>
                         <span class="estimated-amount">${montantNetAr.toLocaleString()} Ar</span>
                     </div>
-                    <div style="color: var(--warning); font-size: 0.9rem;">
-                        <i class="fas fa-percent"></i> Taux de frais: ${fraisAffichage}
-                    </div>
                 </div>
             `;
+            
+            // Vérifier les limites
+            verifierLimitesVente();
         }
 
         function verifierPINavantConfirmation(type) {
@@ -2778,6 +2881,17 @@
 
             if (utilisateurCourant.codePIN?.bloque) {
                 alert('Code PIN bloqué. Contactez l\'admin.');
+                return;
+            }
+
+            // Vérification des limites avant confirmation
+            if (type === 'ACHAT' && !verifierLimitesAchat()) {
+                alert('Le montant doit être entre 2 000 Ar et 100 000 Ar');
+                return;
+            }
+            
+            if (type === 'VENTE' && !verifierLimitesVente()) {
+                alert('La valeur de votre transaction doit être entre 2 000 Ar et 100 000 Ar');
                 return;
             }
 
@@ -3515,10 +3629,14 @@
             if (section === 'achat') {
                 mettreAJourReseaux('achat');
                 estimerAchat();
+                afficherFraisReseauAchat();
+                verifierLimitesAchat();
             }
             if (section === 'vente') {
                 mettreAJourReseaux('vente');
                 estimerVente();
+                afficherFraisReseauVente();
+                verifierLimitesVente();
                 mettreAJourListeNumerosVente();
             }
         }
@@ -3533,9 +3651,15 @@
             if (section === 'vente') {
                 afficherReponseVente();
                 estimerVente();
+                afficherFraisReseauVente();
+                verifierLimitesVente();
                 mettreAJourListeNumerosVente();
             }
-            if (section === 'achat') estimerAchat();
+            if (section === 'achat') {
+                estimerAchat();
+                afficherFraisReseauAchat();
+                verifierLimitesAchat();
+            }
             if (section === 'demandes' && utilisateurCourant) mettreAJourMesDemandes();
             if (section === 'profil') {
                 mettreAJourNumerosUtilisateur();
@@ -3566,8 +3690,16 @@
                         mettreAJourAffichage();
                         afficherNews();
                         afficherTauxSimplifies();
-                        if (document.getElementById('achat-section').classList.contains('active')) estimerAchat();
-                        if (document.getElementById('vente-section').classList.contains('active')) estimerVente();
+                        if (document.getElementById('achat-section').classList.contains('active')) {
+                            estimerAchat();
+                            afficherFraisReseauAchat();
+                            verifierLimitesAchat();
+                        }
+                        if (document.getElementById('vente-section').classList.contains('active')) {
+                            estimerVente();
+                            afficherFraisReseauVente();
+                            verifierLimitesVente();
+                        }
                     }
                 }
             });
