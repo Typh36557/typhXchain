@@ -1148,6 +1148,201 @@
             gap: 3px;
         }
 
+        /* Styles pour le reçu */
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--gray-300);
+        }
+
+        .receipt-header h2 {
+            color: var(--white);
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .receipt-header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .receipt-amount-large {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--bg-dark));
+            border-radius: 40px;
+            border: 1px solid var(--gray-300);
+        }
+
+        .receipt-amount-large .amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--white);
+            line-height: 1.2;
+        }
+
+        .receipt-amount-large .description {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-top: 10px;
+        }
+
+        .receipt-amount-large .badge-statut {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+
+        .badge-statut.confirme {
+            background: rgba(5, 150, 105, 0.2);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .badge-statut.en_attente {
+            background: rgba(217, 119, 6, 0.2);
+            border: 1px solid var(--warning);
+            color: var(--warning);
+        }
+
+        .badge-statut.rejete {
+            background: rgba(220, 38, 38, 0.2);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .receipt-details {
+            background: var(--primary);
+            border-radius: 28px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .receipt-details .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--gray-300);
+        }
+
+        .receipt-details .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .receipt-details .detail-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .receipt-details .detail-value {
+            color: var(--white);
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .receipt-details .detail-value.small {
+            font-size: 0.8rem;
+            max-width: 200px;
+            word-break: break-all;
+        }
+
+        .receipt-actions {
+            margin-top: 30px;
+        }
+
+        .btn-receipt {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .btn-receipt:hover {
+            background: var(--accent-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-receipt-outline {
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-receipt-outline:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .rating-section {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid var(--gray-300);
+        }
+
+        .rating-title {
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+
+        .rating-stars {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 1.8rem;
+            color: var(--warning);
+        }
+
+        .rating-stars i {
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .rating-stars i:hover {
+            transform: scale(1.2);
+        }
+
+        .rating-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .rating-btn {
+            background: var(--primary);
+            border: 1px solid var(--gray-300);
+            color: var(--text-secondary);
+            padding: 10px 25px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .rating-btn:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
         @media (min-width: 768px) {
             .hero-title {
                 font-size: 3.5rem;
@@ -1765,12 +1960,49 @@
         </div>
     </div>
 
-    <!-- MODAL DÉTAILS -->
+    <!-- MODAL DÉTAILS (ancien) -->
     <div id="modal-details-demande" class="modal">
         <div class="modal-content">
             <div class="modal-title"><i class="fas fa-info-circle"></i> Détails</div>
             <div id="details-demande-complete" class="request-detail-modal"></div>
             <button class="btn btn-cancel" onclick="fermerDetailsDemande()"><i class="fas fa-times"></i> Fermer</button>
+        </div>
+    </div>
+
+    <!-- NOUVEAU : MODAL REÇU -->
+    <div id="modal-recu" class="modal">
+        <div class="modal-content">
+            <div class="receipt-header">
+                <h2>TYPH X-CHAIN</h2>
+                <p><i class="fas fa-receipt"></i> Reçu de transaction</p>
+            </div>
+            
+            <div id="recu-content"></div>
+            
+            <div class="receipt-actions">
+                <button class="btn-receipt" onclick="verifierMesActifs()">
+                    <i class="fas fa-wallet"></i> Vérifier mes actifs
+                </button>
+                
+                <div class="rating-section">
+                    <div class="rating-title">RAPIDE - SIMPLE - SÉCURISÉ</div>
+                    <div class="rating-stars">
+                        <i class="fas fa-star" onclick="noter(1)"></i>
+                        <i class="fas fa-star" onclick="noter(2)"></i>
+                        <i class="fas fa-star" onclick="noter(3)"></i>
+                        <i class="fas fa-star" onclick="noter(4)"></i>
+                        <i class="fas fa-star" onclick="noter(5)"></i>
+                    </div>
+                    <div class="rating-buttons">
+                        <span class="rating-btn" onclick="noter('positif')">Positive</span>
+                        <span class="rating-btn" onclick="noter('negatif')">Négative</span>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="btn btn-cancel" onclick="fermerModalRecu()" style="margin-top: 20px;">
+                <i class="fas fa-times"></i> Fermer
+            </button>
         </div>
     </div>
 
@@ -3019,7 +3251,7 @@
             }
 
             liste.innerHTML = mes.map(d => `
-                <li class="activity-item" onclick="voirDetailsDemande('${d.id}')">
+                <li class="activity-item" onclick="ouvrirRecu('${d.id}')">
                     <div class="activity-left">
                         <div class="activity-icon ${d.type}">
                             <i class="fas ${d.type === 'ACHAT' ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
@@ -3035,6 +3267,129 @@
                     </div>
                 </li>
             `).join('');
+        }
+
+        // NOUVELLE FONCTION : Ouvrir le reçu
+        function ouvrirRecu(id) {
+            const demande = donnees.demandes?.find(d => d.id === id);
+            if (!demande) return;
+
+            let montantPrincipal = '';
+            let description = '';
+            let statutTexte = '';
+            let classeStatut = '';
+
+            // Déterminer le statut
+            if (demande.statut === 'confirme') {
+                statutTexte = 'confirmée';
+                classeStatut = 'confirme';
+            } else if (demande.statut === 'en_attente') {
+                statutTexte = 'en attente';
+                classeStatut = 'en_attente';
+            } else if (demande.statut === 'rejete') {
+                statutTexte = 'rejetée';
+                classeStatut = 'rejete';
+            }
+
+            // Format du montant principal selon le type
+            if (demande.type === 'ACHAT') {
+                // Pour un achat, le montant reçu est en crypto
+                montantPrincipal = (demande.montantRecu || 0).toFixed(4) + ' ' + demande.crypto;
+                description = `Achat ${statutTexte} de ${parseFloat(demande.montant).toLocaleString()} Ar`;
+            } else {
+                // Pour une vente, le montant reçu est en Ariary
+                montantPrincipal = (demande.montantRecu || 0).toLocaleString() + ' Ar';
+                description = `Vente ${statutTexte} de ${demande.montant} ${demande.crypto}`;
+            }
+
+            // Format du bénéficiaire
+            let beneficiaire = '';
+            if (demande.type === 'ACHAT') {
+                beneficiaire = demande.adresse || 'Non spécifié';
+            } else {
+                beneficiaire = demande.nomNumero ? `${demande.nomNumero} (${demande.numero})` : demande.numero || 'Non spécifié';
+            }
+
+            // Construction du HTML du reçu
+            const recuHTML = `
+                <div class="receipt-amount-large">
+                    <div class="amount">${montantPrincipal}</div>
+                    <div class="description">${description}</div>
+                    <div class="badge-statut ${classeStatut}">${demande.statut.toUpperCase()}</div>
+                </div>
+                
+                <div class="receipt-details">
+                    <div class="detail-row">
+                        <span class="detail-label">ID Transaction</span>
+                        <span class="detail-value small">${demande.id}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Date</span>
+                        <span class="detail-value">${new Date(demande.date).toLocaleString('fr-FR')}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Type</span>
+                        <span class="detail-value">${demande.type}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Crypto</span>
+                        <span class="detail-value">${demande.crypto}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Réseau</span>
+                        <span class="detail-value">${demande.reseau || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Montant envoyé</span>
+                        <span class="detail-value">${demande.type === 'ACHAT' ? parseFloat(demande.montant).toLocaleString() + ' Ar' : demande.montant + ' ' + demande.crypto}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Bénéficiaire</span>
+                        <span class="detail-value small">${beneficiaire}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">TXID</span>
+                        <span class="detail-value small" style="cursor: pointer;" onclick="copierTexte('${demande.txid}')">
+                            ${demande.txid ? demande.txid.substring(0, 20) + '...' : 'Non fourni'} 
+                            ${demande.txid ? '<i class="fas fa-copy" style="margin-left: 5px;"></i>' : ''}
+                        </span>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('recu-content').innerHTML = recuHTML;
+            document.getElementById('modal-recu').classList.add('active');
+        }
+
+        // Nouvelle fonction pour copier du texte
+        function copierTexte(texte) {
+            if (texte) {
+                navigator.clipboard.writeText(texte).then(() => {
+                    alert('✅ TXID copié !');
+                });
+            }
+        }
+
+        // Nouvelle fonction pour fermer le reçu
+        function fermerModalRecu() {
+            document.getElementById('modal-recu').classList.remove('active');
+        }
+
+        // Nouvelle fonction pour vérifier mes actifs
+        function verifierMesActifs() {
+            fermerModalRecu();
+            switchPlatformSection('accueil');
+        }
+
+        // Nouvelle fonction pour noter
+        function noter(valeur) {
+            if (valeur === 'positif' || valeur === 'negatif') {
+                alert(`Merci pour votre retour ${valeur === 'positif' ? 'positif' : 'négatif'} !`);
+            } else {
+                alert(`Merci pour votre note de ${valeur} étoile(s) !`);
+            }
+            // Rediriger vers Facebook pour laisser un avis
+            window.open('https://www.facebook.com/Typh.Exchange.Ofisialy', '_blank');
         }
 
         function voirDetailsDemande(id) {
