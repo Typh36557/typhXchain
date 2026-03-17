@@ -9,6 +9,8 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- html2canvas pour téléchargement en photo -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -1450,6 +1452,12 @@
         .limite-error.show {
             display: block;
         }
+
+        /* Styles pour la capture d'écran */
+        #recu-modal-content.capture-mode {
+            max-height: none !important;
+            overflow: visible !important;
+        }
     </style>
 </head>
 <body>
@@ -1487,9 +1495,9 @@
                     Premium Service
                 </div>
                 
-            </div>  <!-- FIN DE LA SECTION HERO -->
+            </div>
 
-            <!-- BOUTON DE TÉLÉCHARGEMENT EN DEHORS DU CADRE, À DROITE -->
+            <!-- BOUTON DE TÉLÉCHARGEMENT -->
             <div style="display: flex; flex-direction: column; align-items: flex-end; margin-top: -10px; margin-bottom: 30px; padding-right: 10px;">
                 <a href="https://www.directfiles.link/TD7E00O1I" 
                    target="_blank" 
@@ -1504,7 +1512,6 @@
                     </span>
                 </div>
             </div>
-            <!-- FIN DU BOUTON DE TÉLÉCHARGEMENT -->
 
             <div class="features-grid">
                 <div class="feature-card">
@@ -1646,9 +1653,8 @@
             </div>
         </div>
 
-        <!-- PLATFORM SECTIONS (inchangées) -->
+        <!-- PLATFORM SECTIONS -->
         <div id="accueil-section" class="platform-section">
-            <!-- Contenu identique -->
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title"><i class="fas fa-chart-line"></i> Taux en direct <span class="binance-badge"><i class="fab fa-binance"></i> Binance</span></h2>
@@ -1672,7 +1678,6 @@
 
         <!-- ACHAT -->
         <div id="achat-section" class="platform-section">
-            <!-- Contenu identique -->
             <div class="card">
                 <h2 class="card-title"><i class="fas fa-arrow-down"></i> Achat crypto</h2>
                 
@@ -1729,7 +1734,6 @@
 
         <!-- VENTE -->
         <div id="vente-section" class="platform-section">
-            <!-- Contenu identique -->
             <div class="card">
                 <h2 class="card-title"><i class="fas fa-arrow-up"></i> Vente crypto</h2>
                 
@@ -1870,7 +1874,6 @@
 
     <!-- MODAL AUTH -->
     <div id="modal-auth" class="modal">
-        <!-- Contenu inchangé -->
         <div class="modal-content">
             <div class="modal-title"><i class="fas fa-sign-in-alt"></i> Bienvenue</div>
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
@@ -1897,7 +1900,6 @@
 
     <!-- MODAL PIN -->
     <div id="modal-pin" class="modal">
-        <!-- Contenu inchangé -->
         <div class="modal-content">
             <div class="modal-title"><i class="fas fa-lock"></i> Code PIN</div>
             <div id="pin-setup" style="display: block;">
@@ -1995,7 +1997,6 @@
 
     <!-- MODAL CONFIRMATION -->
     <div id="modal-confirmation" class="modal">
-        <!-- Contenu inchangé -->
         <div class="modal-content">
             <div class="modal-title" id="modal-titre">
                 <i class="fas fa-clock"></i> Confirmation
@@ -2025,7 +2026,7 @@
             
             <div class="warning-message" id="warning-message">
                 <i class="fas fa-exclamation-triangle"></i>
-                <span>Vérifiez bien le numéro ou l'adresse d'envoi ,et aussi les informations avant d'envoyer ! </span>
+                <span>Vérifiez bien le numéro ou adresse et aussi les informations avant d'envoyer ! Min de transaction : 2 000 Ar ≈ 0.4$ - Max de transaction : 100 000 Ar ≈ 24$</span>
             </div>
             
             <div class="modal-buttons">
@@ -2048,15 +2049,22 @@
         </div>
     </div>
 
-    <!-- MODAL REÇU -->
+    <!-- MODAL REÇU - AVEC BOUTON DE TÉLÉCHARGEMENT -->
     <div id="modal-recu" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" id="recu-modal-content">
             <div class="receipt-header">
                 <h2>TYPH X-CHAIN</h2>
                 <p><i class="fas fa-receipt"></i> Reçu de transaction</p>
             </div>
             
             <div id="recu-content"></div>
+            
+            <!-- BOUTON DE TÉLÉCHARGEMENT PHOTO -->
+            <div style="text-align: center; margin: 20px 0;">
+                <button class="btn-receipt" onclick="telechargerRecuEnPhoto()" style="background: #10B981;" id="btn-telecharger-recu">
+                    <i class="fas fa-download"></i> Télécharger le reçu (photo)
+                </button>
+            </div>
             
             <div class="receipt-actions">
                 <button class="btn-receipt" onclick="verifierMesActifs()">
@@ -3544,6 +3552,84 @@
                 alert(`Merci pour votre note de ${valeur} étoile(s) !`);
             }
             window.open('https://www.facebook.com/Typh.Exchange.Ofisialy', '_blank');
+        }
+
+        // NOUVELLE FONCTION : Télécharger le reçu en photo (capture l'ENTIER)
+        function telechargerRecuEnPhoto() {
+            const modalContent = document.getElementById('recu-modal-content');
+            const btn = document.getElementById('btn-telecharger-recu');
+            const originalText = btn.innerHTML;
+            
+            // Sauvegarder les styles originaux
+            const originalMaxHeight = modalContent.style.maxHeight;
+            const originalOverflow = modalContent.style.overflow;
+            
+            // Forcer l'affichage complet pour la capture
+            modalContent.style.maxHeight = 'none';
+            modalContent.style.overflow = 'visible';
+            modalContent.classList.add('capture-mode');
+            
+            // Désactiver le bouton
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Capture...';
+            
+            // Attendre que le DOM soit prêt (500ms pour garantir le rendu complet)
+            setTimeout(() => {
+                html2canvas(modalContent, {
+                    scale: 2.5,
+                    backgroundColor: '#132B4A',
+                    logging: false,
+                    allowTaint: false,
+                    useCORS: true,
+                    windowWidth: modalContent.scrollWidth,
+                    windowHeight: modalContent.scrollHeight,
+                    onclone: function(clonedDoc) {
+                        const clonedModal = clonedDoc.getElementById('recu-modal-content');
+                        if (clonedModal) {
+                            clonedModal.style.maxHeight = 'none';
+                            clonedModal.style.overflow = 'visible';
+                        }
+                    }
+                }).then(canvas => {
+                    // Télécharger l'image
+                    const link = document.createElement('a');
+                    const date = new Date().toLocaleDateString('fr-FR').replace(/\//g, '-');
+                    const heure = new Date().toLocaleTimeString('fr-FR').replace(/:/g, '-');
+                    link.download = `TYPH-RECU-${date}-${heure}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    
+                    // Restaurer les styles
+                    modalContent.style.maxHeight = originalMaxHeight;
+                    modalContent.style.overflow = originalOverflow;
+                    modalContent.classList.remove('capture-mode');
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    
+                    // Notification de succès
+                    const notification = document.createElement('div');
+                    notification.style.cssText = `
+                        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+                        background: #059669; color: white; padding: 15px 30px;
+                        border-radius: 50px; z-index: 9999; font-weight: 600;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    `;
+                    notification.innerHTML = '<i class="fas fa-check-circle"></i> Reçu téléchargé avec succès !';
+                    document.body.appendChild(notification);
+                    setTimeout(() => notification.remove(), 3000);
+                    
+                }).catch(error => {
+                    console.error('Erreur capture:', error);
+                    alert('❌ Erreur lors du téléchargement. Veuillez réessayer.');
+                    
+                    // Restaurer en cas d'erreur
+                    modalContent.style.maxHeight = originalMaxHeight;
+                    modalContent.style.overflow = originalOverflow;
+                    modalContent.classList.remove('capture-mode');
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
+            }, 500); // Délai de 500ms
         }
 
         function voirDetailsDemande(id) {
