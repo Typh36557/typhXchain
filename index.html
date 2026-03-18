@@ -1711,9 +1711,9 @@
                         <div class="input-wrapper"><input type="text" placeholder="ID ou Email ou Adresse..." id="adresse-achat"></div>
                     </div>
                     
-                    <!-- NOUVEAU : Sélection du numéro d'envoi pour ACHAT -->
+                    <!-- NOUVEAU : Sélection du numéro à débiter pour ACHAT -->
                     <div class="form-group" id="groupe-numero-achat" style="display: none;">
-                        <label class="form-label"><i class="fas fa-phone-alt"></i> Numéro à d'envoi</label>
+                        <label class="form-label"><i class="fas fa-phone-alt"></i> Numéro à débiter</label>
                         <div class="input-wrapper">
                             <select id="numero-achat-select" onchange="afficherInfosNumeroAchat()">
                                 <option value="">Sélectionnez un numéro</option>
@@ -3054,7 +3054,7 @@
                     numero = selectedOption.value;
                     nomNumero = selectedOption.dataset.nom || '';
                 } else {
-                    alert('Sélectionnez un numéro d'envoi');
+                    alert('Sélectionnez un numéro à débiter');
                     return;
                 }
             }
