@@ -458,6 +458,27 @@
             font-weight: 600; color: var(--white);
         }
         
+        /* Styles pour la recherche dans les approbations */
+        .search-numero-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .search-numero-bar input {
+            flex: 1;
+            padding: 14px;
+            background: var(--primary);
+            border: 1px solid var(--gray-300);
+            border-radius: 40px;
+            color: var(--white);
+            font-size: 0.95rem;
+        }
+        .search-numero-bar button {
+            padding: 14px 20px;
+            white-space: nowrap;
+        }
+        
         @media (min-width: 768px) {
             .container { max-width: 600px; margin: 0 auto; }
             .nav-menu { max-width: 600px; }
@@ -494,7 +515,7 @@
         <div class="container">
             <h1><i class="fas fa-cog" style="color: var(--accent);"></i> Administration</h1>
 
-            <!-- Stats Dashboard -->
+            <!-- Stats Dashboard avec NOUVEAU compteur de transactions en attente -->
             <div class="stats-grid" id="stats-dashboard">
                 <div class="stat-card">
                     <div class="stat-value" id="stats-utilisateurs">0</div>
@@ -510,7 +531,12 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-value" id="stats-transactions">0</div>
-                    <div class="stat-label">Transactions</div>
+                    <div class="stat-label">Transactions confirmées</div>
+                </div>
+                <!-- NOUVEAU : Transactions en attente -->
+                <div class="stat-card">
+                    <div class="stat-value" id="stats-transactions-attente">0</div>
+                    <div class="stat-label">En attente</div>
                 </div>
             </div>
 
@@ -656,10 +682,17 @@
                 </div>
             </div>
 
-            <!-- GESTION DES APPROBATIONS DE NUMÉROS -->
+            <!-- GESTION DES APPROBATIONS DE NUMÉROS AVEC RECHERCHE PAR NOM -->
             <div id="numeros-tab" style="display: none;">
                 <div class="admin-card">
                     <h2><i class="fas fa-phone-alt"></i> Demandes d'approbation de numéros</h2>
+                    <!-- NOUVEAU : Barre de recherche par nom -->
+                    <div class="search-numero-bar">
+                        <input type="text" id="recherche-numero-nom" placeholder="Rechercher par nom du titulaire..." oninput="afficherNumerosAttente(); afficherNumerosApprouves();">
+                        <button class="btn btn-filter" onclick="afficherNumerosAttente(); afficherNumerosApprouves();">
+                            <i class="fas fa-search"></i> Rechercher
+                        </button>
+                    </div>
                     <div id="numeros-attente-liste" class="item-list"></div>
                 </div>
                 <div class="admin-card">
@@ -1784,15 +1817,24 @@
             `).join('') || '<div class="item-row">Aucun réseau configuré</div>';
         }
 
+        // NOUVELLE VERSION avec recherche par nom
         function afficherNumerosAttente() {
             const liste = document.getElementById('numeros-attente-liste');
             if (!liste) return;
+            
+            // Récupérer la valeur de recherche
+            const rechercheNom = document.getElementById('recherche-numero-nom')?.value.toLowerCase() || '';
             
             let html = '';
             (donnees.utilisateurs || []).forEach((user) => {
                 if (user.numeros) {
                     user.numeros.forEach((num, numIndex) => {
-                        if (num.statut === 'en_attente') {
+                        // Appliquer le filtre de recherche si actif
+                        const correspondRecherche = rechercheNom === '' || 
+                            (num.nom && num.nom.toLowerCase().includes(rechercheNom)) || 
+                            (user.nom && user.nom.toLowerCase().includes(rechercheNom));
+                        
+                        if (num.statut === 'en_attente' && correspondRecherche) {
                             html += `
                                 <div class="numero-item">
                                     <div class="numero-header">
@@ -1822,15 +1864,24 @@
             liste.innerHTML = html || '<div class="item-row">Aucune demande en attente</div>';
         }
 
+        // NOUVELLE VERSION avec recherche par nom
         function afficherNumerosApprouves() {
             const liste = document.getElementById('numeros-approuves-liste');
             if (!liste) return;
+            
+            // Récupérer la valeur de recherche
+            const rechercheNom = document.getElementById('recherche-numero-nom')?.value.toLowerCase() || '';
             
             let html = '';
             (donnees.utilisateurs || []).forEach(user => {
                 if (user.numeros) {
                     user.numeros.forEach(num => {
-                        if (num.statut === 'approuve') {
+                        // Appliquer le filtre de recherche si actif
+                        const correspondRecherche = rechercheNom === '' || 
+                            (num.nom && num.nom.toLowerCase().includes(rechercheNom)) || 
+                            (user.nom && user.nom.toLowerCase().includes(rechercheNom));
+                        
+                        if (num.statut === 'approuve' && correspondRecherche) {
                             html += `
                                 <div class="numero-item">
                                     <div class="numero-header">
@@ -2007,12 +2058,14 @@
             }
         }
 
+        // NOUVELLE VERSION avec compteur de transactions en attente
         function mettreAJourStats() {
             const stats = {
                 utilisateurs: donnees.utilisateurs?.length || 0,
                 numerosAttente: 0,
                 demandes: donnees.demandes?.length || 0,
-                transactions: donnees.demandes?.filter(d => d.statut === 'confirme').length || 0
+                transactionsConfirmees: donnees.demandes?.filter(d => d.statut === 'confirme').length || 0,
+                transactionsEnAttente: donnees.demandes?.filter(d => d.statut === 'en_attente').length || 0
             };
 
             donnees.utilisateurs?.forEach(user => {
@@ -2024,7 +2077,11 @@
             document.getElementById('stats-utilisateurs').textContent = stats.utilisateurs;
             document.getElementById('stats-numeros-attente').textContent = stats.numerosAttente;
             document.getElementById('stats-demandes').textContent = stats.demandes;
-            document.getElementById('stats-transactions').textContent = stats.transactions;
+            document.getElementById('stats-transactions').textContent = stats.transactionsConfirmees;
+            // NOUVEAU : Afficher les transactions en attente
+            if (document.getElementById('stats-transactions-attente')) {
+                document.getElementById('stats-transactions-attente').textContent = stats.transactionsEnAttente;
+            }
         }
 
         function filtrerUtilisateurs() {
