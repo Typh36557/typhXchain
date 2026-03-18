@@ -11,6 +11,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <!-- HTML2CANVAS pour générer les images -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Manifest pour PWA -->
+    <link rel="manifest" href="/manifest.json">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -292,9 +294,33 @@
             transition: all 0.2s; font-size: 0.95rem; font-weight: 500; color: var(--text-secondary);
             display: flex; align-items: center; justify-content: center; gap: 8px;
             min-width: 120px;
+            position: relative;
         }
         .tab i { font-size: 1.1rem; }
         .tab.active { background: var(--accent); color: white; }
+        
+        /* Notification badge sur l'onglet */
+        .notification-badge {
+            background: var(--danger);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 20px;
+            margin-left: 5px;
+            min-width: 18px;
+            text-align: center;
+            animation: pulse 1.5s infinite;
+            position: absolute;
+            top: -5px;
+            right: -5px;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
         
         .filter-bar {
             display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;
@@ -479,6 +505,108 @@
             white-space: nowrap;
         }
         
+        /* Styles pour les notifications toast */
+        .notification-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            border-left: 4px solid var(--warning);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 2000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            max-width: 350px;
+            border: 1px solid var(--gray-300);
+        }
+        
+        .notification-toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--warning);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+        
+        .toast-content {
+            flex: 1;
+        }
+        
+        .toast-title {
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 4px;
+        }
+        
+        .toast-message {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+        
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0 5px;
+        }
+        
+        .toast-close:hover {
+            color: var(--white);
+        }
+        
+        /* Banner de permission de notification */
+        .permission-banner {
+            position: fixed;
+            bottom: 80px;
+            left: 10px;
+            right: 10px;
+            background: var(--bg-card);
+            border: 2px solid var(--accent);
+            border-radius: 20px;
+            padding: 15px;
+            z-index: 1500;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            animation: slideUp 0.3s ease;
+        }
+        
+        .permission-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .permission-content i {
+            font-size: 1.5rem;
+            color: var(--accent);
+        }
+        
+        .permission-content span {
+            flex: 1;
+            color: var(--white);
+            font-size: 0.9rem;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
         @media (min-width: 768px) {
             .container { max-width: 600px; margin: 0 auto; }
             .nav-menu { max-width: 600px; }
@@ -515,7 +643,7 @@
         <div class="container">
             <h1><i class="fas fa-cog" style="color: var(--accent);"></i> Administration</h1>
 
-            <!-- Stats Dashboard avec NOUVEAU compteur de transactions en attente -->
+            <!-- Stats Dashboard avec compteur de transactions en attente -->
             <div class="stats-grid" id="stats-dashboard">
                 <div class="stat-card">
                     <div class="stat-value" id="stats-utilisateurs">0</div>
@@ -533,7 +661,6 @@
                     <div class="stat-value" id="stats-transactions">0</div>
                     <div class="stat-label">Transactions confirmées</div>
                 </div>
-                <!-- NOUVEAU : Transactions en attente -->
                 <div class="stat-card">
                     <div class="stat-value" id="stats-transactions-attente">0</div>
                     <div class="stat-label">En attente</div>
@@ -548,7 +675,10 @@
                 <div class="tab" onclick="switchTab('numeros')"><i class="fas fa-phone-alt"></i> Approbations</div>
                 <div class="tab" onclick="switchTab('demandes')"><i class="fas fa-clipboard-list"></i> Demandes</div>
                 <div class="tab" onclick="switchTab('news')"><i class="fas fa-newspaper"></i> Actualités</div>
-                <div class="tab" onclick="switchTab('transactions')"><i class="fas fa-exchange-alt"></i> Transactions</div>
+                <div class="tab" onclick="switchTab('transactions')" id="tab-transactions">
+                    <i class="fas fa-exchange-alt"></i> Transactions
+                    <span id="notif-transactions" class="notification-badge" style="display: none;">0</span>
+                </div>
             </div>
 
             <!-- GESTION DES DONNÉES -->
@@ -686,7 +816,6 @@
             <div id="numeros-tab" style="display: none;">
                 <div class="admin-card">
                     <h2><i class="fas fa-phone-alt"></i> Demandes d'approbation de numéros</h2>
-                    <!-- NOUVEAU : Barre de recherche par nom -->
                     <div class="search-numero-bar">
                         <input type="text" id="recherche-numero-nom" placeholder="Rechercher par nom du titulaire..." oninput="afficherNumerosAttente(); afficherNumerosApprouves();">
                         <button class="btn btn-filter" onclick="afficherNumerosAttente(); afficherNumerosApprouves();">
@@ -785,7 +914,7 @@
                 </div>
             </div>
 
-            <!-- NOUVEL ONGLET TRANSACTIONS -->
+            <!-- ONGLET TRANSACTIONS -->
             <div id="transactions-tab" style="display: none;">
                 <div class="admin-card">
                     <h2><i class="fas fa-chart-bar"></i> Statistiques des transactions</h2>
@@ -933,6 +1062,30 @@
         </div>
     </div>
 
+    <!-- NOTIFICATION TOAST -->
+    <div id="notification-toast" class="notification-toast">
+        <div class="toast-icon"><i class="fas fa-bell"></i></div>
+        <div class="toast-content">
+            <div class="toast-title">Nouvelle transaction</div>
+            <div class="toast-message" id="toast-message"></div>
+        </div>
+        <button class="toast-close" onclick="fermerToast()">×</button>
+    </div>
+
+    <!-- BANNER DE PERMISSION DE NOTIFICATION -->
+    <div id="notification-permission-banner" class="permission-banner" style="display: none;">
+        <div class="permission-content">
+            <i class="fas fa-bell"></i>
+            <span>Activez les notifications pour être alerté des nouvelles transactions en temps réel</span>
+            <button class="btn btn-success" onclick="demanderPermissionNotification()">
+                <i class="fas fa-check"></i> Activer
+            </button>
+            <button class="btn btn-cancel" onclick="fermerBannerPermission()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
     <script>
         // Configuration Firebase
         const firebaseConfig = {
@@ -997,6 +1150,13 @@
             'USDC': 'USDCUSDT'
         };
 
+        // Variables pour les notifications
+        let dernierCompteTransactions = 0;
+        let intervalNotification = null;
+        let toastTimer = null;
+        let notificationPermission = false;
+        let dernieresTransactions = [];
+
         function loginAdmin() {
             const username = document.getElementById('admin-username').value;
             const password = document.getElementById('admin-password').value;
@@ -1007,6 +1167,8 @@
                 sessionStorage.setItem('adminLoggedIn', 'true');
                 chargerDonnees();
                 demarrerSyncBinance();
+                demarrerSurveillanceTransactions();
+                verifierPermissionNotification();
             } else {
                 document.getElementById('admin-error').style.display = 'block';
             }
@@ -1017,6 +1179,7 @@
             document.getElementById('login-page').style.display = 'flex';
             document.getElementById('admin-interface').style.display = 'none';
             if (binanceInterval) clearInterval(binanceInterval);
+            if (intervalNotification) clearInterval(intervalNotification);
         }
 
         if (sessionStorage.getItem('adminLoggedIn') === 'true') {
@@ -1024,6 +1187,176 @@
             document.getElementById('admin-interface').style.display = 'block';
             chargerDonnees();
             demarrerSyncBinance();
+            demarrerSurveillanceTransactions();
+            verifierPermissionNotification();
+        }
+
+        // Fonctions de notification
+        function verifierPermissionNotification() {
+            if (!('Notification' in window)) return;
+            
+            const savedPermission = localStorage.getItem('notificationPermission');
+            
+            if (Notification.permission === 'granted') {
+                notificationPermission = true;
+            } else if (Notification.permission === 'default' && !savedPermission) {
+                setTimeout(() => {
+                    document.getElementById('notification-permission-banner').style.display = 'block';
+                }, 5000);
+            }
+        }
+
+        function fermerBannerPermission() {
+            document.getElementById('notification-permission-banner').style.display = 'none';
+            localStorage.setItem('notificationPermission', 'declined');
+        }
+
+        function demanderPermissionNotification() {
+            if (!('Notification' in window)) {
+                alert("Votre navigateur ne supporte pas les notifications");
+                return;
+            }
+            
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    notificationPermission = true;
+                    document.getElementById('notification-permission-banner').style.display = 'none';
+                    
+                    // Notification de test
+                    const notification = new Notification('✅ Typh X-chain Admin', {
+                        body: 'Notifications activées avec succès !',
+                        vibrate: [200, 100, 200]
+                    });
+                    
+                    localStorage.setItem('notificationPermission', 'granted');
+                }
+            });
+        }
+
+        function afficherNotification(message) {
+            const toast = document.getElementById('notification-toast');
+            const toastMessage = document.getElementById('toast-message');
+            
+            if (!toast || !toastMessage) return;
+            
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 5000);
+        }
+
+        function fermerToast() {
+            const toast = document.getElementById('notification-toast');
+            if (toast) {
+                toast.classList.remove('show');
+                if (toastTimer) clearTimeout(toastTimer);
+            }
+        }
+
+        function envoyerNotificationTransaction(transaction) {
+            if (!notificationPermission) return;
+            
+            const dateTransaction = new Date(transaction.date);
+            const maintenant = new Date();
+            const diffMinutes = (maintenant - dateTransaction) / (1000 * 60);
+            
+            if (diffMinutes > 1) return;
+            
+            if (dernieresTransactions.includes(transaction.id)) return;
+            dernieresTransactions.push(transaction.id);
+            if (dernieresTransactions.length > 10) dernieresTransactions.shift();
+            
+            const montant = transaction.type === 'ACHAT' 
+                ? `${transaction.montant} Ar → ${transaction.montantRecu?.toFixed(4)} ${transaction.crypto}`
+                : `${transaction.montant} ${transaction.crypto} → ${transaction.montantRecu?.toLocaleString()} Ar`;
+            
+            const notification = new Notification('💰 Nouvelle transaction en attente', {
+                body: `${transaction.utilisateur} - ${transaction.type}: ${montant}`,
+                vibrate: [200, 100, 200],
+                tag: transaction.id,
+                renotify: true,
+                actions: [
+                    { action: 'view', title: '👁️ Voir' },
+                    { action: 'approve', title: '✅ Approuver' },
+                    { action: 'reject', title: '❌ Rejeter' }
+                ]
+            });
+            
+            notification.onclick = function() {
+                window.focus();
+                switchTab('transactions');
+                voirDetailsTransaction(transaction.id);
+                this.close();
+            };
+            
+            notification.onaction = function(event) {
+                window.focus();
+                switchTab('transactions');
+                
+                if (event.action === 'view') {
+                    voirDetailsTransaction(transaction.id);
+                } else if (event.action === 'approve') {
+                    setTimeout(() => {
+                        approuverDemande(transaction.id);
+                    }, 500);
+                } else if (event.action === 'reject') {
+                    setTimeout(() => {
+                        rejeterDemande(transaction.id);
+                    }, 500);
+                }
+                
+                this.close();
+            };
+        }
+
+        function verifierNouvellesTransactions() {
+            const demandes = donnees.demandes || [];
+            const enAttente = demandes.filter(d => d.statut === 'en_attente').length;
+            
+            const badge = document.getElementById('notif-transactions');
+            if (badge) {
+                if (enAttente > 0) {
+                    badge.textContent = enAttente;
+                    badge.style.display = 'inline-block';
+                    
+                    if (enAttente > dernierCompteTransactions) {
+                        badge.style.background = 'var(--danger)';
+                        badge.style.animation = 'pulse 1.5s infinite';
+                    } else {
+                        badge.style.background = 'var(--warning)';
+                        badge.style.animation = 'none';
+                    }
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+            
+            if (enAttente > dernierCompteTransactions) {
+                const nouvelles = enAttente - dernierCompteTransactions;
+                afficherNotification(`${nouvelles} nouvelle(s) transaction(s) en attente`);
+                
+                const nouvellesTransactions = demandes.filter(d => 
+                    d.statut === 'en_attente' && 
+                    !dernieresTransactions.includes(d.id) &&
+                    (new Date() - new Date(d.date)) < 60000
+                );
+                
+                nouvellesTransactions.forEach(tx => {
+                    envoyerNotificationTransaction(tx);
+                });
+            }
+            
+            dernierCompteTransactions = enAttente;
+        }
+
+        function demarrerSurveillanceTransactions() {
+            if (intervalNotification) clearInterval(intervalNotification);
+            intervalNotification = setInterval(() => {
+                verifierNouvellesTransactions();
+            }, 10000);
         }
 
         // Fonctions Binance
@@ -1032,7 +1365,6 @@
             await syncBinance();
             binanceInterval = setInterval(syncBinance, 30000);
             
-            // Timer pour l'affichage
             let tempsRestant = 30;
             setInterval(() => {
                 tempsRestant--;
@@ -1070,16 +1402,13 @@
                 
                 const tauxMGA = await getTauxMGA();
                 
-                // Récupérer tous les prix
                 const response = await fetch('https://api.binance.com/api/v3/ticker/price');
                 const prices = await response.json();
                 
                 let updates = {};
                 
-                // Mettre à jour chaque crypto
                 Object.entries(pairesBinance).forEach(([crypto, paire]) => {
                     if (crypto === 'USDT') {
-                        // USDT est spécial - toujours 1 USD
                         updates[`donnees/taux/${crypto}`] = {
                             prixUSD: 1,
                             prixMGA: tauxMGA,
@@ -1093,8 +1422,6 @@
                         if (ticker) {
                             const prixUSD = parseFloat(ticker.price);
                             const prixMGA = Math.round(prixUSD * tauxMGA);
-                            
-                            // Calculer variation (simulée pour l'exemple)
                             const variation = (Math.random() * 4 - 2).toFixed(1);
                             
                             updates[`donnees/taux/${crypto}`] = {
@@ -1111,7 +1438,6 @@
                 
                 await database.ref().update(updates);
                 
-                // Recharger les données
                 const snapshot = await database.ref('donnees/taux').once('value');
                 if (snapshot.val()) {
                     donnees.taux = snapshot.val();
@@ -1159,7 +1485,6 @@
             sauvegarderDonnees();
             
             if (donnees.tauxMode === 'manual') {
-                // Mettre à jour tous les prix MGA manuellement
                 Object.keys(donnees.taux || {}).forEach(crypto => {
                     if (donnees.taux[crypto] && donnees.taux[crypto].prixUSD) {
                         donnees.taux[crypto].prixMGA = Math.round(donnees.taux[crypto].prixUSD * valeur);
@@ -1200,7 +1525,6 @@
                 const variationClass = taux.couleur === 'positive' ? 'positive' : 'negative';
                 const variationIcon = taux.couleur === 'positive' ? 'arrow-up' : 'arrow-down';
                 
-                // Déterminer le symbole d'affichage
                 let symboleAffiche = crypto;
                 if (crypto === 'MATIC') symboleAffiche = 'POL';
                 if (crypto === 'LTC') symboleAffiche = 'LTC';
@@ -1256,7 +1580,6 @@
                 return;
             }
             
-            // Trier par date (plus récent en premier)
             const newsTriees = [...donnees.news].sort((a, b) => new Date(b.date) - new Date(a.date));
             
             liste.innerHTML = newsTriees.map((news, index) => {
@@ -1351,7 +1674,6 @@
             const id = document.getElementById('news-editing-id').value;
             
             if (id) {
-                // Modification
                 const index = donnees.news.findIndex(n => n.id === id);
                 if (index !== -1) {
                     donnees.news[index] = {
@@ -1365,7 +1687,6 @@
                     };
                 }
             } else {
-                // Nouvelle news
                 const nouvelleNews = {
                     id: 'NEWS-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
                     titre,
@@ -1587,7 +1908,6 @@
                             source: 'manual'
                         };
                         
-                        // Si mode automatique, passer en manuel
                         if (donnees.tauxMode === 'auto') {
                             setTauxMode('manual');
                         }
@@ -1696,7 +2016,7 @@
             afficherDemandes();
             afficherUtilisateurs();
             afficherNews();
-            afficherTransactions(); // Nouvelle fonction
+            afficherTransactions();
             
             if (donnees.frais) {
                 document.getElementById('frais-achat-display').textContent = donnees.frais.achat + '%';
@@ -1752,6 +2072,11 @@
                 document.getElementById('transactions-tab').style.display = 'block';
                 afficherTransactions();
                 calculerStatsTransactions();
+                
+                // Réinitialiser les notifications vues
+                if (document.getElementById('notif-transactions')) {
+                    document.getElementById('notif-transactions').style.background = 'var(--warning)';
+                }
             }
         }
 
@@ -1817,19 +2142,16 @@
             `).join('') || '<div class="item-row">Aucun réseau configuré</div>';
         }
 
-        // NOUVELLE VERSION avec recherche par nom
         function afficherNumerosAttente() {
             const liste = document.getElementById('numeros-attente-liste');
             if (!liste) return;
             
-            // Récupérer la valeur de recherche
             const rechercheNom = document.getElementById('recherche-numero-nom')?.value.toLowerCase() || '';
             
             let html = '';
             (donnees.utilisateurs || []).forEach((user) => {
                 if (user.numeros) {
                     user.numeros.forEach((num, numIndex) => {
-                        // Appliquer le filtre de recherche si actif
                         const correspondRecherche = rechercheNom === '' || 
                             (num.nom && num.nom.toLowerCase().includes(rechercheNom)) || 
                             (user.nom && user.nom.toLowerCase().includes(rechercheNom));
@@ -1864,19 +2186,16 @@
             liste.innerHTML = html || '<div class="item-row">Aucune demande en attente</div>';
         }
 
-        // NOUVELLE VERSION avec recherche par nom
         function afficherNumerosApprouves() {
             const liste = document.getElementById('numeros-approuves-liste');
             if (!liste) return;
             
-            // Récupérer la valeur de recherche
             const rechercheNom = document.getElementById('recherche-numero-nom')?.value.toLowerCase() || '';
             
             let html = '';
             (donnees.utilisateurs || []).forEach(user => {
                 if (user.numeros) {
                     user.numeros.forEach(num => {
-                        // Appliquer le filtre de recherche si actif
                         const correspondRecherche = rechercheNom === '' || 
                             (num.nom && num.nom.toLowerCase().includes(rechercheNom)) || 
                             (user.nom && user.nom.toLowerCase().includes(rechercheNom));
@@ -1978,6 +2297,8 @@
                 });
                 sauvegarderDonnees();
                 afficherDemandes();
+                afficherTransactions();
+                verifierNouvellesTransactions();
                 alert('Demande approuvée !');
             }
         }
@@ -1996,6 +2317,8 @@
                 });
                 sauvegarderDonnees();
                 afficherDemandes();
+                afficherTransactions();
+                verifierNouvellesTransactions();
                 alert('Demande rejetée.');
             }
         }
@@ -2058,7 +2381,6 @@
             }
         }
 
-        // NOUVELLE VERSION avec compteur de transactions en attente
         function mettreAJourStats() {
             const stats = {
                 utilisateurs: donnees.utilisateurs?.length || 0,
@@ -2078,7 +2400,6 @@
             document.getElementById('stats-numeros-attente').textContent = stats.numerosAttente;
             document.getElementById('stats-demandes').textContent = stats.demandes;
             document.getElementById('stats-transactions').textContent = stats.transactionsConfirmees;
-            // NOUVEAU : Afficher les transactions en attente
             if (document.getElementById('stats-transactions-attente')) {
                 document.getElementById('stats-transactions-attente').textContent = stats.transactionsEnAttente;
             }
@@ -2196,7 +2517,6 @@
                 return;
             }
 
-            // Appliquer les filtres
             let transactionsFiltrees = filtrerTransactionsListe(demandes);
 
             liste.innerHTML = transactionsFiltrees.sort((a, b) => new Date(b.date) - new Date(a.date)).map(tx => {
@@ -2252,17 +2572,14 @@
 
             let filtrees = [...demandes];
 
-            // Filtre par type
             if (type !== 'all') {
                 filtrees = filtrees.filter(tx => tx.type === type);
             }
 
-            // Filtre par statut
             if (statut !== 'all') {
                 filtrees = filtrees.filter(tx => tx.statut === statut);
             }
 
-            // Filtre par recherche
             if (recherche) {
                 filtrees = filtrees.filter(tx => 
                     (tx.utilisateur && tx.utilisateur.toLowerCase().includes(recherche)) ||
@@ -2272,7 +2589,6 @@
                 );
             }
 
-            // Filtre par date
             const maintenant = new Date();
             const debutAujourdhui = new Date(maintenant.setHours(0,0,0,0));
             const debutSemaine = new Date(maintenant.setDate(maintenant.getDate() - maintenant.getDay()));
@@ -2295,7 +2611,6 @@
             const total = demandes.length;
             const enAttente = demandes.filter(d => d.statut === 'en_attente').length;
             
-            // Calculer les volumes
             let volumeAr = 0;
             let volumeCrypto = 0;
             
@@ -2318,7 +2633,6 @@
             calculerStatsTransactions();
         }
 
-        // NOUVELLE FONCTION : Télécharger le reçu en image
         function telechargerRecu() {
             if (!transactionSelectionneeId) {
                 alert('Aucune transaction sélectionnée');
@@ -2331,11 +2645,9 @@
                 return;
             }
             
-            // Préparer le contenu du reçu
             const recuContenu = document.getElementById('recu-contenu');
             const dateGeneration = document.getElementById('recu-date-generation');
             
-            // Formater les montants
             let montantRecu = '';
             if (transaction.type === 'ACHAT') {
                 montantRecu = (transaction.montantRecu ? transaction.montantRecu.toFixed(4) : '0') + ' ' + transaction.crypto;
@@ -2343,7 +2655,6 @@
                 montantRecu = (transaction.montantRecu ? transaction.montantRecu.toLocaleString() : '0') + ' Ar';
             }
             
-            // Informations bénéficiaire
             let beneficiaireInfo = '';
             if (transaction.type === 'ACHAT') {
                 beneficiaireInfo = `
@@ -2356,7 +2667,6 @@
                 `;
             }
             
-            // Construire le HTML du reçu
             recuContenu.innerHTML = `
                 <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
                     <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>ID Transaction:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.id}</td></tr>
@@ -2375,7 +2685,6 @@
             
             dateGeneration.textContent = new Date().toLocaleString('fr-FR');
             
-            // Capturer le template en image
             const template = document.getElementById('template-recu');
             
             html2canvas(template, {
@@ -2385,13 +2694,11 @@
                 allowTaint: true,
                 useCORS: true
             }).then(canvas => {
-                // Créer un lien de téléchargement
                 const link = document.createElement('a');
                 link.download = `recu-${transaction.id}-${Date.now()}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
                 
-                // Ajouter à l'historique
                 if (!transaction.historique) transaction.historique = [];
                 transaction.historique.push({
                     date: new Date().toISOString(),
@@ -2511,7 +2818,6 @@
 
             document.getElementById('details-transaction-complete').innerHTML = detailsHtml;
 
-            // Afficher l'historique
             let historiqueHtml = '';
             if (transaction.historique && transaction.historique.length > 0) {
                 historiqueHtml = transaction.historique.sort((a,b) => new Date(b.date) - new Date(a.date)).map(h => `
@@ -2557,6 +2863,7 @@
                 alert(`✅ Statut changé à ${nouveauStatut}`);
                 voirDetailsTransaction(transactionSelectionneeId);
                 afficherTransactions();
+                verifierNouvellesTransactions();
             }
         }
 
@@ -2598,6 +2905,7 @@
                         mettreAJourStats();
                         afficherTout();
                         mettreAJourPauseUI();
+                        verifierNouvellesTransactions();
                         
                         if (document.getElementById('demandes-tab').style.display === 'block') {
                             afficherDemandes();

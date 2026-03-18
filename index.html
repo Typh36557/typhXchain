@@ -1646,9 +1646,8 @@
             </div>
         </div>
 
-        <!-- PLATFORM SECTIONS (inchangées) -->
+        <!-- PLATFORM SECTIONS -->
         <div id="accueil-section" class="platform-section">
-            <!-- Contenu identique -->
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title"><i class="fas fa-chart-line"></i> Taux en direct <span class="binance-badge"><i class="fab fa-binance"></i> Binance</span></h2>
@@ -1672,7 +1671,6 @@
 
         <!-- ACHAT -->
         <div id="achat-section" class="platform-section">
-            <!-- Contenu identique -->
             <div class="card">
                 <h2 class="card-title"><i class="fas fa-arrow-down"></i> Achat crypto</h2>
                 
@@ -1713,6 +1711,18 @@
                         <div class="input-wrapper"><input type="text" placeholder="ID ou Email ou Adresse..." id="adresse-achat"></div>
                     </div>
                     
+                    <!-- NOUVEAU : Sélection du numéro d'envoi pour ACHAT -->
+                    <div class="form-group" id="groupe-numero-achat" style="display: none;">
+                        <label class="form-label"><i class="fas fa-phone-alt"></i> Numéro à d'envoi</label>
+                        <div class="input-wrapper">
+                            <select id="numero-achat-select" onchange="afficherInfosNumeroAchat()">
+                                <option value="">Sélectionnez un numéro</option>
+                            </select>
+                        </div>
+                        <div id="info-numero-achat-selectionne" style="margin-top: 8px; font-size: 0.9rem; color: var(--text-secondary);"></div>
+                    </div>
+                    <!-- FIN NOUVEAU -->
+                    
                     <div class="limite-info">
                         <span class="limite-label"><i class="fas fa-info-circle"></i> Limites d'échange</span>
                         <span class="limite-valeur">2 000 Ar - 100 000 Ar</span>
@@ -1729,7 +1739,6 @@
 
         <!-- VENTE -->
         <div id="vente-section" class="platform-section">
-            <!-- Contenu identique -->
             <div class="card">
                 <h2 class="card-title"><i class="fas fa-arrow-up"></i> Vente crypto</h2>
                 
@@ -1870,7 +1879,6 @@
 
     <!-- MODAL AUTH -->
     <div id="modal-auth" class="modal">
-        <!-- Contenu inchangé -->
         <div class="modal-content">
             <div class="modal-title"><i class="fas fa-sign-in-alt"></i> Bienvenue</div>
             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
@@ -1881,6 +1889,14 @@
             <div id="connexion-form">
                 <input type="email" id="email-connexion" class="modal-input" placeholder="Email">
                 <input type="password" id="password-connexion" class="modal-input" placeholder="Mot de passe">
+                
+                <!-- NOUVEAU : Lien mot de passe oublié -->
+                <div style="text-align: right; margin: 10px 0 20px 0;">
+                    <span onclick="ouvrirModalMotDePasseOublie()" style="color: var(--accent); cursor: pointer; font-size: 0.9rem;">
+                        <i class="fas fa-question-circle"></i> Mot de passe oublié ?
+                    </span>
+                </div>
+                <!-- FIN NOUVEAU -->
             </div>
             
             <div id="inscription-form" style="display: none;">
@@ -1895,9 +1911,63 @@
         </div>
     </div>
 
+    <!-- MODAL MOT DE PASSE OUBLIÉ - NOUVELLE -->
+    <div id="modal-motdepasse-oublie" class="modal">
+        <div class="modal-content">
+            <div class="modal-title"><i class="fas fa-shield-alt"></i> Récupération sécurisée</div>
+            
+            <!-- ÉTAPE 1 : EMAIL + NUMÉRO -->
+            <div id="etape-1-mdp" style="display: block;">
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    <i class="fas fa-info-circle"></i> 
+                    Vérification en 2 étapes
+                </p>
+                
+                <input type="email" id="email-recuperation" class="modal-input" 
+                       placeholder="Votre email">
+                
+                <input type="tel" id="numero-recuperation" class="modal-input" 
+                       placeholder="Votre numéro enregistré" 
+                       style="margin-top: 10px;">
+                
+                <div class="error-message" id="erreur-recuperation"></div>
+                
+                <div class="modal-buttons" style="margin-top: 20px;">
+                    <button class="btn btn-cancel" onclick="fermerModalMotDePasseOublie()">
+                        Annuler
+                    </button>
+                    <button class="btn btn-confirm" onclick="verifierEmailEtNumero()">
+                        Vérifier
+                    </button>
+                </div>
+            </div>
+            
+            <!-- ÉTAPE 2 : NOUVEAU MDP -->
+            <div id="etape-2-mdp" style="display: none;">
+                <p style="color: var(--success); margin-bottom: 10px;">
+                    <i class="fas fa-check-circle"></i> 
+                    Identité vérifiée pour <span id="email-affiche"></span>
+                </p>
+                
+                <input type="password" id="nouveau-motdepasse" class="modal-input" 
+                       placeholder="Nouveau mot de passe (6+ caractères)">
+                <input type="password" id="confirmer-motdepasse" class="modal-input" 
+                       placeholder="Confirmer mot de passe">
+                
+                <div class="error-message" id="erreur-nouveau-mdp"></div>
+                
+                <div class="modal-buttons" style="margin-top: 20px;">
+                    <button class="btn btn-cancel" onclick="retourEtape1()">Retour</button>
+                    <button class="btn btn-confirm" onclick="reinitialiserMotDePasse()">
+                        Réinitialiser
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL PIN -->
     <div id="modal-pin" class="modal">
-        <!-- Contenu inchangé -->
         <div class="modal-content">
             <div class="modal-title"><i class="fas fa-lock"></i> Code PIN</div>
             <div id="pin-setup" style="display: block;">
@@ -1995,7 +2065,6 @@
 
     <!-- MODAL CONFIRMATION -->
     <div id="modal-confirmation" class="modal">
-        <!-- Contenu inchangé -->
         <div class="modal-content">
             <div class="modal-title" id="modal-titre">
                 <i class="fas fa-clock"></i> Confirmation
@@ -2573,6 +2642,7 @@
             afficherTauxSimplifies();
             verifierPause();
             mettreAJourListeNumerosVente();
+            mettreAJourListeNumerosAchat(); // NOUVEAU
             
             if (utilisateurCourant) {
                 document.getElementById('userBadge').innerHTML = `<i class="fas fa-user-check"></i> ${utilisateurCourant.nom}`;
@@ -2787,6 +2857,41 @@
             }
         }
 
+        // NOUVELLE FONCTION : Mettre à jour la liste des numéros pour ACHAT
+        function mettreAJourListeNumerosAchat() {
+            const select = document.getElementById('numero-achat-select');
+            const groupe = document.getElementById('groupe-numero-achat');
+            if (!select || !groupe) return;
+            
+            if (!utilisateurCourant) {
+                groupe.style.display = 'none';
+                return;
+            }
+            
+            const numerosApprouves = utilisateurCourant.numeros?.filter(num => num.statut === 'approuve') || [];
+            
+            if (numerosApprouves.length > 0) {
+                groupe.style.display = 'block';
+                const ancienneValeur = select.value;
+                
+                select.innerHTML = numerosApprouves.map(num => 
+                    `<option value="${num.numero}" data-nom="${num.nom}">${num.nom} - ${num.numero}</option>`
+                ).join('');
+                
+                if (ancienneValeur) {
+                    const optionExists = Array.from(select.options).some(opt => opt.value === ancienneValeur);
+                    if (optionExists) {
+                        select.value = ancienneValeur;
+                    }
+                }
+                select.disabled = false;
+            } else {
+                groupe.style.display = 'none';
+                select.innerHTML = '<option value="">Aucun numéro approuvé</option>';
+                select.disabled = true;
+            }
+        }
+
         function afficherInfosNumeroVente() {
             const select = document.getElementById('numero-vente-select');
             const infoDiv = document.getElementById('info-numero-selectionne');
@@ -2801,6 +2906,27 @@
                 infoDiv.innerHTML = `
                     <i class="fas fa-check-circle" style="color: var(--success);"></i> 
                     Bénéficiaire: <strong>${nom}</strong> (${numero})
+                `;
+            } else {
+                infoDiv.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i> Veuillez sélectionner un numéro';
+            }
+        }
+
+        // NOUVELLE FONCTION : Afficher les infos du numéro sélectionné pour ACHAT
+        function afficherInfosNumeroAchat() {
+            const select = document.getElementById('numero-achat-select');
+            const infoDiv = document.getElementById('info-numero-achat-selectionne');
+            
+            if (!select || !infoDiv) return;
+            
+            const selectedOption = select.options[select.selectedIndex];
+            
+            if (selectedOption && selectedOption.value) {
+                const nom = selectedOption.dataset.nom || '';
+                const numero = selectedOption.value;
+                infoDiv.innerHTML = `
+                    <i class="fas fa-check-circle" style="color: var(--success);"></i> 
+                    Compte à débiter: <strong>${nom}</strong> (${numero})
                 `;
             } else {
                 infoDiv.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i> Veuillez sélectionner un numéro';
@@ -2909,6 +3035,7 @@
             const adresse = document.getElementById(`adresse-${type.toLowerCase()}`)?.value;
             
             let numero = '', nomNumero = '';
+            
             if (type === 'VENTE') {
                 const select = document.getElementById('numero-vente-select');
                 const selectedOption = select.options[select.selectedIndex];
@@ -2916,7 +3043,18 @@
                     numero = selectedOption.value;
                     nomNumero = selectedOption.dataset.nom || '';
                 } else {
-                    alert('Sélectionnez un numéro');
+                    alert('Sélectionnez un numéro à créditer');
+                    return;
+                }
+            } else if (type === 'ACHAT') {
+                // NOUVEAU : Récupérer le numéro sélectionné pour ACHAT
+                const select = document.getElementById('numero-achat-select');
+                const selectedOption = select?.options[select.selectedIndex];
+                if (selectedOption?.value) {
+                    numero = selectedOption.value;
+                    nomNumero = selectedOption.dataset.nom || '';
+                } else {
+                    alert('Sélectionnez un numéro d'envoi');
                     return;
                 }
             }
@@ -2953,11 +3091,14 @@
             
             let infoDestinataire = '';
             if (transaction.type === 'ACHAT') {
-                infoDestinataire = `<p><i class="fas fa-qrcode"></i> Adresse: <span>${transaction.adresse || 'Non spécifiée'}</span></p>`;
+                infoDestinataire = `
+                    <p><i class="fas fa-qrcode"></i> Adresse: <span>${transaction.adresse || 'Non spécifiée'}</span></p>
+                    <p><i class="fas fa-phone-alt"></i> Numéro débité: <span>${transaction.nomNumero} (${transaction.numero})</span></p>
+                `;
             } else {
                 infoDestinataire = `
                     <p><i class="fas fa-user"></i> Bénéficiaire: <span>${transaction.nomNumero || transaction.utilisateur}</span></p>
-                    <p><i class="fas fa-phone-alt"></i> Numéro: <span>${transaction.numero || 'Non spécifié'}</span></p>
+                    <p><i class="fas fa-phone-alt"></i> Numéro crédité: <span>${transaction.numero || 'Non spécifié'}</span></p>
                 `;
             }
             
@@ -3136,6 +3277,8 @@
             let adresse = '', numero = '', nomNumero = '';
             if (type === 'ACHAT') {
                 adresse = transaction.adresse || document.getElementById('adresse-achat')?.value || '';
+                numero = transaction.numero || '';
+                nomNumero = transaction.nomNumero || '';
             } else {
                 numero = transaction.numero || '';
                 nomNumero = transaction.nomNumero || '';
@@ -3465,7 +3608,7 @@
 
             let beneficiaire = '';
             if (demande.type === 'ACHAT') {
-                beneficiaire = demande.adresse || 'Non spécifié';
+                beneficiaire = demande.nomNumero ? `${demande.nomNumero} (${demande.numero})` : demande.adresse || 'Non spécifié';
             } else {
                 beneficiaire = demande.nomNumero ? `${demande.nomNumero} (${demande.numero})` : demande.numero || 'Non spécifié';
             }
@@ -3503,7 +3646,7 @@
                         <span class="detail-value">${demande.type === 'ACHAT' ? parseFloat(demande.montant).toLocaleString() + ' Ar' : demande.montant + ' ' + demande.crypto}</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Bénéficiaire</span>
+                        <span class="detail-label">Bénéficiaire / Débiteur</span>
                         <span class="detail-value small">${beneficiaire}</span>
                     </div>
                     <div class="detail-row">
@@ -3552,11 +3695,14 @@
 
             let infoDestinataire = '';
             if (demande.type === 'ACHAT') {
-                infoDestinataire = `<p><i class="fas fa-qrcode"></i> Adresse: <span>${demande.adresse || 'Non spécifiée'}</span></p>`;
+                infoDestinataire = `
+                    <p><i class="fas fa-qrcode"></i> Adresse: <span>${demande.adresse || 'Non spécifiée'}</span></p>
+                    <p><i class="fas fa-phone-alt"></i> Numéro débité: <span>${demande.nomNumero} (${demande.numero})</span></p>
+                `;
             } else {
                 infoDestinataire = `
                     <p><i class="fas fa-user"></i> Bénéficiaire: <span>${demande.nomNumero || demande.utilisateur}</span></p>
-                    <p><i class="fas fa-phone-alt"></i> Numéro: <span>${demande.numero || 'Non spécifié'}</span></p>
+                    <p><i class="fas fa-phone-alt"></i> Numéro crédité: <span>${demande.numero || 'Non spécifié'}</span></p>
                 `;
             }
 
@@ -3587,6 +3733,95 @@
 
         function scrollToTestimonials() {
             document.getElementById('testimonials').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // NOUVELLES FONCTIONS : Mot de passe oublié
+        function ouvrirModalMotDePasseOublie() {
+            document.getElementById('modal-auth').classList.remove('active');
+            document.getElementById('etape-1-mdp').style.display = 'block';
+            document.getElementById('etape-2-mdp').style.display = 'none';
+            document.getElementById('email-recuperation').value = '';
+            document.getElementById('numero-recuperation').value = '';
+            document.getElementById('erreur-recuperation').classList.remove('show');
+            document.getElementById('modal-motdepasse-oublie').classList.add('active');
+        }
+
+        function fermerModalMotDePasseOublie() {
+            document.getElementById('modal-motdepasse-oublie').classList.remove('active');
+        }
+
+        function retourEtape1() {
+            document.getElementById('etape-1-mdp').style.display = 'block';
+            document.getElementById('etape-2-mdp').style.display = 'none';
+            document.getElementById('erreur-nouveau-mdp').classList.remove('show');
+        }
+
+        function verifierEmailEtNumero() {
+            const email = document.getElementById('email-recuperation').value.trim();
+            const numero = document.getElementById('numero-recuperation').value.trim();
+            const erreurDiv = document.getElementById('erreur-recuperation');
+            
+            if (!email || !numero) {
+                erreurDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Email et numéro requis';
+                erreurDiv.classList.add('show');
+                return;
+            }
+            
+            // Vérifier si l'email existe
+            const user = donnees.utilisateurs?.find(u => u.email === email);
+            
+            if (!user) {
+                erreurDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Email non trouvé';
+                erreurDiv.classList.add('show');
+                return;
+            }
+            
+            // Vérifier si le numéro appartient à cet utilisateur (même en attente)
+            const numeroTrouve = user.numeros?.some(n => n.numero === numero);
+            
+            if (!numeroTrouve) {
+                erreurDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Ce numéro n\'est pas associé à cet email';
+                erreurDiv.classList.add('show');
+                return;
+            }
+            
+            // ✅ Vérification réussie !
+            document.getElementById('etape-1-mdp').style.display = 'none';
+            document.getElementById('etape-2-mdp').style.display = 'block';
+            document.getElementById('email-affiche').textContent = email;
+            document.getElementById('erreur-recuperation').classList.remove('show');
+        }
+
+        function reinitialiserMotDePasse() {
+            const nouveauMdp = document.getElementById('nouveau-motdepasse').value.trim();
+            const confirmerMdp = document.getElementById('confirmer-motdepasse').value.trim();
+            const email = document.getElementById('email-affiche').textContent;
+            const erreurDiv = document.getElementById('erreur-nouveau-mdp');
+            
+            if (!nouveauMdp || nouveauMdp.length < 6) {
+                erreurDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Minimum 6 caractères';
+                erreurDiv.classList.add('show');
+                return;
+            }
+            
+            if (nouveauMdp !== confirmerMdp) {
+                erreurDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Les mots de passe ne correspondent pas';
+                erreurDiv.classList.add('show');
+                return;
+            }
+            
+            // Mettre à jour le mot de passe
+            const userIndex = donnees.utilisateurs?.findIndex(u => u.email === email);
+            if (userIndex !== -1) {
+                donnees.utilisateurs[userIndex].motDePasse = nouveauMdp;
+                sauvegarderDonnees();
+                
+                alert('✅ Mot de passe réinitialisé avec succès !');
+                fermerModalMotDePasseOublie();
+                
+                // Rouvrir la modal de connexion
+                document.getElementById('modal-auth').classList.add('active');
+            }
         }
 
         function verifierAvantAcces(section) {
@@ -3621,6 +3856,7 @@
                 estimerAchat();
                 afficherFraisReseauAchat();
                 verifierLimitesAchat();
+                mettreAJourListeNumerosAchat(); // NOUVEAU
             }
             if (section === 'vente') {
                 mettreAJourReseaux('vente');
@@ -3649,6 +3885,7 @@
                 estimerAchat();
                 afficherFraisReseauAchat();
                 verifierLimitesAchat();
+                mettreAJourListeNumerosAchat(); // NOUVEAU
             }
             if (section === 'demandes' && utilisateurCourant) mettreAJourMesDemandes();
             if (section === 'profil') {
@@ -3684,11 +3921,13 @@
                             estimerAchat();
                             afficherFraisReseauAchat();
                             verifierLimitesAchat();
+                            mettreAJourListeNumerosAchat(); // NOUVEAU
                         }
                         if (document.getElementById('vente-section').classList.contains('active')) {
                             estimerVente();
                             afficherFraisReseauVente();
                             verifierLimitesVente();
+                            mettreAJourListeNumerosVente();
                         }
                     }
                 }
