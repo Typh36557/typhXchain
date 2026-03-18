@@ -1903,7 +1903,7 @@
                 <input type="text" id="nom-inscription" class="modal-input" placeholder="Nom complet">
                 <input type="email" id="email-inscription" class="modal-input" placeholder="Email">
                 <input type="password" id="password-inscription" class="modal-input" placeholder="Mot de passe">
-                <input type="tel" id="numero-inscription" class="modal-input" placeholder="Numéro">
+                <!-- SUPPRESSION DU CHAMP NUMÉRO -->
             </div>
             
             <div class="error-message" id="erreur-auth"><i class="fas fa-exclamation-triangle"></i> <span id="erreur-texte"></span></div>
@@ -1911,7 +1911,7 @@
         </div>
     </div>
 
-    <!-- MODAL MOT DE PASSE OUBLIÉ - NOUVELLE -->
+    <!-- MODAL MOT DE PASSE OUBLIÉ -->
     <div id="modal-motdepasse-oublie" class="modal">
         <div class="modal-content">
             <div class="modal-title"><i class="fas fa-shield-alt"></i> Récupération sécurisée</div>
@@ -2237,6 +2237,36 @@
         const MIN_MONTANT_AR = 2000;
         const MAX_MONTANT_AR = 100000;
 
+        // Fonction pour générer un ID unique pour un utilisateur
+        function genererIDUtilisateur() {
+            // Compter le nombre d'utilisateurs existants pour déterminer le prochain numéro
+            const nbUtilisateurs = donnees.utilisateurs?.length || 0;
+            // Formater avec 5 chiffres (ex: 00001, 00042, 00123)
+            const numero = (nbUtilisateurs + 1).toString().padStart(5, '0');
+            return `TX-${numero}`;
+        }
+
+        // Fonction pour attribuer des IDs à tous les utilisateurs existants
+        function attribuerIDsAuxUtilisateursExistants() {
+            if (!donnees.utilisateurs) return;
+            
+            let besoinDeSauvegarde = false;
+            
+            donnees.utilisateurs.forEach((user, index) => {
+                if (!user.id) {
+                    // Générer un ID basé sur l'index + 1
+                    const numero = (index + 1).toString().padStart(5, '0');
+                    user.id = `TX-${numero}`;
+                    besoinDeSauvegarde = true;
+                }
+            });
+            
+            if (besoinDeSauvegarde) {
+                console.log('✅ IDs attribués aux utilisateurs existants');
+                sauvegarderDonnees();
+            }
+        }
+
         function obtenirDonneesParDefaut() {
             return {
                 utilisateurs: [],
@@ -2378,6 +2408,9 @@
                         if (!donnees.usdMGA) donnees.usdMGA = 4700;
                         
                         tauxUSD_MGA = donnees.usdMGA;
+                        
+                        // Attribuer des IDs aux utilisateurs existants
+                        attribuerIDsAuxUtilisateursExistants();
                     } else {
                         donnees = obtenirDonneesParDefaut();
                         sauvegarderDonnees();
@@ -2594,9 +2627,9 @@
             const nom = document.getElementById('nom-inscription').value.trim();
             const email = document.getElementById('email-inscription').value.trim();
             const password = document.getElementById('password-inscription').value.trim();
-            const numero = document.getElementById('numero-inscription').value.trim();
+            // SUPPRESSION DE LA RÉCUPÉRATION DU NUMÉRO
 
-            if (!nom || !email || !password || !numero) {
+            if (!nom || !email || !password) {
                 afficherErreur('Tous les champs sont requis');
                 return;
             }
@@ -2606,12 +2639,16 @@
                 return;
             }
 
+            // Générer un ID unique pour le nouvel utilisateur
+            const nouvelID = genererIDUtilisateur();
+
             const nouvelUtilisateur = {
+                id: nouvelID, // Ajout de l'ID unique
                 nom: nom,
                 email: email,
                 motDePasse: password,
                 dateInscription: new Date().toISOString(),
-                numeros: [{ nom: nom, numero: numero, statut: 'en_attente' }],
+                numeros: [], // Plus de numéro automatique, l'utilisateur devra en ajouter
                 codePIN: { hash: null, actif: false, tentativeEchouees: 0, bloque: false }
             };
 
@@ -2625,7 +2662,7 @@
             mettreAJourAffichage();
             showPlatform();
             switchPlatformSection('profil');
-            alert('Inscription réussie ! Votre numéro est en attente d\'approbation.');
+            alert('Inscription réussie ! Ajoutez vos numéros dans votre profil pour commencer à échanger. Ils seront validés par l\'administrateur.');
         }
 
         function afficherErreur(message) {
@@ -2642,7 +2679,7 @@
             afficherTauxSimplifies();
             verifierPause();
             mettreAJourListeNumerosVente();
-            mettreAJourListeNumerosAchat(); // NOUVEAU
+            mettreAJourListeNumerosAchat();
             
             if (utilisateurCourant) {
                 document.getElementById('userBadge').innerHTML = `<i class="fas fa-user-check"></i> ${utilisateurCourant.nom}`;
@@ -2821,6 +2858,7 @@
             
             if (utilisateurCourant) {
                 profil.innerHTML = `
+                    <div class="profile-row"><span class="profile-label">ID</span><span class="profile-value" style="color: var(--accent); font-weight: 700;">${utilisateurCourant.id || 'Non attribué'}</span></div>
                     <div class="profile-row"><span class="profile-label">Nom</span><span class="profile-value">${utilisateurCourant.nom}</span></div>
                     <div class="profile-row"><span class="profile-label">Email</span><span class="profile-value">${utilisateurCourant.email || 'Non renseigné'}</span></div>
                     <div class="profile-row"><span class="profile-label">Membre depuis</span><span class="profile-value">${new Date(utilisateurCourant.dateInscription).toLocaleDateString()}</span></div>
@@ -2857,7 +2895,7 @@
             }
         }
 
-        // NOUVELLE FONCTION : Mettre à jour la liste des numéros pour ACHAT
+        // Mettre à jour la liste des numéros pour ACHAT
         function mettreAJourListeNumerosAchat() {
             const select = document.getElementById('numero-achat-select');
             const groupe = document.getElementById('groupe-numero-achat');
@@ -2912,7 +2950,7 @@
             }
         }
 
-        // NOUVELLE FONCTION : Afficher les infos du numéro sélectionné pour ACHAT
+        // Afficher les infos du numéro sélectionné pour ACHAT
         function afficherInfosNumeroAchat() {
             const select = document.getElementById('numero-achat-select');
             const infoDiv = document.getElementById('info-numero-achat-selectionne');
@@ -3001,7 +3039,7 @@
             }
 
             if (!aNumeroApprouve()) {
-                alert('Vous devez avoir un numéro approuvé');
+                alert('Vous devez avoir un numéro approuvé pour effectuer une transaction. Ajoutez un numéro dans votre profil et attendez la validation par l\'administrateur.');
                 switchPlatformSection('profil');
                 return;
             }
@@ -3047,7 +3085,6 @@
                     return;
                 }
             } else if (type === 'ACHAT') {
-                // NOUVEAU : Récupérer le numéro sélectionné pour ACHAT
                 const select = document.getElementById('numero-achat-select');
                 const selectedOption = select?.options[select.selectedIndex];
                 if (selectedOption?.value) {
@@ -3072,6 +3109,7 @@
                 date: new Date().toISOString(),
                 utilisateur: utilisateurCourant.nom,
                 email: utilisateurCourant.email,
+                userID: utilisateurCourant.id, // Ajout de l'ID utilisateur
                 montantRecu: type === 'ACHAT' ? montantRecuAchat : montantRecuVente,
                 cryptoAffichee: type === 'ACHAT' ? crypto : 'Ar'
             };
@@ -3296,6 +3334,7 @@
             const demande = {
                 id: 'DEM-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
                 type, utilisateur: utilisateurCourant.nom, email: utilisateurCourant.email,
+                userID: utilisateurCourant.id, // Ajout de l'ID utilisateur dans la demande
                 montant, crypto, operateur, portefeuille, reseau, adresse, numero, nomNumero,
                 messagePaiement, txid,
                 statut: 'en_attente', date: new Date().toISOString(), avecPIN: true,
@@ -3393,7 +3432,7 @@
 
             sauvegarderDonnees();
             mettreAJourNumerosUtilisateur();
-            alert('Numéro ajouté ! En attente d\'approbation.');
+            alert('Numéro ajouté ! En attente d\'approbation par l\'administrateur.');
         }
 
         function aNumeroApprouve() {
@@ -3710,6 +3749,7 @@
                 <p><i class="fas fa-tag"></i> ID: <span>${demande.id}</span></p>
                 <p><i class="fas fa-tag"></i> Type: <span>${demande.type}</span></p>
                 <p><i class="fas fa-user"></i> Client: <span>${demande.utilisateur}</span></p>
+                <p><i class="fas fa-id-card"></i> ID Client: <span>${demande.userID || 'Non attribué'}</span></p>
                 <p><i class="fas fa-coins"></i> Montant: <span>${demande.montant} ${demande.type === 'ACHAT' ? 'Ar' : demande.crypto}</span></p>
                 <p><i class="fas fa-coins" style="color: var(--success);"></i> Vous recevez: <span style="color: var(--success); font-weight: 700;">${demande.type === 'ACHAT' ? (demande.montantRecu ? demande.montantRecu.toFixed(4) + ' ' + demande.crypto : 'Calcul...') : (demande.montantRecu ? demande.montantRecu.toLocaleString() + ' Ar' : 'Calcul...')}</span></p>
                 <p><i class="fas fa-network-wired"></i> Réseau: <span>${demande.reseau || ' '}</span></p>
@@ -3735,7 +3775,7 @@
             document.getElementById('testimonials').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // NOUVELLES FONCTIONS : Mot de passe oublié
+        // Fonctions pour mot de passe oublié
         function ouvrirModalMotDePasseOublie() {
             document.getElementById('modal-auth').classList.remove('active');
             document.getElementById('etape-1-mdp').style.display = 'block';
@@ -3831,7 +3871,7 @@
             }
 
             if (!aNumeroApprouve() && (section === 'achat' || section === 'vente' || section === 'demandes')) {
-                alert('Vous devez avoir un numéro approuvé');
+                alert('Vous devez avoir un numéro approuvé. Ajoutez un numéro dans votre profil et attendez la validation par l\'administrateur.');
                 switchPlatformSection('profil');
                 return;
             }
@@ -3856,7 +3896,7 @@
                 estimerAchat();
                 afficherFraisReseauAchat();
                 verifierLimitesAchat();
-                mettreAJourListeNumerosAchat(); // NOUVEAU
+                mettreAJourListeNumerosAchat();
             }
             if (section === 'vente') {
                 mettreAJourReseaux('vente');
@@ -3885,7 +3925,7 @@
                 estimerAchat();
                 afficherFraisReseauAchat();
                 verifierLimitesAchat();
-                mettreAJourListeNumerosAchat(); // NOUVEAU
+                mettreAJourListeNumerosAchat();
             }
             if (section === 'demandes' && utilisateurCourant) mettreAJourMesDemandes();
             if (section === 'profil') {
@@ -3904,6 +3944,10 @@
                     const nouvellesDonnees = JSON.stringify(data);
                     if (anciennesDonnees !== nouvellesDonnees) {
                         donnees = data;
+                        
+                        // S'assurer que les IDs sont attribués
+                        attribuerIDsAuxUtilisateursExistants();
+                        
                         if (utilisateurCourant) {
                             const userToujoursPresent = donnees.utilisateurs?.find(u => u.email === utilisateurCourant.email);
                             if (!userToujoursPresent) {
@@ -3921,7 +3965,7 @@
                             estimerAchat();
                             afficherFraisReseauAchat();
                             verifierLimitesAchat();
-                            mettreAJourListeNumerosAchat(); // NOUVEAU
+                            mettreAJourListeNumerosAchat();
                         }
                         if (document.getElementById('vente-section').classList.contains('active')) {
                             estimerVente();

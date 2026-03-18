@@ -806,7 +806,7 @@
                 <div class="admin-card">
                     <h2><i class="fas fa-users"></i> Liste des utilisateurs</h2>
                     <div class="filter-bar">
-                        <input type="text" id="recherche-utilisateur" placeholder="Rechercher par nom ou email..." oninput="filtrerUtilisateurs()">
+                        <input type="text" id="recherche-utilisateur" placeholder="Rechercher par nom, email ou ID..." oninput="filtrerUtilisateurs()">
                     </div>
                     <div id="utilisateurs-liste" class="item-list"></div>
                 </div>
@@ -1933,6 +1933,16 @@
                         if (!donnees.usdMGA) donnees.usdMGA = 4700;
                         
                         tauxUSD_MGA = donnees.usdMGA;
+                        
+                        // S'assurer que les utilisateurs ont un ID
+                        if (donnees.utilisateurs) {
+                            donnees.utilisateurs.forEach((user, index) => {
+                                if (!user.id) {
+                                    const numero = (index + 1).toString().padStart(5, '0');
+                                    user.id = `TX-${numero}`;
+                                }
+                            });
+                        }
                     } else {
                         donnees = obtenirDonneesParDefaut();
                         sauvegarderDonnees();
@@ -2160,7 +2170,7 @@
                             html += `
                                 <div class="numero-item">
                                     <div class="numero-header">
-                                        <span class="numero-user"><i class="fas fa-user"></i> ${user.nom}</span>
+                                        <span class="numero-user"><i class="fas fa-user"></i> ${user.nom} (${user.id || 'ID inconnu'})</span>
                                         <span class="numero-status-badge badge-attente">En attente</span>
                                     </div>
                                     <div class="numero-info">
@@ -2204,7 +2214,7 @@
                             html += `
                                 <div class="numero-item">
                                     <div class="numero-header">
-                                        <span class="numero-user"><i class="fas fa-user"></i> ${user.nom}</span>
+                                        <span class="numero-user"><i class="fas fa-user"></i> ${user.nom} (${user.id || 'ID inconnu'})</span>
                                         <span class="numero-status-badge badge-approuve">Approuvé</span>
                                     </div>
                                     <div class="numero-info">
@@ -2268,7 +2278,7 @@
                         </span>
                     </div>
                     <div style="margin: 10px 0;">
-                        <div>Client: <strong>${d.utilisateur}</strong></div>
+                        <div>Client: <strong>${d.utilisateur}</strong> (${d.userID || 'ID inconnu'})</div>
                         <div>Montant: ${d.montant} ${d.type === 'ACHAT' ? 'Ar' : d.crypto}</div>
                         <div style="color: var(--success); font-weight: 600;">Vous recevez: ${d.type === 'ACHAT' ? (d.montantRecu ? d.montantRecu.toFixed(4) + ' ' + d.crypto : 'Calcul...') : (d.montantRecu ? d.montantRecu.toLocaleString() + ' Ar' : 'Calcul...')}</div>
                         ${d.txid ? `<div style="font-size:0.8rem;">TXID: ${d.txid.substring(0,20)}...</div>` : ''}
@@ -2331,7 +2341,8 @@
             if (rechercheUtilisateurs) {
                 utilisateursFiltres = utilisateursFiltres.filter(u => 
                     u.nom.toLowerCase().includes(rechercheUtilisateurs) || 
-                    (u.email && u.email.toLowerCase().includes(rechercheUtilisateurs))
+                    (u.email && u.email.toLowerCase().includes(rechercheUtilisateurs)) ||
+                    (u.id && u.id.toLowerCase().includes(rechercheUtilisateurs))
                 );
             }
 
@@ -2348,6 +2359,7 @@
                 <div class="user-item">
                     <div class="user-header">
                         <span class="user-name"><i class="fas fa-user-circle" style="color:var(--accent);"></i> ${user.nom}</span>
+                        <span style="background: var(--accent); padding: 4px 10px; border-radius: 40px; font-size: 0.8rem;">${user.id || 'ID inconnu'}</span>
                         <div class="item-actions">
                             <button class="btn btn-edit" onclick="editerUtilisateur(${index})"><i class="fas fa-edit"></i></button>
                         </div>
@@ -2375,6 +2387,7 @@
                 document.getElementById('modal-champs').innerHTML = `
                     <input type="text" id="modal-nom" placeholder="Nom complet" value="${user.nom}">
                     <input type="email" id="modal-email" placeholder="Email" value="${user.email || ''}">
+                    <input type="text" id="modal-id" placeholder="ID utilisateur" value="${user.id || ''}" readonly style="background: var(--gray-300);">
                 `;
                 
                 modal.classList.add('active');
@@ -2533,7 +2546,7 @@
                     </div>
                     
                     <div class="transaction-user">
-                        <i class="fas fa-user"></i> ${tx.utilisateur} (${tx.email})
+                        <i class="fas fa-user"></i> ${tx.utilisateur} (${tx.userID || 'ID inconnu'})
                     </div>
                     
                     <div class="transaction-details">
@@ -2584,6 +2597,7 @@
                 filtrees = filtrees.filter(tx => 
                     (tx.utilisateur && tx.utilisateur.toLowerCase().includes(recherche)) ||
                     (tx.email && tx.email.toLowerCase().includes(recherche)) ||
+                    (tx.userID && tx.userID.toLowerCase().includes(recherche)) ||
                     (tx.txid && tx.txid.toLowerCase().includes(recherche)) ||
                     (tx.montant && tx.montant.toString().includes(recherche))
                 );
@@ -2659,17 +2673,19 @@
             if (transaction.type === 'ACHAT') {
                 beneficiaireInfo = `
                     <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Adresse:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.adresse || 'Non spécifiée'}</td></tr>
+                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Numéro débité:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.nomNumero ? transaction.nomNumero + ' (' + transaction.numero + ')' : transaction.numero || 'Non spécifié'}</td></tr>
                 `;
             } else {
                 beneficiaireInfo = `
                     <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Bénéficiaire:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.nomNumero || transaction.utilisateur}</td></tr>
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Numéro:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.numero || 'Non spécifié'}</td></tr>
+                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Numéro crédité:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.numero || 'Non spécifié'}</td></tr>
                 `;
             }
             
             recuContenu.innerHTML = `
                 <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
                     <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>ID Transaction:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.id}</td></tr>
+                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>ID Client:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.userID || 'Non attribué'}</td></tr>
                     <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Type:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.type}</td></tr>
                     <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Statut:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.statut}</td></tr>
                     <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Client:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.utilisateur}</td></tr>
@@ -2724,6 +2740,10 @@
                     <span class="info-value">${transaction.id}</span>
                 </div>
                 <div class="info-row">
+                    <span class="info-label">ID Client:</span>
+                    <span class="info-value">${transaction.userID || 'Non attribué'}</span>
+                </div>
+                <div class="info-row">
                     <span class="info-label">Type:</span>
                     <span class="info-value" style="color: ${transaction.type === 'ACHAT' ? 'var(--success)' : 'var(--warning)'}">
                         <i class="fas ${transaction.type === 'ACHAT' ? 'fa-arrow-down' : 'fa-arrow-up'}"></i> ${transaction.type}
@@ -2773,6 +2793,10 @@
                         <span class="info-label">Adresse:</span>
                         <span class="info-value" style="word-break: break-all;">${transaction.adresse || 'N/A'}</span>
                     </div>
+                    <div class="info-row">
+                        <span class="info-label">Numéro débité:</span>
+                        <span class="info-value">${transaction.nomNumero ? transaction.nomNumero + ' (' + transaction.numero + ')' : transaction.numero || 'Non spécifié'}</span>
+                    </div>
                 `;
             } else {
                 detailsHtml += `
@@ -2797,7 +2821,7 @@
                         <span class="info-value">${transaction.nomNumero || transaction.utilisateur}</span>
                     </div>
                     <div class="info-row">
-                        <span class="info-label">Numéro:</span>
+                        <span class="info-label">Numéro crédité:</span>
                         <span class="info-value">${transaction.numero || 'N/A'}</span>
                     </div>
                 `;
@@ -2902,6 +2926,17 @@
                     if (anciennesDonnees !== nouvellesDonnees) {
                         console.log('🔄 Mise à jour détectée');
                         donnees = data;
+                        
+                        // S'assurer que les utilisateurs ont un ID
+                        if (donnees.utilisateurs) {
+                            donnees.utilisateurs.forEach((user, index) => {
+                                if (!user.id) {
+                                    const numero = (index + 1).toString().padStart(5, '0');
+                                    user.id = `TX-${numero}`;
+                                }
+                            });
+                        }
+                        
                         mettreAJourStats();
                         afficherTout();
                         mettreAJourPauseUI();
