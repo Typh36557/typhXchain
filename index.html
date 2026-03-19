@@ -195,7 +195,7 @@
             justify-content: center;
             width: 55px;
             height: 55px;
-            background: #10B981;  /* Vert */
+            background: #10B981;
             color: white;
             border-radius: 50%;
             text-decoration: none;
@@ -206,7 +206,7 @@
         }
 
         .btn-download-green:hover {
-            background: #059669 !important;  /* Vert plus foncé */
+            background: #059669 !important;
             transform: translateY(-3px) scale(1.05);
             box-shadow: 0 12px 24px rgba(16, 185, 129, 0.4);
         }
@@ -1418,7 +1418,7 @@
             text-decoration: underline;
         }
 
-        /* Styles pour les limites */
+        /* Styles pour les limites dynamiques */
         .limite-info {
             background: rgba(59, 130, 246, 0.1);
             border: 1px solid var(--accent);
@@ -1451,7 +1451,7 @@
             display: block;
         }
         
-        /* Style pour le message spécial TRX */
+        /* Style pour le message spécial TRX dynamique */
         .frais-special {
             color: var(--warning);
             font-weight: 600;
@@ -1699,8 +1699,8 @@
                     
                     <div class="form-group">
                         <label class="form-label"><i class="fas fa-coins"></i> Montant <span id="montant-limite-achat" style="color: var(--warning); font-size: 0.8rem;"></span></label>
-                        <div class="input-wrapper"><input type="number" id="montant-achat" value="2000" min="2000" max="100000" oninput="estimerAchat(); verifierLimitesAchat()"></div>
-                        <div class="limite-error" id="limite-error-achat">Le montant doit être entre <span id="min-affichage-achat">2 000</span> Ar et 100 000 Ar</div>
+                        <div class="input-wrapper"><input type="number" id="montant-achat" oninput="estimerAchat(); verifierLimitesAchat()"></div>
+                        <div class="limite-error" id="limite-error-achat">Le montant doit être entre <span id="min-affichage-achat">2 000</span> Ar et <span id="max-affichage-achat">100 000</span> Ar</div>
                     </div>
                     
                     <div class="form-group">
@@ -1713,9 +1713,9 @@
                         <div class="input-wrapper"><select id="reseau-achat" onchange="estimerAchat(); afficherFraisReseauAchat()"></select></div>
                     </div>
                     
-                    <!-- Message spécial pour TRX/TRC20 -->
+                    <!-- Message spécial pour TRX/TRC20 dynamique -->
                     <div id="message-trx-special" class="frais-special" style="display: none;">
-                        <i class="fas fa-info-circle"></i> Frais réseau TRC20 : 3% <span style="color: var(--warning); font-weight: 700;">ou -1 TRX si activation</span>
+                        <i class="fas fa-info-circle"></i> <span id="message-trx-texte">Frais réseau TRC20 : 3% ou -1 TRX si activation</span>
                     </div>
                     
                     <div class="form-group">
@@ -1800,9 +1800,9 @@
                     
                     <div class="limite-info">
                         <span class="limite-label"><i class="fas fa-info-circle"></i> Limites d'échange</span>
-                        <span class="limite-valeur">2 000 Ar - 100 000 Ar</span>
+                        <span class="limite-valeur" id="limite-affichee-vente">2 000 Ar - 100 000 Ar</span>
                     </div>
-                    <div class="limite-error" id="limite-error-vente">La valeur doit être entre 2 000 Ar et 100 000 Ar</div>
+                    <div class="limite-error" id="limite-error-vente">La valeur doit être entre <span id="min-affichage-vente">2 000</span> Ar et <span id="max-affichage-vente">100 000</span> Ar</div>
                     
                     <div class="estimated-value" id="estimation-vente-container"></div>
                     
@@ -2222,16 +2222,23 @@
             demandes: [],
             news: [],
             tauxMode: 'auto',
-            usdMGA: 4700
+            usdMGA: 4700,
+            limites: {
+                minAchat: 2000,
+                minAchatTRX: 5000,
+                maxAchat: 100000,
+                minVente: 2000,
+                maxVente: 100000
+            },
+            messagesSpeciaux: {
+                trx: "Frais réseau TRC20 : 3% ou -1 TRX si activation"
+            }
         };
 
         let utilisateurCourant = null;
         let sessionValide = false;
-        
-        // Constantes pour les limites
-        const MIN_MONTANT_AR = 2000;
-        const MIN_MONTANT_TRX = 5000; // Minimum spécial pour TRX
-        const MAX_MONTANT_AR = 100000;
+        let enCoursDeMiseAJour = false;
+        let dernierHashDonnees = '';
         
         // Vérifier la session au chargement
         let sessionUtilisateur = localStorage.getItem('typhSession');
@@ -2277,66 +2284,84 @@
             'USDC': 'USDCUSDT'
         };
 
+        // Fonction pour calculer un hash simple des données
+        function calculerHashDonnees() {
+            const donneesSansDates = JSON.parse(JSON.stringify(donnees, (key, value) => {
+                if (key === 'lastUpdate' || key === 'date' || key === 'dateModification') return undefined;
+                return value;
+            }));
+            return btoa(JSON.stringify(donneesSansDates)).slice(0, 50);
+        }
+
         // Fonction pour obtenir le minimum selon la crypto
         function getMinimumAchat(crypto) {
-            return crypto === 'TRX' ? MIN_MONTANT_TRX : MIN_MONTANT_AR;
+            return crypto === 'TRX' ? (donnees.limites?.minAchatTRX || 5000) : (donnees.limites?.minAchat || 2000);
         }
 
         // Fonction pour mettre à jour l'affichage des limites
         function mettreAJourLimiteAchat() {
             const crypto = document.getElementById('crypto-achat')?.value;
             const min = getMinimumAchat(crypto);
+            const max = donnees.limites?.maxAchat || 100000;
             const input = document.getElementById('montant-achat');
             const limiteSpan = document.getElementById('montant-limite-achat');
             const limiteAffichee = document.getElementById('limite-affichee-achat');
             const minSpan = document.getElementById('min-affichage-achat');
+            const maxSpan = document.getElementById('max-affichage-achat');
             
             if (input) {
                 input.min = min;
+                input.max = max;
                 if (input.value < min) {
                     input.value = min;
+                }
+                if (input.value > max) {
+                    input.value = max;
                 }
             }
             
             if (limiteSpan) {
-                limiteSpan.innerHTML = `(Min: ${min.toLocaleString()} Ar)`;
+                limiteSpan.innerHTML = `(Min: ${min.toLocaleString()} Ar - Max: ${max.toLocaleString()} Ar)`;
             }
             
             if (limiteAffichee) {
-                limiteAffichee.innerHTML = `${min.toLocaleString()} Ar - ${MAX_MONTANT_AR.toLocaleString()} Ar`;
+                limiteAffichee.innerHTML = `${min.toLocaleString()} Ar - ${max.toLocaleString()} Ar`;
             }
             
             if (minSpan) {
                 minSpan.innerHTML = min.toLocaleString();
             }
             
+            if (maxSpan) {
+                maxSpan.innerHTML = max.toLocaleString();
+            }
+            
             verifierLimitesAchat();
             estimerAchat();
         }
 
-        // Fonction pour générer un ID unique pour un utilisateur
-        function genererIDUtilisateur() {
-            const nbUtilisateurs = donnees.utilisateurs?.length || 0;
-            const numero = (nbUtilisateurs + 1).toString().padStart(5, '0');
-            return `TX-${numero}`;
+        // Fonction pour générer un ID unique pour un utilisateur (UNE SEULE FOIS)
+        function genererIDUtilisateur(email, nom) {
+            // Créer un ID basé sur l'email pour qu'il soit stable
+            const hash = btoa(email + nom).replace(/[^a-zA-Z0-9]/g, '').substring(0, 8);
+            return `TX-${hash}`;
         }
 
-        // Fonction pour attribuer des IDs à tous les utilisateurs existants
-        function attribuerIDsAuxUtilisateursExistants() {
+        // Fonction pour attribuer des IDs stables aux utilisateurs
+        function attribuerIDsStables() {
             if (!donnees.utilisateurs) return;
             
             let besoinDeSauvegarde = false;
             
-            donnees.utilisateurs.forEach((user, index) => {
+            donnees.utilisateurs.forEach((user) => {
                 if (!user.id) {
-                    const numero = (index + 1).toString().padStart(5, '0');
-                    user.id = `TX-${numero}`;
+                    user.id = genererIDUtilisateur(user.email, user.nom);
                     besoinDeSauvegarde = true;
                 }
             });
             
             if (besoinDeSauvegarde) {
-                console.log('✅ IDs attribués aux utilisateurs existants');
+                console.log('✅ IDs stables attribués');
                 sauvegarderDonnees();
             }
         }
@@ -2375,7 +2400,17 @@
                     }
                 ],
                 tauxMode: 'auto',
-                usdMGA: 4700
+                usdMGA: 4700,
+                limites: {
+                    minAchat: 2000,
+                    minAchatTRX: 5000,
+                    maxAchat: 100000,
+                    minVente: 2000,
+                    maxVente: 100000
+                },
+                messagesSpeciaux: {
+                    trx: "Frais réseau TRC20 : 3% ou -1 TRX si activation"
+                }
             };
         }
 
@@ -2458,13 +2493,6 @@
                 
                 await database.ref().update(updates);
                 
-                const snapshot = await database.ref('donnees/taux').once('value');
-                if (snapshot.val()) {
-                    donnees.taux = snapshot.val();
-                }
-                
-                afficherTauxSimplifies();
-                
             } catch (error) {
                 console.error('Erreur sync Binance:', error);
             }
@@ -2476,6 +2504,24 @@
                     const data = snapshot.val();
                     if (data) {
                         donnees = data;
+                        
+                        // Initialiser les nouvelles propriétés si absentes
+                        if (!donnees.limites) {
+                            donnees.limites = {
+                                minAchat: 2000,
+                                minAchatTRX: 5000,
+                                maxAchat: 100000,
+                                minVente: 2000,
+                                maxVente: 100000
+                            };
+                        }
+                        
+                        if (!donnees.messagesSpeciaux) {
+                            donnees.messagesSpeciaux = {
+                                trx: "Frais réseau TRC20 : 3% ou -1 TRX si activation"
+                            };
+                        }
+                        
                         if (!donnees.taux) donnees.taux = {};
                         if (!donnees.news) donnees.news = [];
                         if (!donnees.cryptos) donnees.cryptos = ["USDT", "BTC", "ETH", "BNB", "LTC", "SOL", "TRX", "DOGE", "MATIC", "SUI", "XRP", "TON", "USDC"];
@@ -2484,22 +2530,48 @@
                         
                         tauxUSD_MGA = donnees.usdMGA;
                         
-                        attribuerIDsAuxUtilisateursExistants();
+                        // Attribuer des IDs stables
+                        attribuerIDsStables();
+                        
+                        // Mettre à jour la session si nécessaire
+                        if (sessionValide && utilisateurCourant) {
+                            const userToujoursPresent = donnees.utilisateurs?.find(u => u.email === utilisateurCourant.email);
+                            if (userToujoursPresent) {
+                                // Comparer uniquement les champs essentiels
+                                if (userToujoursPresent.id !== utilisateurCourant.id || 
+                                    userToujoursPresent.nom !== utilisateurCourant.nom) {
+                                    utilisateurCourant = userToujoursPresent;
+                                    // Mettre à jour la session
+                                    const sessionData = {
+                                        email: utilisateurCourant.email,
+                                        nom: utilisateurCourant.nom,
+                                        id: utilisateurCourant.id,
+                                        dateConnexion: new Date().toISOString()
+                                    };
+                                    
+                                    if (localStorage.getItem('typhSession')) {
+                                        localStorage.setItem('typhSession', JSON.stringify(sessionData));
+                                    } else if (sessionStorage.getItem('typhSession')) {
+                                        sessionStorage.setItem('typhSession', JSON.stringify(sessionData));
+                                    }
+                                }
+                            } else {
+                                utilisateurCourant = null;
+                                sessionValide = false;
+                                localStorage.removeItem('typhSession');
+                                sessionStorage.removeItem('typhSession');
+                            }
+                        }
+                        
+                        // Mettre à jour le hash
+                        dernierHashDonnees = calculerHashDonnees();
                     } else {
                         donnees = obtenirDonneesParDefaut();
                         sauvegarderDonnees();
                     }
                     
                     if (sessionValide && utilisateurCourant) {
-                        const userToujoursPresent = donnees.utilisateurs?.find(u => u.email === utilisateurCourant.email);
-                        if (userToujoursPresent) {
-                            utilisateurCourant = userToujoursPresent;
-                            showPlatform();
-                        } else {
-                            utilisateurCourant = null;
-                            sessionValide = false;
-                            localStorage.removeItem('typhSession');
-                        }
+                        showPlatform();
                     }
                     
                     mettreAJourAffichage();
@@ -2517,10 +2589,18 @@
         }
 
         function sauvegarderDonnees() {
+            enCoursDeMiseAJour = true;
             database.ref('donnees').set(donnees)
-                .then(() => console.log('✅ Données sauvegardées'))
-                .catch(() => localStorage.setItem('typhData', JSON.stringify(donnees)));
-            mettreAJourAffichage();
+                .then(() => {
+                    console.log('✅ Données sauvegardées');
+                    dernierHashDonnees = calculerHashDonnees();
+                    enCoursDeMiseAJour = false;
+                })
+                .catch(() => {
+                    console.warn('⚠️ Fallback localStorage');
+                    localStorage.setItem('typhData', JSON.stringify(donnees));
+                    enCoursDeMiseAJour = false;
+                });
         }
 
         function afficherTauxSimplifies() {
@@ -2740,7 +2820,7 @@
                 return;
             }
 
-            const nouvelID = genererIDUtilisateur();
+            const nouvelID = genererIDUtilisateur(email, nom);
 
             const nouvelUtilisateur = {
                 id: nouvelID,
@@ -2791,6 +2871,27 @@
         }
 
         function mettreAJourAffichage() {
+            // Sauvegarder l'état des formulaires
+            const etatFormulaires = {
+                achat: {
+                    operateur: document.getElementById('operateur-achat')?.value,
+                    crypto: document.getElementById('crypto-achat')?.value,
+                    montant: document.getElementById('montant-achat')?.value,
+                    reseau: document.getElementById('reseau-achat')?.value,
+                    portefeuille: document.getElementById('portefeuille-achat')?.value,
+                    adresse: document.getElementById('adresse-achat')?.value,
+                    numero: document.getElementById('numero-achat-select')?.value
+                },
+                vente: {
+                    crypto: document.getElementById('crypto-vente')?.value,
+                    montant: document.getElementById('montant-vente')?.value,
+                    reseau: document.getElementById('reseau-vente')?.value,
+                    operateur: document.getElementById('operateur-vente')?.value,
+                    portefeuille: document.getElementById('portefeuille-vente')?.value,
+                    numero: document.getElementById('numero-vente-select')?.value
+                }
+            };
+            
             mettreAJourSelecteurs();
             mettreAJourProfil();
             mettreAJourActiviteRecente();
@@ -2800,6 +2901,46 @@
             verifierPause();
             mettreAJourListeNumerosVente();
             mettreAJourListeNumerosAchat();
+            mettreAJourMessageSpecialTRX();
+            
+            // Restaurer l'état des formulaires si possible
+            setTimeout(() => {
+                if (document.getElementById('achat-section').classList.contains('active')) {
+                    if (etatFormulaires.achat.operateur) document.getElementById('operateur-achat').value = etatFormulaires.achat.operateur;
+                    if (etatFormulaires.achat.crypto) document.getElementById('crypto-achat').value = etatFormulaires.achat.crypto;
+                    if (etatFormulaires.achat.montant) document.getElementById('montant-achat').value = etatFormulaires.achat.montant;
+                    if (etatFormulaires.achat.reseau) document.getElementById('reseau-achat').value = etatFormulaires.achat.reseau;
+                    if (etatFormulaires.achat.portefeuille) document.getElementById('portefeuille-achat').value = etatFormulaires.achat.portefeuille;
+                    if (etatFormulaires.achat.adresse) document.getElementById('adresse-achat').value = etatFormulaires.achat.adresse;
+                    if (etatFormulaires.achat.numero) {
+                        const select = document.getElementById('numero-achat-select');
+                        if (select && Array.from(select.options).some(opt => opt.value === etatFormulaires.achat.numero)) {
+                            select.value = etatFormulaires.achat.numero;
+                        }
+                    }
+                    estimerAchat();
+                    afficherFraisReseauAchat();
+                    verifierLimitesAchat();
+                    mettreAJourLimiteAchat();
+                }
+                
+                if (document.getElementById('vente-section').classList.contains('active')) {
+                    if (etatFormulaires.vente.crypto) document.getElementById('crypto-vente').value = etatFormulaires.vente.crypto;
+                    if (etatFormulaires.vente.montant) document.getElementById('montant-vente').value = etatFormulaires.vente.montant;
+                    if (etatFormulaires.vente.reseau) document.getElementById('reseau-vente').value = etatFormulaires.vente.reseau;
+                    if (etatFormulaires.vente.operateur) document.getElementById('operateur-vente').value = etatFormulaires.vente.operateur;
+                    if (etatFormulaires.vente.portefeuille) document.getElementById('portefeuille-vente').value = etatFormulaires.vente.portefeuille;
+                    if (etatFormulaires.vente.numero) {
+                        const select = document.getElementById('numero-vente-select');
+                        if (select && Array.from(select.options).some(opt => opt.value === etatFormulaires.vente.numero)) {
+                            select.value = etatFormulaires.vente.numero;
+                        }
+                    }
+                    estimerVente();
+                    afficherFraisReseauVente();
+                    verifierLimitesVente();
+                }
+            }, 100);
             
             if (utilisateurCourant) {
                 document.getElementById('userBadge').innerHTML = `<i class="fas fa-user-check"></i> ${utilisateurCourant.nom}`;
@@ -2815,6 +2956,15 @@
                 if (carteDeconnexion) {
                     carteDeconnexion.style.display = 'none';
                 }
+            }
+        }
+
+        function mettreAJourMessageSpecialTRX() {
+            const messageTRX = document.getElementById('message-trx-special');
+            const texteTRX = document.getElementById('message-trx-texte');
+            
+            if (messageTRX && texteTRX && donnees.messagesSpeciaux?.trx) {
+                texteTRX.textContent = donnees.messagesSpeciaux.trx;
             }
         }
 
@@ -2903,6 +3053,7 @@
             if (type === 'achat') {
                 estimerAchat();
                 afficherFraisReseauAchat();
+                mettreAJourMessageSpecialTRX();
             } else {
                 estimerVente();
                 afficherFraisReseauVente();
@@ -2949,11 +3100,12 @@
             const montant = parseFloat(document.getElementById('montant-achat')?.value) || 0;
             const crypto = document.getElementById('crypto-achat')?.value;
             const min = getMinimumAchat(crypto);
+            const max = donnees.limites?.maxAchat || 100000;
             
             const errorDiv = document.getElementById('limite-error-achat');
             const btn = document.getElementById('btn-confirmer-achat');
             
-            if (montant < min || montant > MAX_MONTANT_AR) {
+            if (montant < min || montant > max) {
                 errorDiv.classList.add('show');
                 btn.disabled = true;
                 btn.classList.add('btn-disabled');
@@ -2971,11 +3123,13 @@
             const crypto = document.getElementById('crypto-vente')?.value;
             const taux = donnees.taux[crypto]?.prixMGA || 0;
             const valeurAr = montant * taux;
+            const min = donnees.limites?.minVente || 2000;
+            const max = donnees.limites?.maxVente || 100000;
             
             const errorDiv = document.getElementById('limite-error-vente');
             const btn = document.getElementById('btn-confirmer-vente');
             
-            if (valeurAr < MIN_MONTANT_AR || valeurAr > MAX_MONTANT_AR) {
+            if (valeurAr < min || valeurAr > max) {
                 errorDiv.classList.add('show');
                 btn.disabled = true;
                 btn.classList.add('btn-disabled');
@@ -3204,7 +3358,7 @@
             }
             
             if (type === 'VENTE' && !verifierLimitesVente()) {
-                alert('La valeur de votre transaction doit être entre 2 000 Ar et 100 000 Ar');
+                alert('La valeur de votre transaction doit être entre les limites autorisées');
                 return;
             }
 
@@ -3808,6 +3962,10 @@
                         <span class="detail-value small">${demande.id}</span>
                     </div>
                     <div class="detail-row">
+                        <span class="detail-label">ID Client</span>
+                        <span class="detail-value small">${demande.userID || 'Non attribué'}</span>
+                    </div>
+                    <div class="detail-row">
                         <span class="detail-label">Date</span>
                         <span class="detail-value">${new Date(demande.date).toLocaleString('fr-FR')}</span>
                     </div>
@@ -4036,6 +4194,7 @@
                 verifierLimitesAchat();
                 mettreAJourListeNumerosAchat();
                 mettreAJourLimiteAchat();
+                mettreAJourMessageSpecialTRX();
             }
             if (section === 'vente') {
                 mettreAJourReseaux('vente');
@@ -4066,6 +4225,7 @@
                 verifierLimitesAchat();
                 mettreAJourListeNumerosAchat();
                 mettreAJourLimiteAchat();
+                mettreAJourMessageSpecialTRX();
             }
             if (section === 'demandes' && utilisateurCourant) mettreAJourMesDemandes();
             if (section === 'profil') {
@@ -4078,54 +4238,91 @@
 
         function ecouterChangements() {
             database.ref('donnees').on('value', (snapshot) => {
+                if (enCoursDeMiseAJour) return;
+                
                 const data = snapshot.val();
                 if (data) {
-                    const anciennesDonnees = JSON.stringify(donnees);
-                    const nouvellesDonnees = JSON.stringify(data);
-                    if (anciennesDonnees !== nouvellesDonnees) {
+                    const nouveauHash = btoa(JSON.stringify(data, (key, value) => {
+                        if (key === 'lastUpdate' || key === 'date' || key === 'dateModification') return undefined;
+                        return value;
+                    })).slice(0, 50);
+                    
+                    if (nouveauHash !== dernierHashDonnees) {
+                        console.log('🔄 Changement détecté, mise à jour partielle');
+                        
+                        // Sauvegarder les données utilisateur actuelles
+                        const currentUserEmail = utilisateurCourant?.email;
+                        
                         donnees = data;
                         
-                        attribuerIDsAuxUtilisateursExistants();
+                        // Initialiser les nouvelles propriétés si absentes
+                        if (!donnees.limites) {
+                            donnees.limites = {
+                                minAchat: 2000,
+                                minAchatTRX: 5000,
+                                maxAchat: 100000,
+                                minVente: 2000,
+                                maxVente: 100000
+                            };
+                        }
                         
-                        if (utilisateurCourant) {
-                            const userToujoursPresent = donnees.utilisateurs?.find(u => u.email === utilisateurCourant.email);
-                            if (!userToujoursPresent) {
+                        if (!donnees.messagesSpeciaux) {
+                            donnees.messagesSpeciaux = {
+                                trx: "Frais réseau TRC20 : 3% ou -1 TRX si activation"
+                            };
+                        }
+                        
+                        // Mettre à jour l'utilisateur courant si nécessaire
+                        if (currentUserEmail) {
+                            const userToujoursPresent = donnees.utilisateurs?.find(u => u.email === currentUserEmail);
+                            if (userToujoursPresent) {
+                                utilisateurCourant = userToujoursPresent;
+                            } else {
                                 utilisateurCourant = null;
                                 sessionValide = false;
                                 localStorage.removeItem('typhSession');
                                 sessionStorage.removeItem('typhSession');
                                 showLandingPage();
-                            } else {
-                                utilisateurCourant = userToujoursPresent;
-                                const sessionData = {
-                                    email: utilisateurCourant.email,
-                                    nom: utilisateurCourant.nom,
-                                    id: utilisateurCourant.id,
-                                    dateConnexion: new Date().toISOString()
-                                };
-                                
-                                if (localStorage.getItem('typhSession')) {
-                                    localStorage.setItem('typhSession', JSON.stringify(sessionData));
-                                } else if (sessionStorage.getItem('typhSession')) {
-                                    sessionStorage.setItem('typhSession', JSON.stringify(sessionData));
-                                }
+                                return;
                             }
                         }
-                        mettreAJourAffichage();
-                        afficherNews();
+                        
+                        dernierHashDonnees = nouveauHash;
+                        
+                        // Mise à jour sélective sans tout recharger
                         afficherTauxSimplifies();
+                        afficherNews();
+                        verifierPause();
+                        
+                        if (document.getElementById('accueil-section').classList.contains('active')) {
+                            mettreAJourActiviteRecente();
+                        }
+                        
                         if (document.getElementById('achat-section').classList.contains('active')) {
+                            mettreAJourSelecteurs();
                             estimerAchat();
                             afficherFraisReseauAchat();
                             verifierLimitesAchat();
                             mettreAJourListeNumerosAchat();
                             mettreAJourLimiteAchat();
+                            mettreAJourMessageSpecialTRX();
                         }
+                        
                         if (document.getElementById('vente-section').classList.contains('active')) {
+                            mettreAJourSelecteurs();
                             estimerVente();
                             afficherFraisReseauVente();
                             verifierLimitesVente();
                             mettreAJourListeNumerosVente();
+                        }
+                        
+                        if (document.getElementById('profil-section').classList.contains('active')) {
+                            mettreAJourProfil();
+                            mettreAJourNumerosUtilisateur();
+                        }
+                        
+                        if (document.getElementById('demandes-section').classList.contains('active') && utilisateurCourant) {
+                            mettreAJourMesDemandes();
                         }
                     }
                 }
