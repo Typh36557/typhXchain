@@ -780,7 +780,7 @@
             align-items: center;
             padding: 16px 0;
             border-bottom: 1px solid var(--gray-300);
-            cursor: default; /* Changé de 'pointer' à 'default' */
+            cursor: default;
         }
 
         .activity-item:last-child {
@@ -1450,6 +1450,19 @@
         .limite-error.show {
             display: block;
         }
+        
+        /* Style pour le message spécial TRX */
+        .frais-special {
+            color: var(--warning);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            padding: 8px;
+            background: rgba(217, 119, 6, 0.1);
+            border-radius: 16px;
+            text-align: center;
+            border: 1px dashed var(--warning);
+        }
     </style>
 </head>
 <body>
@@ -1487,7 +1500,7 @@
                     Premium Service
                 </div>
                 
-            </div>  <!-- FIN DE LA SECTION HERO -->
+            </div>
 
             <!-- BOUTON DE TÉLÉCHARGEMENT EN DEHORS DU CADRE, À DROITE -->
             <div style="display: flex; flex-direction: column; align-items: flex-end; margin-top: -10px; margin-bottom: 30px; padding-right: 10px;">
@@ -1504,7 +1517,6 @@
                     </span>
                 </div>
             </div>
-            <!-- FIN DU BOUTON DE TÉLÉCHARGEMENT -->
 
             <div class="features-grid">
                 <div class="feature-card">
@@ -1686,19 +1698,24 @@
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label"><i class="fas fa-coins"></i> Montant (Min: 2 000 Ar - Max: 100 000 Ar)</label>
+                        <label class="form-label"><i class="fas fa-coins"></i> Montant <span id="montant-limite-achat" style="color: var(--warning); font-size: 0.8rem;"></span></label>
                         <div class="input-wrapper"><input type="number" id="montant-achat" value="2000" min="2000" max="100000" oninput="estimerAchat(); verifierLimitesAchat()"></div>
-                        <div class="limite-error" id="limite-error-achat">Le montant doit être entre 2 000 Ar et 100 000 Ar</div>
+                        <div class="limite-error" id="limite-error-achat">Le montant doit être entre <span id="min-affichage-achat">2 000</span> Ar et 100 000 Ar</div>
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label"><i class="fas fa-coins"></i> Crypto</label>
-                        <div class="input-wrapper"><select id="crypto-achat" onchange="estimerAchat(); mettreAJourReseaux('achat')"></select></div>
+                        <div class="input-wrapper"><select id="crypto-achat" onchange="estimerAchat(); mettreAJourReseaux('achat'); mettreAJourLimiteAchat()"></select></div>
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label"><i class="fas fa-network-wired"></i> Réseau <span class="frais-valeur" id="frais-reseau-achat-affichage" style="font-size:0.8rem;"></span></label>
                         <div class="input-wrapper"><select id="reseau-achat" onchange="estimerAchat(); afficherFraisReseauAchat()"></select></div>
+                    </div>
+                    
+                    <!-- Message spécial pour TRX/TRC20 -->
+                    <div id="message-trx-special" class="frais-special" style="display: none;">
+                        <i class="fas fa-info-circle"></i> Frais réseau TRC20 : 3% <span style="color: var(--warning); font-weight: 700;">ou -1 TRX si activation</span>
                     </div>
                     
                     <div class="form-group">
@@ -1711,7 +1728,6 @@
                         <div class="input-wrapper"><input type="text" placeholder="ID ou Email ou Adresse..." id="adresse-achat"></div>
                     </div>
                     
-                    <!-- NOUVEAU : Sélection du numéro à débiter pour ACHAT -->
                     <div class="form-group" id="groupe-numero-achat" style="display: none;">
                         <label class="form-label"><i class="fas fa-phone-alt"></i> Numéro à débiter</label>
                         <div class="input-wrapper">
@@ -1721,11 +1737,10 @@
                         </div>
                         <div id="info-numero-achat-selectionne" style="margin-top: 8px; font-size: 0.9rem; color: var(--text-secondary);"></div>
                     </div>
-                    <!-- FIN NOUVEAU -->
                     
                     <div class="limite-info">
                         <span class="limite-label"><i class="fas fa-info-circle"></i> Limites d'échange</span>
-                        <span class="limite-valeur">2 000 Ar - 100 000 Ar</span>
+                        <span class="limite-valeur" id="limite-affichee-achat">2 000 Ar - 100 000 Ar</span>
                     </div>
                     
                     <div class="estimated-value" id="estimation-achat-container"></div>
@@ -1853,6 +1868,14 @@
                     </a>
                 </div>
             </div>
+            
+            <!-- CARTE DÉCONNEXION -->
+            <div class="card" id="carte-deconnexion">
+                <h2 class="card-title" style="margin-bottom:16px;"><i class="fas fa-sign-out-alt"></i> Session</h2>
+                <button class="btn btn-warning" onclick="deconnexion()" style="background: var(--danger);">
+                    <i class="fas fa-power-off"></i> Se déconnecter
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1890,20 +1913,25 @@
                 <input type="email" id="email-connexion" class="modal-input" placeholder="Email">
                 <input type="password" id="password-connexion" class="modal-input" placeholder="Mot de passe">
                 
-                <!-- NOUVEAU : Lien mot de passe oublié -->
+                <!-- Case à cocher "Rester connecté" -->
+                <div style="display: flex; align-items: center; gap: 8px; margin: 15px 0;">
+                    <input type="checkbox" id="check-rester-connecte" style="width: 18px; height: 18px; accent-color: var(--accent);" checked>
+                    <label for="check-rester-connecte" style="color: var(--text-secondary); font-size: 0.9rem;">
+                        <i class="fas fa-lock"></i> Rester connecté
+                    </label>
+                </div>
+                
                 <div style="text-align: right; margin: 10px 0 20px 0;">
                     <span onclick="ouvrirModalMotDePasseOublie()" style="color: var(--accent); cursor: pointer; font-size: 0.9rem;">
                         <i class="fas fa-question-circle"></i> Mot de passe oublié ?
                     </span>
                 </div>
-                <!-- FIN NOUVEAU -->
             </div>
             
             <div id="inscription-form" style="display: none;">
                 <input type="text" id="nom-inscription" class="modal-input" placeholder="Nom complet">
                 <input type="email" id="email-inscription" class="modal-input" placeholder="Email">
                 <input type="password" id="password-inscription" class="modal-input" placeholder="Mot de passe">
-                <!-- SUPPRESSION DU CHAMP NUMÉRO -->
             </div>
             
             <div class="error-message" id="erreur-auth"><i class="fas fa-exclamation-triangle"></i> <span id="erreur-texte"></span></div>
@@ -1916,7 +1944,6 @@
         <div class="modal-content">
             <div class="modal-title"><i class="fas fa-shield-alt"></i> Récupération sécurisée</div>
             
-            <!-- ÉTAPE 1 : EMAIL + NUMÉRO -->
             <div id="etape-1-mdp" style="display: block;">
                 <p style="color: var(--text-secondary); margin-bottom: 20px;">
                     <i class="fas fa-info-circle"></i> 
@@ -1942,7 +1969,6 @@
                 </div>
             </div>
             
-            <!-- ÉTAPE 2 : NOUVEAU MDP -->
             <div id="etape-2-mdp" style="display: none;">
                 <p style="color: var(--success); margin-bottom: 10px;">
                     <i class="fas fa-check-circle"></i> 
@@ -2201,6 +2227,23 @@
 
         let utilisateurCourant = null;
         let sessionValide = false;
+        
+        // Constantes pour les limites
+        const MIN_MONTANT_AR = 2000;
+        const MIN_MONTANT_TRX = 5000; // Minimum spécial pour TRX
+        const MAX_MONTANT_AR = 100000;
+        
+        // Vérifier la session au chargement
+        let sessionUtilisateur = localStorage.getItem('typhSession');
+        if (sessionUtilisateur) {
+            try {
+                utilisateurCourant = JSON.parse(sessionUtilisateur);
+                sessionValide = true;
+            } catch (e) {
+                localStorage.removeItem('typhSession');
+            }
+        }
+        
         let modeAuth = 'connexion';
         let transactionEnAttente = null;
         let tentativePIN = 0;
@@ -2234,14 +2277,46 @@
             'USDC': 'USDCUSDT'
         };
 
-        const MIN_MONTANT_AR = 2000;
-        const MAX_MONTANT_AR = 100000;
+        // Fonction pour obtenir le minimum selon la crypto
+        function getMinimumAchat(crypto) {
+            return crypto === 'TRX' ? MIN_MONTANT_TRX : MIN_MONTANT_AR;
+        }
+
+        // Fonction pour mettre à jour l'affichage des limites
+        function mettreAJourLimiteAchat() {
+            const crypto = document.getElementById('crypto-achat')?.value;
+            const min = getMinimumAchat(crypto);
+            const input = document.getElementById('montant-achat');
+            const limiteSpan = document.getElementById('montant-limite-achat');
+            const limiteAffichee = document.getElementById('limite-affichee-achat');
+            const minSpan = document.getElementById('min-affichage-achat');
+            
+            if (input) {
+                input.min = min;
+                if (input.value < min) {
+                    input.value = min;
+                }
+            }
+            
+            if (limiteSpan) {
+                limiteSpan.innerHTML = `(Min: ${min.toLocaleString()} Ar)`;
+            }
+            
+            if (limiteAffichee) {
+                limiteAffichee.innerHTML = `${min.toLocaleString()} Ar - ${MAX_MONTANT_AR.toLocaleString()} Ar`;
+            }
+            
+            if (minSpan) {
+                minSpan.innerHTML = min.toLocaleString();
+            }
+            
+            verifierLimitesAchat();
+            estimerAchat();
+        }
 
         // Fonction pour générer un ID unique pour un utilisateur
         function genererIDUtilisateur() {
-            // Compter le nombre d'utilisateurs existants pour déterminer le prochain numéro
             const nbUtilisateurs = donnees.utilisateurs?.length || 0;
-            // Formater avec 5 chiffres (ex: 00001, 00042, 00123)
             const numero = (nbUtilisateurs + 1).toString().padStart(5, '0');
             return `TX-${numero}`;
         }
@@ -2254,7 +2329,6 @@
             
             donnees.utilisateurs.forEach((user, index) => {
                 if (!user.id) {
-                    // Générer un ID basé sur l'index + 1
                     const numero = (index + 1).toString().padStart(5, '0');
                     user.id = `TX-${numero}`;
                     besoinDeSauvegarde = true;
@@ -2283,7 +2357,8 @@
                 reseaux: [
                     { nom: "BEP20", crypto: "USDT", fraisReseau: 0.5 },
                     { nom: "ERC20", crypto: "USDT", fraisReseau: 1.2 },
-                    { nom: "TRC20", crypto: "USDT", fraisReseau: 0.8 }
+                    { nom: "TRC20", crypto: "USDT", fraisReseau: 0.8 },
+                    { nom: "TRC20", crypto: "TRX", fraisReseau: 3.0 }
                 ],
                 frais: { achat: 1.5, vente: 2.0 },
                 pause: { achat: false, vente: false },
@@ -2409,12 +2484,24 @@
                         
                         tauxUSD_MGA = donnees.usdMGA;
                         
-                        // Attribuer des IDs aux utilisateurs existants
                         attribuerIDsAuxUtilisateursExistants();
                     } else {
                         donnees = obtenirDonneesParDefaut();
                         sauvegarderDonnees();
                     }
+                    
+                    if (sessionValide && utilisateurCourant) {
+                        const userToujoursPresent = donnees.utilisateurs?.find(u => u.email === utilisateurCourant.email);
+                        if (userToujoursPresent) {
+                            utilisateurCourant = userToujoursPresent;
+                            showPlatform();
+                        } else {
+                            utilisateurCourant = null;
+                            sessionValide = false;
+                            localStorage.removeItem('typhSession');
+                        }
+                    }
+                    
                     mettreAJourAffichage();
                     afficherNews();
                     afficherTauxSimplifies();
@@ -2604,6 +2691,7 @@
         function connexion() {
             const email = document.getElementById('email-connexion').value.trim();
             const password = document.getElementById('password-connexion').value.trim();
+            const resterConnecte = document.getElementById('check-rester-connecte')?.checked || false;
 
             if (!email || !password) {
                 afficherErreur('Email et mot de passe requis');
@@ -2615,6 +2703,20 @@
             if (user) {
                 utilisateurCourant = user;
                 sessionValide = true;
+                
+                const sessionData = {
+                    email: user.email,
+                    nom: user.nom,
+                    id: user.id,
+                    dateConnexion: new Date().toISOString()
+                };
+                
+                if (resterConnecte) {
+                    localStorage.setItem('typhSession', JSON.stringify(sessionData));
+                } else {
+                    sessionStorage.setItem('typhSession', JSON.stringify(sessionData));
+                }
+                
                 hideAuthModal();
                 mettreAJourAffichage();
                 showPlatform();
@@ -2627,7 +2729,6 @@
             const nom = document.getElementById('nom-inscription').value.trim();
             const email = document.getElementById('email-inscription').value.trim();
             const password = document.getElementById('password-inscription').value.trim();
-            // SUPPRESSION DE LA RÉCUPÉRATION DU NUMÉRO
 
             if (!nom || !email || !password) {
                 afficherErreur('Tous les champs sont requis');
@@ -2639,16 +2740,15 @@
                 return;
             }
 
-            // Générer un ID unique pour le nouvel utilisateur
             const nouvelID = genererIDUtilisateur();
 
             const nouvelUtilisateur = {
-                id: nouvelID, // Ajout de l'ID unique
+                id: nouvelID,
                 nom: nom,
                 email: email,
                 motDePasse: password,
                 dateInscription: new Date().toISOString(),
-                numeros: [], // Plus de numéro automatique, l'utilisateur devra en ajouter
+                numeros: [],
                 codePIN: { hash: null, actif: false, tentativeEchouees: 0, bloque: false }
             };
 
@@ -2657,12 +2757,32 @@
             utilisateurCourant = nouvelUtilisateur;
             sessionValide = true;
             
+            const sessionData = {
+                email: nouvelUtilisateur.email,
+                nom: nouvelUtilisateur.nom,
+                id: nouvelUtilisateur.id,
+                dateConnexion: new Date().toISOString()
+            };
+            
+            localStorage.setItem('typhSession', JSON.stringify(sessionData));
+            
             sauvegarderDonnees();
             hideAuthModal();
             mettreAJourAffichage();
             showPlatform();
             switchPlatformSection('profil');
             alert('Inscription réussie ! Ajoutez vos numéros dans votre profil pour commencer à échanger. Ils seront validés par l\'administrateur.');
+        }
+
+        function deconnexion() {
+            if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+                utilisateurCourant = null;
+                sessionValide = false;
+                localStorage.removeItem('typhSession');
+                sessionStorage.removeItem('typhSession');
+                showLandingPage();
+                mettreAJourAffichage();
+            }
         }
 
         function afficherErreur(message) {
@@ -2683,8 +2803,18 @@
             
             if (utilisateurCourant) {
                 document.getElementById('userBadge').innerHTML = `<i class="fas fa-user-check"></i> ${utilisateurCourant.nom}`;
+                
+                const carteDeconnexion = document.getElementById('carte-deconnexion');
+                if (carteDeconnexion) {
+                    carteDeconnexion.style.display = 'block';
+                }
             } else {
                 document.getElementById('userBadge').innerHTML = '<i class="fas fa-user-circle"></i> Connexion';
+                
+                const carteDeconnexion = document.getElementById('carte-deconnexion');
+                if (carteDeconnexion) {
+                    carteDeconnexion.style.display = 'none';
+                }
             }
         }
 
@@ -2782,11 +2912,23 @@
         function afficherFraisReseauAchat() {
             const select = document.getElementById('reseau-achat');
             const fraisSpan = document.getElementById('frais-reseau-achat-affichage');
+            const crypto = document.getElementById('crypto-achat')?.value;
+            const messageTRX = document.getElementById('message-trx-special');
+            
             if (select && fraisSpan) {
                 const selectedOption = select.options[select.selectedIndex];
                 if (selectedOption) {
                     const frais = selectedOption.dataset.frais || '0';
                     fraisSpan.innerHTML = `(frais réseau: ${frais}%)`;
+                }
+            }
+            
+            // Afficher le message spécial pour TRX + TRC20
+            if (messageTRX) {
+                if (crypto === 'TRX' && select?.value === 'TRC20') {
+                    messageTRX.style.display = 'block';
+                } else {
+                    messageTRX.style.display = 'none';
                 }
             }
         }
@@ -2805,10 +2947,13 @@
 
         function verifierLimitesAchat() {
             const montant = parseFloat(document.getElementById('montant-achat')?.value) || 0;
+            const crypto = document.getElementById('crypto-achat')?.value;
+            const min = getMinimumAchat(crypto);
+            
             const errorDiv = document.getElementById('limite-error-achat');
             const btn = document.getElementById('btn-confirmer-achat');
             
-            if (montant < MIN_MONTANT_AR || montant > MAX_MONTANT_AR) {
+            if (montant < min || montant > MAX_MONTANT_AR) {
                 errorDiv.classList.add('show');
                 btn.disabled = true;
                 btn.classList.add('btn-disabled');
@@ -2895,7 +3040,6 @@
             }
         }
 
-        // Mettre à jour la liste des numéros pour ACHAT
         function mettreAJourListeNumerosAchat() {
             const select = document.getElementById('numero-achat-select');
             const groupe = document.getElementById('groupe-numero-achat');
@@ -2950,7 +3094,6 @@
             }
         }
 
-        // Afficher les infos du numéro sélectionné pour ACHAT
         function afficherInfosNumeroAchat() {
             const select = document.getElementById('numero-achat-select');
             const infoDiv = document.getElementById('info-numero-achat-selectionne');
@@ -3056,7 +3199,7 @@
             }
 
             if (type === 'ACHAT' && !verifierLimitesAchat()) {
-                alert('Le montant doit être entre 2 000 Ar et 100 000 Ar');
+                alert('Le montant doit être entre les limites autorisées');
                 return;
             }
             
@@ -3109,7 +3252,7 @@
                 date: new Date().toISOString(),
                 utilisateur: utilisateurCourant.nom,
                 email: utilisateurCourant.email,
-                userID: utilisateurCourant.id, // Ajout de l'ID utilisateur
+                userID: utilisateurCourant.id,
                 montantRecu: type === 'ACHAT' ? montantRecuAchat : montantRecuVente,
                 cryptoAffichee: type === 'ACHAT' ? crypto : 'Ar'
             };
@@ -3334,7 +3477,7 @@
             const demande = {
                 id: 'DEM-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
                 type, utilisateur: utilisateurCourant.nom, email: utilisateurCourant.email,
-                userID: utilisateurCourant.id, // Ajout de l'ID utilisateur dans la demande
+                userID: utilisateurCourant.id,
                 montant, crypto, operateur, portefeuille, reseau, adresse, numero, nomNumero,
                 messagePaiement, txid,
                 statut: 'en_attente', date: new Date().toISOString(), avecPIN: true,
@@ -3807,7 +3950,6 @@
                 return;
             }
             
-            // Vérifier si l'email existe
             const user = donnees.utilisateurs?.find(u => u.email === email);
             
             if (!user) {
@@ -3816,7 +3958,6 @@
                 return;
             }
             
-            // Vérifier si le numéro appartient à cet utilisateur (même en attente)
             const numeroTrouve = user.numeros?.some(n => n.numero === numero);
             
             if (!numeroTrouve) {
@@ -3825,7 +3966,6 @@
                 return;
             }
             
-            // ✅ Vérification réussie !
             document.getElementById('etape-1-mdp').style.display = 'none';
             document.getElementById('etape-2-mdp').style.display = 'block';
             document.getElementById('email-affiche').textContent = email;
@@ -3850,7 +3990,6 @@
                 return;
             }
             
-            // Mettre à jour le mot de passe
             const userIndex = donnees.utilisateurs?.findIndex(u => u.email === email);
             if (userIndex !== -1) {
                 donnees.utilisateurs[userIndex].motDePasse = nouveauMdp;
@@ -3859,7 +3998,6 @@
                 alert('✅ Mot de passe réinitialisé avec succès !');
                 fermerModalMotDePasseOublie();
                 
-                // Rouvrir la modal de connexion
                 document.getElementById('modal-auth').classList.add('active');
             }
         }
@@ -3897,6 +4035,7 @@
                 afficherFraisReseauAchat();
                 verifierLimitesAchat();
                 mettreAJourListeNumerosAchat();
+                mettreAJourLimiteAchat();
             }
             if (section === 'vente') {
                 mettreAJourReseaux('vente');
@@ -3926,6 +4065,7 @@
                 afficherFraisReseauAchat();
                 verifierLimitesAchat();
                 mettreAJourListeNumerosAchat();
+                mettreAJourLimiteAchat();
             }
             if (section === 'demandes' && utilisateurCourant) mettreAJourMesDemandes();
             if (section === 'profil') {
@@ -3945,7 +4085,6 @@
                     if (anciennesDonnees !== nouvellesDonnees) {
                         donnees = data;
                         
-                        // S'assurer que les IDs sont attribués
                         attribuerIDsAuxUtilisateursExistants();
                         
                         if (utilisateurCourant) {
@@ -3953,9 +4092,23 @@
                             if (!userToujoursPresent) {
                                 utilisateurCourant = null;
                                 sessionValide = false;
+                                localStorage.removeItem('typhSession');
+                                sessionStorage.removeItem('typhSession');
                                 showLandingPage();
                             } else {
                                 utilisateurCourant = userToujoursPresent;
+                                const sessionData = {
+                                    email: utilisateurCourant.email,
+                                    nom: utilisateurCourant.nom,
+                                    id: utilisateurCourant.id,
+                                    dateConnexion: new Date().toISOString()
+                                };
+                                
+                                if (localStorage.getItem('typhSession')) {
+                                    localStorage.setItem('typhSession', JSON.stringify(sessionData));
+                                } else if (sessionStorage.getItem('typhSession')) {
+                                    sessionStorage.setItem('typhSession', JSON.stringify(sessionData));
+                                }
                             }
                         }
                         mettreAJourAffichage();
@@ -3966,6 +4119,7 @@
                             afficherFraisReseauAchat();
                             verifierLimitesAchat();
                             mettreAJourListeNumerosAchat();
+                            mettreAJourLimiteAchat();
                         }
                         if (document.getElementById('vente-section').classList.contains('active')) {
                             estimerVente();
@@ -3977,6 +4131,35 @@
                 }
             });
         }
+
+        window.addEventListener('load', function() {
+            let session = sessionStorage.getItem('typhSession');
+            let storageType = 'session';
+            
+            if (!session) {
+                session = localStorage.getItem('typhSession');
+                storageType = 'local';
+            }
+            
+            if (session && donnees.utilisateurs) {
+                try {
+                    const sessionData = JSON.parse(session);
+                    const user = donnees.utilisateurs.find(u => u.email === sessionData.email);
+                    if (user) {
+                        utilisateurCourant = user;
+                        sessionValide = true;
+                        showPlatform();
+                        mettreAJourAffichage();
+                    } else {
+                        if (storageType === 'local') localStorage.removeItem('typhSession');
+                        else sessionStorage.removeItem('typhSession');
+                    }
+                } catch (e) {
+                    if (storageType === 'local') localStorage.removeItem('typhSession');
+                    else sessionStorage.removeItem('typhSession');
+                }
+            }
+        });
 
         chargerDonnees();
         ecouterChangements();
