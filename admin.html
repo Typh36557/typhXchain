@@ -611,46 +611,6 @@
             .container { max-width: 600px; margin: 0 auto; }
             .nav-menu { max-width: 600px; }
         }
-
-        /* Nouveaux styles pour les limites */
-        .limites-config {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .limite-input-group {
-            background: var(--primary);
-            padding: 15px;
-            border-radius: 20px;
-        }
-        
-        .limite-input-group label {
-            display: block;
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            margin-bottom: 8px;
-        }
-        
-        .limite-input-group input {
-            width: 100%;
-            padding: 10px;
-            background: var(--bg-dark);
-            border: 1px solid var(--gray-300);
-            border-radius: 16px;
-            color: var(--white);
-        }
-        
-        .message-special-config textarea {
-            width: 100%;
-            padding: 12px;
-            background: var(--bg-dark);
-            border: 1px solid var(--gray-300);
-            border-radius: 16px;
-            color: var(--white);
-            margin-bottom: 10px;
-        }
     </style>
 </head>
 <body>
@@ -719,7 +679,6 @@
                     <i class="fas fa-exchange-alt"></i> Transactions
                     <span id="notif-transactions" class="notification-badge" style="display: none;">0</span>
                 </div>
-                <div class="tab" onclick="switchTab('config')"><i class="fas fa-sliders-h"></i> Configuration</div>
             </div>
 
             <!-- GESTION DES DONNÉES -->
@@ -1016,53 +975,6 @@
                     <div id="transactions-liste" class="item-list"></div>
                 </div>
             </div>
-
-            <!-- NOUVEL ONGLET CONFIGURATION -->
-            <div id="config-tab" style="display: none;">
-                <div class="admin-card">
-                    <h2><i class="fas fa-sliders-h"></i> Configuration des limites</h2>
-                    
-                    <div class="limites-config">
-                        <div class="limite-input-group">
-                            <label>Min Achat (standard)</label>
-                            <input type="number" id="config-min-achat" value="2000" min="500" max="50000" step="100">
-                        </div>
-                        <div class="limite-input-group">
-                            <label>Min Achat TRX</label>
-                            <input type="number" id="config-min-achat-trx" value="5000" min="500" max="100000" step="100">
-                        </div>
-                        <div class="limite-input-group">
-                            <label>Max Achat</label>
-                            <input type="number" id="config-max-achat" value="100000" min="10000" max="1000000" step="1000">
-                        </div>
-                        <div class="limite-input-group">
-                            <label>Min Vente</label>
-                            <input type="number" id="config-min-vente" value="2000" min="500" max="50000" step="100">
-                        </div>
-                        <div class="limite-input-group">
-                            <label>Max Vente</label>
-                            <input type="number" id="config-max-vente" value="100000" min="10000" max="1000000" step="1000">
-                        </div>
-                    </div>
-                    
-                    <button class="btn btn-success" onclick="sauvegarderLimites()" style="margin-top: 20px; width: 100%;">
-                        <i class="fas fa-save"></i> Sauvegarder les limites
-                    </button>
-                </div>
-                
-                <div class="admin-card">
-                    <h2><i class="fas fa-comment"></i> Messages spéciaux</h2>
-                    
-                    <div class="message-special-config">
-                        <label>Message TRX/TRC20</label>
-                        <textarea id="config-message-trx" rows="3" placeholder="Message pour TRX sur réseau TRC20">Frais réseau TRC20 : 3% ou -1 TRX si activation</textarea>
-                    </div>
-                    
-                    <button class="btn btn-success" onclick="sauvegarderMessagesSpeciaux()" style="margin-top: 20px; width: 100%;">
-                        <i class="fas fa-save"></i> Sauvegarder les messages
-                    </button>
-                </div>
-            </div>
         </div>
 
         <!-- BOTTOM NAVIGATION -->
@@ -1204,17 +1116,7 @@
             demandes: [],
             news: [],
             tauxMode: 'auto',
-            usdMGA: 4700,
-            limites: {
-                minAchat: 2000,
-                minAchatTRX: 5000,
-                maxAchat: 100000,
-                minVente: 2000,
-                maxVente: 100000
-            },
-            messagesSpeciaux: {
-                trx: "Frais réseau TRC20 : 3% ou -1 TRX si activation"
-            }
+            usdMGA: 4700
         };
 
         let modalMode = 'ajout';
@@ -1227,7 +1129,6 @@
         // Variables pour les transactions
         let transactionsFiltrees = [];
         let transactionSelectionneeId = null;
-        let enCoursDeMiseAJour = false;
         
         // Variables pour Binance
         let binanceInterval = null;
@@ -1255,12 +1156,6 @@
         let toastTimer = null;
         let notificationPermission = false;
         let dernieresTransactions = [];
-
-        // Fonction pour générer un ID stable
-        function genererIDStable(email, nom) {
-            const hash = btoa(email + nom).replace(/[^a-zA-Z0-9]/g, '').substring(0, 8);
-            return `TX-${hash}`;
-        }
 
         function loginAdmin() {
             const username = document.getElementById('admin-username').value;
@@ -1327,6 +1222,7 @@
                     notificationPermission = true;
                     document.getElementById('notification-permission-banner').style.display = 'none';
                     
+                    // Notification de test
                     const notification = new Notification('✅ Typh X-chain Admin', {
                         body: 'Notifications activées avec succès !',
                         vibrate: [200, 100, 200]
@@ -1440,9 +1336,7 @@
             
             if (enAttente > dernierCompteTransactions) {
                 const nouvelles = enAttente - dernierCompteTransactions;
-                if (nouvelles <= 3) { // Limiter à 3 notifications pour éviter le spam
-                    afficherNotification(`${nouvelles} nouvelle(s) transaction(s) en attente`);
-                }
+                afficherNotification(`${nouvelles} nouvelle(s) transaction(s) en attente`);
                 
                 const nouvellesTransactions = demandes.filter(d => 
                     d.statut === 'en_attente' && 
@@ -1450,7 +1344,7 @@
                     (new Date() - new Date(d.date)) < 60000
                 );
                 
-                nouvellesTransactions.slice(0, 3).forEach(tx => { // Limiter à 3 notifications push
+                nouvellesTransactions.forEach(tx => {
                     envoyerNotificationTransaction(tx);
                 });
             }
@@ -1543,6 +1437,11 @@
                 });
                 
                 await database.ref().update(updates);
+                
+                const snapshot = await database.ref('donnees/taux').once('value');
+                if (snapshot.val()) {
+                    donnees.taux = snapshot.val();
+                }
                 
                 document.getElementById('sync-badge').textContent = 'Actif';
                 document.getElementById('sync-badge').style.background = 'var(--success)';
@@ -2028,24 +1927,6 @@
                     const data = snapshot.val();
                     if (data) {
                         donnees = data;
-                        
-                        // Initialiser les nouvelles propriétés si absentes
-                        if (!donnees.limites) {
-                            donnees.limites = {
-                                minAchat: 2000,
-                                minAchatTRX: 5000,
-                                maxAchat: 100000,
-                                minVente: 2000,
-                                maxVente: 100000
-                            };
-                        }
-                        
-                        if (!donnees.messagesSpeciaux) {
-                            donnees.messagesSpeciaux = {
-                                trx: "Frais réseau TRC20 : 3% ou -1 TRX si activation"
-                            };
-                        }
-                        
                         if (!donnees.taux) donnees.taux = {};
                         if (!donnees.news) donnees.news = [];
                         if (!donnees.tauxMode) donnees.tauxMode = 'auto';
@@ -2053,17 +1934,15 @@
                         
                         tauxUSD_MGA = donnees.usdMGA;
                         
-                        // S'assurer que les utilisateurs ont un ID stable
+                        // S'assurer que les utilisateurs ont un ID
                         if (donnees.utilisateurs) {
-                            donnees.utilisateurs.forEach((user) => {
+                            donnees.utilisateurs.forEach((user, index) => {
                                 if (!user.id) {
-                                    user.id = genererIDStable(user.email, user.nom);
+                                    const numero = (index + 1).toString().padStart(5, '0');
+                                    user.id = `TX-${numero}`;
                                 }
                             });
                         }
-                        
-                        // Mettre à jour l'affichage des limites
-                        mettreAJourAffichageLimites();
                     } else {
                         donnees = obtenirDonneesParDefaut();
                         sauvegarderDonnees();
@@ -2100,8 +1979,7 @@
                 reseaux: [
                     { nom: "BEP20", crypto: "USDT", fraisReseau: 0.5 },
                     { nom: "ERC20", crypto: "USDT", fraisReseau: 1.2 },
-                    { nom: "TRC20", crypto: "USDT", fraisReseau: 0.8 },
-                    { nom: "TRC20", crypto: "TRX", fraisReseau: 3.0 }
+                    { nom: "TRC20", crypto: "USDT", fraisReseau: 0.8 }
                 ],
                 frais: { achat: 1.5, vente: 2.0 },
                 pause: { achat: false, vente: false },
@@ -2119,30 +1997,19 @@
                     }
                 ],
                 tauxMode: 'auto',
-                usdMGA: 4700,
-                limites: {
-                    minAchat: 2000,
-                    minAchatTRX: 5000,
-                    maxAchat: 100000,
-                    minVente: 2000,
-                    maxVente: 100000
-                },
-                messagesSpeciaux: {
-                    trx: "Frais réseau TRC20 : 3% ou -1 TRX si activation"
-                }
+                usdMGA: 4700
             };
         }
 
         function sauvegarderDonnees() {
-            enCoursDeMiseAJour = true;
             database.ref('donnees').set(donnees)
                 .then(() => {
                     console.log('✅ Données synchronisées avec Firebase');
-                    enCoursDeMiseAJour = false;
+                    localStorage.setItem('typhData', JSON.stringify(donnees));
                 })
                 .catch((error) => {
                     console.error('❌ Erreur synchronisation Firebase:', error);
-                    enCoursDeMiseAJour = false;
+                    localStorage.setItem('typhData', JSON.stringify(donnees));
                 });
             
             mettreAJourStats();
@@ -2168,44 +2035,6 @@
             
             document.getElementById('mode-auto').classList.toggle('active', donnees.tauxMode === 'auto');
             document.getElementById('mode-manual').classList.toggle('active', donnees.tauxMode === 'manual');
-            
-            // Mettre à jour l'affichage des limites
-            mettreAJourAffichageLimites();
-        }
-
-        function mettreAJourAffichageLimites() {
-            if (donnees.limites) {
-                document.getElementById('config-min-achat').value = donnees.limites.minAchat || 2000;
-                document.getElementById('config-min-achat-trx').value = donnees.limites.minAchatTRX || 5000;
-                document.getElementById('config-max-achat').value = donnees.limites.maxAchat || 100000;
-                document.getElementById('config-min-vente').value = donnees.limites.minVente || 2000;
-                document.getElementById('config-max-vente').value = donnees.limites.maxVente || 100000;
-            }
-            
-            if (donnees.messagesSpeciaux) {
-                document.getElementById('config-message-trx').value = donnees.messagesSpeciaux.trx || "Frais réseau TRC20 : 3% ou -1 TRX si activation";
-            }
-        }
-
-        function sauvegarderLimites() {
-            donnees.limites = {
-                minAchat: parseInt(document.getElementById('config-min-achat').value) || 2000,
-                minAchatTRX: parseInt(document.getElementById('config-min-achat-trx').value) || 5000,
-                maxAchat: parseInt(document.getElementById('config-max-achat').value) || 100000,
-                minVente: parseInt(document.getElementById('config-min-vente').value) || 2000,
-                maxVente: parseInt(document.getElementById('config-max-vente').value) || 100000
-            };
-            
-            sauvegarderDonnees();
-            alert('✅ Limites sauvegardées');
-        }
-
-        function sauvegarderMessagesSpeciaux() {
-            if (!donnees.messagesSpeciaux) donnees.messagesSpeciaux = {};
-            donnees.messagesSpeciaux.trx = document.getElementById('config-message-trx').value;
-            
-            sauvegarderDonnees();
-            alert('✅ Message spécial sauvegardé');
         }
 
         function switchTab(tab) {
@@ -2218,7 +2047,6 @@
             document.getElementById('demandes-tab').style.display = 'none';
             document.getElementById('news-tab').style.display = 'none';
             document.getElementById('transactions-tab').style.display = 'none';
-            document.getElementById('config-tab').style.display = 'none';
             
             if (tab === 'gestion') {
                 document.querySelectorAll('.tab')[0].classList.add('active');
@@ -2255,13 +2083,10 @@
                 afficherTransactions();
                 calculerStatsTransactions();
                 
+                // Réinitialiser les notifications vues
                 if (document.getElementById('notif-transactions')) {
                     document.getElementById('notif-transactions').style.background = 'var(--warning)';
                 }
-            } else if (tab === 'config') {
-                document.querySelectorAll('.tab')[8].classList.add('active');
-                document.getElementById('config-tab').style.display = 'block';
-                mettreAJourAffichageLimites();
             }
         }
 
@@ -2693,7 +2518,7 @@
             sauvegarderDonnees();
         }
 
-        // FONCTIONS POUR L'ONGLET TRANSACTIONS
+        // NOUVELLES FONCTIONS POUR L'ONGLET TRANSACTIONS
         function afficherTransactions() {
             const liste = document.getElementById('transactions-liste');
             if (!liste) return;
@@ -3093,39 +2918,43 @@
 
         function ecouterChangements() {
             database.ref('donnees').on('value', (snapshot) => {
-                if (enCoursDeMiseAJour) return;
-                
                 const data = snapshot.val();
                 if (data) {
-                    console.log('🔄 Changement détecté');
-                    donnees = data;
+                    const anciennesDonnees = JSON.stringify(donnees);
+                    const nouvellesDonnees = JSON.stringify(data);
                     
-                    // S'assurer que les utilisateurs ont un ID stable
-                    if (donnees.utilisateurs) {
-                        donnees.utilisateurs.forEach((user) => {
-                            if (!user.id) {
-                                user.id = genererIDStable(user.email, user.nom);
-                            }
-                        });
-                    }
-                    
-                    mettreAJourStats();
-                    afficherTout();
-                    mettreAJourPauseUI();
-                    verifierNouvellesTransactions();
-                    
-                    if (document.getElementById('demandes-tab').style.display === 'block') {
-                        afficherDemandes();
-                    }
-                    if (document.getElementById('news-tab').style.display === 'block') {
-                        afficherNews();
-                    }
-                    if (document.getElementById('taux-tab').style.display === 'block') {
-                        afficherTauxSimplifies();
-                    }
-                    if (document.getElementById('transactions-tab').style.display === 'block') {
-                        afficherTransactions();
-                        calculerStatsTransactions();
+                    if (anciennesDonnees !== nouvellesDonnees) {
+                        console.log('🔄 Mise à jour détectée');
+                        donnees = data;
+                        
+                        // S'assurer que les utilisateurs ont un ID
+                        if (donnees.utilisateurs) {
+                            donnees.utilisateurs.forEach((user, index) => {
+                                if (!user.id) {
+                                    const numero = (index + 1).toString().padStart(5, '0');
+                                    user.id = `TX-${numero}`;
+                                }
+                            });
+                        }
+                        
+                        mettreAJourStats();
+                        afficherTout();
+                        mettreAJourPauseUI();
+                        verifierNouvellesTransactions();
+                        
+                        if (document.getElementById('demandes-tab').style.display === 'block') {
+                            afficherDemandes();
+                        }
+                        if (document.getElementById('news-tab').style.display === 'block') {
+                            afficherNews();
+                        }
+                        if (document.getElementById('taux-tab').style.display === 'block') {
+                            afficherTauxSimplifies();
+                        }
+                        if (document.getElementById('transactions-tab').style.display === 'block') {
+                            afficherTransactions();
+                            calculerStatsTransactions();
+                        }
                     }
                 }
             });
