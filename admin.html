@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <!-- HTML2CANVAS pour générer les images -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -659,15 +660,24 @@
         <div class="login-card">
             <div class="logo" style="font-size: 2rem; margin-bottom: 20px;">Typh X-chain</div>
             <h3 class="login-title">🔐 Administration</h3>
-            <input type="text" id="admin-username" class="login-input" placeholder="Nom d'utilisateur" value="Admin">
-            <input type="password" id="admin-password" class="login-input" placeholder="Mot de passe" value="">
+            
+            <!-- Champ Email avec votre email pré-rempli -->
+            <input type="email" id="admin-email" class="login-input" placeholder="Email" value="sarobidytyph4@gmail.com">
+            
+            <!-- Champ Mot de passe -->
+            <input type="password" id="admin-password" class="login-input" placeholder="Mot de passe">
+            
             <div class="login-error" id="admin-error">
-                <i class="fas fa-exclamation-triangle"></i> Identifiants incorrects
+                <i class="fas fa-exclamation-triangle"></i> Email ou mot de passe incorrect
             </div>
+            
             <button class="login-btn" onclick="loginAdmin()">
-                <i class="fas fa-sign-in-alt"></i> Accéder à l'administration
+                <i class="fas fa-sign-in-alt"></i> Se connecter avec Firebase
             </button>
-            <p class="login-info"><i class="fas fa-info-circle"></i> Utilisez vos identifiants</p>
+            
+            <p class="login-info">
+                <i class="fas fa-shield-alt"></i> Connexion sécurisée
+            </p>
         </div>
     </div>
 
@@ -1190,7 +1200,7 @@
         // Initialiser Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        console.log('✅ Firebase Admin connecté');
+        const auth = firebase.auth();
 
         let donnees = {
             utilisateurs: [],
@@ -1256,44 +1266,91 @@
         let notificationPermission = false;
         let dernieresTransactions = [];
 
+        // Fonction d'échappement XSS
+        function echapperHTML(texte) {
+            if (!texte) return '';
+            return String(texte)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
         // Fonction pour générer un ID stable
         function genererIDStable(email, nom) {
             const hash = btoa(email + nom).replace(/[^a-zA-Z0-9]/g, '').substring(0, 8);
             return `TX-${hash}`;
         }
 
-        function loginAdmin() {
-            const username = document.getElementById('admin-username').value;
-            const password = document.getElementById('admin-password').value;
-            
-            if (username === 'Admin' && password === 'Typh_#3600') {
+        // Vérifier l'état d'authentification au chargement
+        auth.onAuthStateChanged((user) => {
+            if (user && user.email === 'sarobidytyph4@gmail.com') {
+                // Admin connecté
+                console.log('✅ Admin connecté:', user.email);
                 document.getElementById('login-page').style.display = 'none';
                 document.getElementById('admin-interface').style.display = 'block';
-                sessionStorage.setItem('adminLoggedIn', 'true');
                 chargerDonnees();
                 demarrerSyncBinance();
                 demarrerSurveillanceTransactions();
                 verifierPermissionNotification();
-            } else {
+            } else if (document.getElementById('admin-interface').style.display === 'block') {
+                // Plus connecté, retour à l'écran de connexion
+                document.getElementById('login-page').style.display = 'flex';
+                document.getElementById('admin-interface').style.display = 'none';
+            }
+        });
+
+        // Nouvelle fonction de connexion
+        async function loginAdmin() {
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            
+            // Cacher l'erreur précédente
+            document.getElementById('admin-error').style.display = 'none';
+            
+            try {
+                // Connexion à Firebase Auth
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // Vérifier que c'est bien l'admin
+                if (user.email === 'sarobidytyph4@gmail.com') {
+                    console.log('✅ Connexion admin réussie');
+                    // Le reste est géré par onAuthStateChanged
+                } else {
+                    // Pas admin, déconnexion
+                    await auth.signOut();
+                    document.getElementById('admin-error').style.display = 'block';
+                    document.getElementById('admin-error').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Email non autorisé';
+                }
+            } catch (error) {
+                console.error('Erreur de connexion:', error);
                 document.getElementById('admin-error').style.display = 'block';
+                
+                // Message d'erreur adapté
+                if (error.code === 'auth/user-not-found') {
+                    document.getElementById('admin-error').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Utilisateur non trouvé';
+                } else if (error.code === 'auth/wrong-password') {
+                    document.getElementById('admin-error').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Mot de passe incorrect';
+                } else if (error.code === 'auth/invalid-email') {
+                    document.getElementById('admin-error').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Email invalide';
+                } else if (error.code === 'auth/too-many-requests') {
+                    document.getElementById('admin-error').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Trop de tentatives, réessayez plus tard';
+                } else {
+                    document.getElementById('admin-error').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erreur de connexion';
+                }
             }
         }
 
+        // Nouvelle fonction de déconnexion
         function logoutAdmin() {
-            sessionStorage.removeItem('adminLoggedIn');
-            document.getElementById('login-page').style.display = 'flex';
-            document.getElementById('admin-interface').style.display = 'none';
-            if (binanceInterval) clearInterval(binanceInterval);
-            if (intervalNotification) clearInterval(intervalNotification);
-        }
-
-        if (sessionStorage.getItem('adminLoggedIn') === 'true') {
-            document.getElementById('login-page').style.display = 'none';
-            document.getElementById('admin-interface').style.display = 'block';
-            chargerDonnees();
-            demarrerSyncBinance();
-            demarrerSurveillanceTransactions();
-            verifierPermissionNotification();
+            auth.signOut().then(() => {
+                console.log('✅ Admin déconnecté');
+                // Le reste est géré par onAuthStateChanged
+            }).catch((error) => {
+                console.error('Erreur déconnexion:', error);
+            });
         }
 
         // Fonctions de notification
@@ -1440,7 +1497,7 @@
             
             if (enAttente > dernierCompteTransactions) {
                 const nouvelles = enAttente - dernierCompteTransactions;
-                if (nouvelles <= 3) { // Limiter à 3 notifications pour éviter le spam
+                if (nouvelles <= 3) {
                     afficherNotification(`${nouvelles} nouvelle(s) transaction(s) en attente`);
                 }
                 
@@ -1450,7 +1507,7 @@
                     (new Date() - new Date(d.date)) < 60000
                 );
                 
-                nouvellesTransactions.slice(0, 3).forEach(tx => { // Limiter à 3 notifications push
+                nouvellesTransactions.slice(0, 3).forEach(tx => {
                     envoyerNotificationTransaction(tx);
                 });
             }
@@ -1641,10 +1698,10 @@
                 <div class="taux-card">
                     <div class="taux-header">
                         <span class="taux-symbole">
-                            <i class="fas fa-coins"></i> ${symboleAffiche}
+                            <i class="fas fa-coins"></i> ${echapperHTML(symboleAffiche)}
                         </span>
                         <div class="item-actions">
-                            <button class="btn btn-edit" onclick="ouvrirModal('taux', null, '${crypto}')">
+                            <button class="btn btn-edit" onclick="ouvrirModal('taux', null, '${echapperHTML(crypto)}')">
                                 <i class="fas fa-edit"></i>
                             </button>
                         </div>
@@ -1693,29 +1750,29 @@
                     <div class="news-header-admin">
                         <div class="news-titre-admin">
                             <i class="fas ${news.important ? 'fa-exclamation-circle' : 'fa-newspaper'}" style="color: var(--accent);"></i> 
-                            ${news.titre}
+                            ${echapperHTML(news.titre)}
                         </div>
                         <div class="item-actions">
-                            <button class="btn btn-edit" onclick="editerNews('${news.id}')">
+                            <button class="btn btn-edit" onclick="editerNews('${echapperHTML(news.id)}')">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn btn-delete" onclick="supprimerNews('${news.id}')">
+                            <button class="btn btn-delete" onclick="supprimerNews('${echapperHTML(news.id)}')">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
                     </div>
                     
                     <div class="news-contenu-admin">
-                        ${news.contenu}
+                        ${echapperHTML(news.contenu)}
                     </div>
                     
                     <div class="news-footer-admin">
                         <div>
                             <span class="news-author">
-                                <i class="fas fa-user-shield"></i> ${news.auteur || 'Typh Exchange'}
+                                <i class="fas fa-user-shield"></i> ${echapperHTML(news.auteur || 'Typh Exchange')}
                             </span>
                             <span class="news-date-admin" style="margin-left: 10px;">
-                                <i class="far fa-calendar-alt"></i> ${dateFormatee}
+                                <i class="far fa-calendar-alt"></i> ${echapperHTML(dateFormatee)}
                             </span>
                         </div>
                         <div style="display: flex; gap: 10px;">
@@ -1834,17 +1891,17 @@
                             <textarea id="modal-message" placeholder="Message de confirmation (pour VENTE)"></textarea>
                             <select id="modal-reseau">
                                 <option value="">Sélectionner un réseau</option>
-                                ${(donnees.reseaux || []).map(r => `<option value="${r.nom}">${r.nom} (${r.crypto})</option>`).join('')}
+                                ${(donnees.reseaux || []).map(r => `<option value="${echapperHTML(r.nom)}">${echapperHTML(r.nom)} (${echapperHTML(r.crypto)})</option>`).join('')}
                             </select>
                         `;
                     } else {
                         html = `
-                            <input type="text" id="modal-nom" placeholder="Nom" value="${donnees.portefeuilles[index].nom}">
-                            <textarea id="modal-reponse" placeholder="Description">${donnees.portefeuilles[index].reponse || ''}</textarea>
-                            <textarea id="modal-message" placeholder="Message de confirmation">${donnees.portefeuilles[index].messageConfirmation || ''}</textarea>
+                            <input type="text" id="modal-nom" placeholder="Nom" value="${echapperHTML(donnees.portefeuilles[index].nom)}">
+                            <textarea id="modal-reponse" placeholder="Description">${echapperHTML(donnees.portefeuilles[index].reponse || '')}</textarea>
+                            <textarea id="modal-message" placeholder="Message de confirmation">${echapperHTML(donnees.portefeuilles[index].messageConfirmation || '')}</textarea>
                             <select id="modal-reseau">
                                 <option value="">Sélectionner un réseau</option>
-                                ${(donnees.reseaux || []).map(r => `<option value="${r.nom}" ${donnees.portefeuilles[index].reseau === r.nom ? 'selected' : ''}>${r.nom} (${r.crypto})</option>`).join('')}
+                                ${(donnees.reseaux || []).map(r => `<option value="${echapperHTML(r.nom)}" ${donnees.portefeuilles[index].reseau === r.nom ? 'selected' : ''}>${echapperHTML(r.nom)} (${echapperHTML(r.crypto)})</option>`).join('')}
                             </select>
                         `;
                     }
@@ -1859,8 +1916,8 @@
                         `;
                     } else {
                         html = `
-                            <input type="text" id="modal-nom" placeholder="Nom" value="${donnees.operateurs[index].nom}">
-                            <textarea id="modal-message" placeholder="Message de confirmation">${donnees.operateurs[index].messageConfirmation || ''}</textarea>
+                            <input type="text" id="modal-nom" placeholder="Nom" value="${echapperHTML(donnees.operateurs[index].nom)}">
+                            <textarea id="modal-message" placeholder="Message de confirmation">${echapperHTML(donnees.operateurs[index].messageConfirmation || '')}</textarea>
                         `;
                     }
                     break;
@@ -1871,15 +1928,15 @@
                         html = `
                             <input type="text" id="modal-nom" placeholder="Nom du réseau (ex: BEP20, ERC20)" value="">
                             <select id="modal-crypto">
-                                ${(donnees.cryptos || []).map(c => `<option value="${c}">${c}</option>`).join('')}
+                                ${(donnees.cryptos || []).map(c => `<option value="${echapperHTML(c)}">${echapperHTML(c)}</option>`).join('')}
                             </select>
                             <input type="number" id="modal-frais-reseau" placeholder="Frais réseau (%)" step="0.1" min="0" value="0">
                         `;
                     } else {
                         html = `
-                            <input type="text" id="modal-nom" placeholder="Nom du réseau" value="${donnees.reseaux[index].nom}">
+                            <input type="text" id="modal-nom" placeholder="Nom du réseau" value="${echapperHTML(donnees.reseaux[index].nom)}">
                             <select id="modal-crypto">
-                                ${(donnees.cryptos || []).map(c => `<option value="${c}" ${donnees.reseaux[index].crypto === c ? 'selected' : ''}>${c}</option>`).join('')}
+                                ${(donnees.cryptos || []).map(c => `<option value="${echapperHTML(c)}" ${donnees.reseaux[index].crypto === c ? 'selected' : ''}>${echapperHTML(c)}</option>`).join('')}
                             </select>
                             <input type="number" id="modal-frais-reseau" placeholder="Frais réseau (%)" step="0.1" min="0" value="${donnees.reseaux[index].fraisReseau || 0}">
                         `;
@@ -1888,18 +1945,18 @@
                     
                 case 'crypto':
                     titre.innerHTML = '<i class="fas fa-coins"></i> ' + (modalMode === 'ajout' ? 'Ajouter crypto' : 'Modifier crypto');
-                    html = `<input type="text" id="modal-nom" placeholder="Nom (ex: USDT, BTC)" value="${modalMode === 'modification' ? donnees.cryptos[index] : ''}">`;
+                    html = `<input type="text" id="modal-nom" placeholder="Nom (ex: USDT, BTC)" value="${modalMode === 'modification' ? echapperHTML(donnees.cryptos[index]) : ''}">`;
                     break;
                     
                 case 'taux':
                     const crypto = cryptoNom || (modalMode === 'modification' ? Object.keys(donnees.taux)[index] : '');
                     const taux = crypto && donnees.taux[crypto] ? donnees.taux[crypto] : { prixUSD: 0, prixMGA: 0, variation: "0", couleur: "positive" };
                     
-                    titre.innerHTML = `<i class="fas fa-chart-line"></i> Modifier taux ${crypto}`;
+                    titre.innerHTML = `<i class="fas fa-chart-line"></i> Modifier taux ${echapperHTML(crypto)}`;
                     html = `
-                        <input type="hidden" id="modal-crypto" value="${crypto}">
+                        <input type="hidden" id="modal-crypto" value="${echapperHTML(crypto)}">
                         <div style="margin-bottom: 15px; color: var(--text-secondary);">
-                            Crypto: <strong>${crypto}</strong>
+                            Crypto: <strong>${echapperHTML(crypto)}</strong>
                         </div>
                         <div style="background: var(--bg-dark); padding: 15px; border-radius: 20px; margin-bottom: 20px;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
@@ -1913,7 +1970,7 @@
                         </div>
                         <input type="number" id="modal-prix-usd" placeholder="Prix USD" step="0.01" value="${taux.prixUSD || 0}">
                         <input type="number" id="modal-prix-mga" placeholder="Prix MGA" value="${taux.prixMGA || 0}">
-                        <input type="text" id="modal-variation" placeholder="Variation %" value="${taux.variation || '0'}">
+                        <input type="text" id="modal-variation" placeholder="Variation %" value="${echapperHTML(taux.variation || '0')}">
                         <select id="modal-couleur">
                             <option value="positive" ${taux.couleur === 'positive' ? 'selected' : ''}>Positif (+)</option>
                             <option value="negative" ${taux.couleur === 'negative' ? 'selected' : ''}>Négatif (-)</option>
@@ -2029,7 +2086,6 @@
                     if (data) {
                         donnees = data;
                         
-                        // Initialiser les nouvelles propriétés si absentes
                         if (!donnees.limites) {
                             donnees.limites = {
                                 minAchat: 2000,
@@ -2053,7 +2109,6 @@
                         
                         tauxUSD_MGA = donnees.usdMGA;
                         
-                        // S'assurer que les utilisateurs ont un ID stable
                         if (donnees.utilisateurs) {
                             donnees.utilisateurs.forEach((user) => {
                                 if (!user.id) {
@@ -2062,7 +2117,6 @@
                             });
                         }
                         
-                        // Mettre à jour l'affichage des limites
                         mettreAJourAffichageLimites();
                     } else {
                         donnees = obtenirDonneesParDefaut();
@@ -2169,7 +2223,6 @@
             document.getElementById('mode-auto').classList.toggle('active', donnees.tauxMode === 'auto');
             document.getElementById('mode-manual').classList.toggle('active', donnees.tauxMode === 'manual');
             
-            // Mettre à jour l'affichage des limites
             mettreAJourAffichageLimites();
         }
 
@@ -2271,13 +2324,13 @@
             liste.innerHTML = (donnees.portefeuilles || []).map((p, index) => `
                 <div class="item-row">
                     <div class="item-info">
-                        <div class="item-nom"><i class="fas fa-wallet" style="color:var(--accent);"></i> ${p.nom}</div>
-                        <div class="item-reponse">${(p.reponse || '').substring(0,50)}...</div>
+                        <div class="item-nom"><i class="fas fa-wallet" style="color:var(--accent);"></i> ${echapperHTML(p.nom)}</div>
+                        <div class="item-reponse">${echapperHTML((p.reponse || '').substring(0,50))}...</div>
                         <div style="font-size:0.8rem; margin-top:5px; color:var(--warning);">
-                            <i class="fas fa-comment"></i> Message: ${p.messageConfirmation || 'Aucun'}
+                            <i class="fas fa-comment"></i> Message: ${echapperHTML(p.messageConfirmation || 'Aucun')}
                         </div>
                         <div style="font-size:0.8rem; margin-top:5px; color:var(--accent);">
-                            <i class="fas fa-network-wired"></i> Réseau: ${p.reseau || 'Non défini'}
+                            <i class="fas fa-network-wired"></i> Réseau: ${echapperHTML(p.reseau || 'Non défini')}
                         </div>
                     </div>
                     <div class="item-actions">
@@ -2294,9 +2347,9 @@
             liste.innerHTML = (donnees.operateurs || []).map((op, index) => `
                 <div class="item-row">
                     <div class="item-info">
-                        <div class="item-nom"><i class="fas fa-sim-card" style="color:var(--accent);"></i> ${op.nom}</div>
+                        <div class="item-nom"><i class="fas fa-sim-card" style="color:var(--accent);"></i> ${echapperHTML(op.nom)}</div>
                         <div style="font-size:0.8rem; margin-top:5px; color:var(--warning);">
-                            <i class="fas fa-comment"></i> Message: ${op.messageConfirmation || 'Aucun'}
+                            <i class="fas fa-comment"></i> Message: ${echapperHTML(op.messageConfirmation || 'Aucun')}
                         </div>
                     </div>
                     <div class="item-actions">
@@ -2313,14 +2366,14 @@
             liste.innerHTML = (donnees.reseaux || []).map((reseau, index) => `
                 <div class="reseau-item">
                     <div class="reseau-header">
-                        <span><i class="fas fa-network-wired" style="color:var(--accent);"></i> <strong>${reseau.nom}</strong></span>
+                        <span><i class="fas fa-network-wired" style="color:var(--accent);"></i> <strong>${echapperHTML(reseau.nom)}</strong></span>
                         <div class="item-actions">
                             <button class="btn btn-edit" onclick="ouvrirModal('reseau', ${index})"><i class="fas fa-edit"></i></button>
                             <button class="btn btn-delete" onclick="supprimer('reseau', ${index})"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                     <div style="margin-top: 8px;">
-                        <span style="color: var(--text-secondary);">Crypto: </span>${reseau.crypto}<br>
+                        <span style="color: var(--text-secondary);">Crypto: </span>${echapperHTML(reseau.crypto)}<br>
                         <span style="color: var(--text-secondary);">Frais réseau: </span>${reseau.fraisReseau || 0}%
                     </div>
                 </div>
@@ -2345,19 +2398,19 @@
                             html += `
                                 <div class="numero-item">
                                     <div class="numero-header">
-                                        <span class="numero-user"><i class="fas fa-user"></i> ${user.nom} (${user.id || 'ID inconnu'})</span>
+                                        <span class="numero-user"><i class="fas fa-user"></i> ${echapperHTML(user.nom)} (${echapperHTML(user.id || 'ID inconnu')})</span>
                                         <span class="numero-status-badge badge-attente">En attente</span>
                                     </div>
                                     <div class="numero-info">
-                                        <div><i class="fas fa-user-tag"></i> Nom: ${num.nom}</div>
-                                        <div><i class="fas fa-phone"></i> ${num.numero}</div>
-                                        <div><i class="fas fa-envelope"></i> ${user.email || 'Email non renseigné'}</div>
+                                        <div><i class="fas fa-user-tag"></i> Nom: ${echapperHTML(num.nom)}</div>
+                                        <div><i class="fas fa-phone"></i> ${echapperHTML(num.numero)}</div>
+                                        <div><i class="fas fa-envelope"></i> ${echapperHTML(user.email || 'Email non renseigné')}</div>
                                     </div>
                                     <div style="display: flex; gap: 10px; margin-top: 10px;">
-                                        <button class="btn btn-approuver" onclick="approuverNumero('${user.email}', ${numIndex})">
+                                        <button class="btn btn-approuver" onclick="approuverNumero('${echapperHTML(user.email)}', ${numIndex})">
                                             <i class="fas fa-check"></i> Approuver
                                         </button>
-                                        <button class="btn btn-rejeter" onclick="rejeterNumero('${user.email}', ${numIndex})">
+                                        <button class="btn btn-rejeter" onclick="rejeterNumero('${echapperHTML(user.email)}', ${numIndex})">
                                             <i class="fas fa-times"></i> Rejeter
                                         </button>
                                     </div>
@@ -2389,13 +2442,13 @@
                             html += `
                                 <div class="numero-item">
                                     <div class="numero-header">
-                                        <span class="numero-user"><i class="fas fa-user"></i> ${user.nom} (${user.id || 'ID inconnu'})</span>
+                                        <span class="numero-user"><i class="fas fa-user"></i> ${echapperHTML(user.nom)} (${echapperHTML(user.id || 'ID inconnu')})</span>
                                         <span class="numero-status-badge badge-approuve">Approuvé</span>
                                     </div>
                                     <div class="numero-info">
-                                        <div><i class="fas fa-user-tag"></i> ${num.nom}</div>
-                                        <div><i class="fas fa-phone"></i> ${num.numero}</div>
-                                        <div><i class="fas fa-envelope"></i> ${user.email}</div>
+                                        <div><i class="fas fa-user-tag"></i> ${echapperHTML(num.nom)}</div>
+                                        <div><i class="fas fa-phone"></i> ${echapperHTML(num.numero)}</div>
+                                        <div><i class="fas fa-envelope"></i> ${echapperHTML(user.email)}</div>
                                     </div>
                                 </div>
                             `;
@@ -2445,23 +2498,23 @@
                 <div class="request-item">
                     <div class="request-header">
                         <div>
-                            <span class="request-type type-${d.type}"><i class="fas ${d.type==='ACHAT'?'fa-arrow-down':'fa-arrow-up'}"></i> ${d.type}</span>
-                            <span class="request-status status-${d.statut}">${d.statut}</span>
+                            <span class="request-type type-${d.type}"><i class="fas ${d.type==='ACHAT'?'fa-arrow-down':'fa-arrow-up'}"></i> ${echapperHTML(d.type)}</span>
+                            <span class="request-status status-${d.statut}">${echapperHTML(d.statut)}</span>
                         </div>
                         <span style="color: var(--text-secondary); font-size: 0.8rem;">
-                            <i class="far fa-clock"></i> ${new Date(d.date).toLocaleString()}
+                            <i class="far fa-clock"></i> ${echapperHTML(new Date(d.date).toLocaleString())}
                         </span>
                     </div>
                     <div style="margin: 10px 0;">
-                        <div>Client: <strong>${d.utilisateur}</strong> (${d.userID || 'ID inconnu'})</div>
-                        <div>Montant: ${d.montant} ${d.type === 'ACHAT' ? 'Ar' : d.crypto}</div>
+                        <div>Client: <strong>${echapperHTML(d.utilisateur)}</strong> (${echapperHTML(d.userID || 'ID inconnu')})</div>
+                        <div>Montant: ${echapperHTML(d.montant)} ${d.type === 'ACHAT' ? 'Ar' : d.crypto}</div>
                         <div style="color: var(--success); font-weight: 600;">Vous recevez: ${d.type === 'ACHAT' ? (d.montantRecu ? d.montantRecu.toFixed(4) + ' ' + d.crypto : 'Calcul...') : (d.montantRecu ? d.montantRecu.toLocaleString() + ' Ar' : 'Calcul...')}</div>
-                        ${d.txid ? `<div style="font-size:0.8rem;">TXID: ${d.txid.substring(0,20)}...</div>` : ''}
+                        ${d.txid ? `<div style="font-size:0.8rem;">TXID: ${echapperHTML(d.txid.substring(0,20))}...</div>` : ''}
                     </div>
                     ${d.statut === 'en_attente' ? `
                     <div style="display: flex; gap: 10px; margin-top: 15px;">
-                        <button class="btn btn-approuver" onclick="approuverDemande('${d.id}')">Approuver</button>
-                        <button class="btn btn-rejeter" onclick="rejeterDemande('${d.id}')">Rejeter</button>
+                        <button class="btn btn-approuver" onclick="approuverDemande('${echapperHTML(d.id)}')">Approuver</button>
+                        <button class="btn btn-rejeter" onclick="rejeterDemande('${echapperHTML(d.id)}')">Rejeter</button>
                     </div>
                     ` : ''}
                 </div>
@@ -2533,15 +2586,15 @@
                 return `
                 <div class="user-item">
                     <div class="user-header">
-                        <span class="user-name"><i class="fas fa-user-circle" style="color:var(--accent);"></i> ${user.nom}</span>
-                        <span style="background: var(--accent); padding: 4px 10px; border-radius: 40px; font-size: 0.8rem;">${user.id || 'ID inconnu'}</span>
+                        <span class="user-name"><i class="fas fa-user-circle" style="color:var(--accent);"></i> ${echapperHTML(user.nom)}</span>
+                        <span style="background: var(--accent); padding: 4px 10px; border-radius: 40px; font-size: 0.8rem;">${echapperHTML(user.id || 'ID inconnu')}</span>
                         <div class="item-actions">
                             <button class="btn btn-edit" onclick="editerUtilisateur(${index})"><i class="fas fa-edit"></i></button>
                         </div>
                     </div>
-                    <div class="user-email"><i class="fas fa-envelope"></i> ${user.email || 'Email non renseigné'}</div>
+                    <div class="user-email"><i class="fas fa-envelope"></i> ${echapperHTML(user.email || 'Email non renseigné')}</div>
                     <div class="user-detail">
-                        <span><i class="fas fa-calendar"></i> ${new Date(user.dateInscription).toLocaleDateString()}</span>
+                        <span><i class="fas fa-calendar"></i> ${echapperHTML(new Date(user.dateInscription).toLocaleDateString())}</span>
                         <span><i class="fas fa-phone"></i> ${user.numeros?.length || 0} numéro(s)</span>
                     </div>
                 </div>
@@ -2560,9 +2613,9 @@
                 titre.innerHTML = '<i class="fas fa-user-edit"></i> Modifier utilisateur';
                 
                 document.getElementById('modal-champs').innerHTML = `
-                    <input type="text" id="modal-nom" placeholder="Nom complet" value="${user.nom}">
-                    <input type="email" id="modal-email" placeholder="Email" value="${user.email || ''}">
-                    <input type="text" id="modal-id" placeholder="ID utilisateur" value="${user.id || ''}" readonly style="background: var(--gray-300);">
+                    <input type="text" id="modal-nom" placeholder="Nom complet" value="${echapperHTML(user.nom)}">
+                    <input type="email" id="modal-email" placeholder="Email" value="${echapperHTML(user.email || '')}">
+                    <input type="text" id="modal-id" placeholder="ID utilisateur" value="${echapperHTML(user.id || '')}" readonly style="background: var(--gray-300);">
                 `;
                 
                 modal.classList.add('active');
@@ -2672,7 +2725,7 @@
             const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
             const linkElement = document.createElement('a');
             linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', 'typh-data-export.json');
+            linkElement.setAttribute('download', `typh-data-export-${new Date().toISOString().split('T')[0]}.json`);
             linkElement.click();
         }
 
@@ -2709,19 +2762,19 @@
 
             liste.innerHTML = transactionsFiltrees.sort((a, b) => new Date(b.date) - new Date(a.date)).map(tx => {
                 return `
-                <div class="transaction-item ${tx.statut}" onclick="voirDetailsTransaction('${tx.id}')">
+                <div class="transaction-item ${tx.statut}" onclick="voirDetailsTransaction('${echapperHTML(tx.id)}')">
                     <div class="transaction-header">
                         <span class="badge-type ${tx.type}">
-                            <i class="fas ${tx.type === 'ACHAT' ? 'fa-arrow-down' : 'fa-arrow-up'}"></i> ${tx.type}
+                            <i class="fas ${tx.type === 'ACHAT' ? 'fa-arrow-down' : 'fa-arrow-up'}"></i> ${echapperHTML(tx.type)}
                         </span>
-                        <span class="badge-statut ${tx.statut}">${tx.statut}</span>
+                        <span class="badge-statut ${tx.statut}">${echapperHTML(tx.statut)}</span>
                         <span class="transaction-date">
-                            <i class="far fa-clock"></i> ${new Date(tx.date).toLocaleString()}
+                            <i class="far fa-clock"></i> ${echapperHTML(new Date(tx.date).toLocaleString())}
                         </span>
                     </div>
                     
                     <div class="transaction-user">
-                        <i class="fas fa-user"></i> ${tx.utilisateur} (${tx.userID || 'ID inconnu'})
+                        <i class="fas fa-user"></i> ${echapperHTML(tx.utilisateur)} (${echapperHTML(tx.userID || 'ID inconnu')})
                     </div>
                     
                     <div class="transaction-details">
@@ -2732,18 +2785,18 @@
                     </div>
                     
                     <div class="transaction-txid">
-                        <i class="fas fa-hashtag"></i> TXID: ${tx.txid || 'Non fourni'}
+                        <i class="fas fa-hashtag"></i> TXID: ${echapperHTML(tx.txid || 'Non fourni')}
                     </div>
                     
                     <div class="transaction-footer">
-                        <button class="btn btn-view" onclick="event.stopPropagation(); voirDetailsTransaction('${tx.id}')">
+                        <button class="btn btn-view" onclick="event.stopPropagation(); voirDetailsTransaction('${echapperHTML(tx.id)}')">
                             <i class="fas fa-eye"></i> Voir détails
                         </button>
                         ${tx.statut === 'en_attente' ? `
-                            <button class="btn btn-success" onclick="event.stopPropagation(); approuverDemande('${tx.id}')">
+                            <button class="btn btn-success" onclick="event.stopPropagation(); approuverDemande('${echapperHTML(tx.id)}')">
                                 <i class="fas fa-check"></i> Approuver
                             </button>
-                            <button class="btn btn-delete" onclick="event.stopPropagation(); rejeterDemande('${tx.id}')">
+                            <button class="btn btn-delete" onclick="event.stopPropagation(); rejeterDemande('${echapperHTML(tx.id)}')">
                                 <i class="fas fa-times"></i> Rejeter
                             </button>
                         ` : ''}
@@ -2847,34 +2900,34 @@
             let beneficiaireInfo = '';
             if (transaction.type === 'ACHAT') {
                 beneficiaireInfo = `
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Adresse:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.adresse || 'Non spécifiée'}</td></tr>
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Numéro débité:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.nomNumero ? transaction.nomNumero + ' (' + transaction.numero + ')' : transaction.numero || 'Non spécifié'}</td></tr>
+                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Adresse:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${echapperHTML(transaction.adresse || 'Non spécifiée')}</td></tr>
+                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Numéro débité:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.nomNumero ? echapperHTML(transaction.nomNumero) + ' (' + echapperHTML(transaction.numero) + ')' : echapperHTML(transaction.numero || 'Non spécifié')}</td></tr>
                 `;
             } else {
                 beneficiaireInfo = `
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Bénéficiaire:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.nomNumero || transaction.utilisateur}</td></tr>
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Numéro crédité:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.numero || 'Non spécifié'}</td></tr>
+                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Bénéficiaire:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${echapperHTML(transaction.nomNumero || transaction.utilisateur)}</td></tr>
+                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Numéro crédité:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${echapperHTML(transaction.numero || 'Non spécifié')}</td></tr>
                 `;
             }
             
             recuContenu.innerHTML = `
                 <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>ID Transaction:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.id}</td></tr>
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>ID Client:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.userID || 'Non attribué'}</td></tr>
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Type:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.type}</td></tr>
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Statut:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.statut}</td></tr>
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Client:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.utilisateur}</td></tr>
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Email:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.email}</td></tr>
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Date:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${new Date(transaction.date).toLocaleString('fr-FR')}</td></tr>
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Montant envoyé:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.montant} ${transaction.type === 'ACHAT' ? 'Ar' : transaction.crypto}</td></tr>
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Vous recevez:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee; color: #059669; font-weight: bold;">${montantRecu}</td></tr>
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Réseau:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${transaction.reseau || 'N/A'}</td></tr>
+                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>ID Transaction:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${echapperHTML(transaction.id)}</td></tr>
+                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>ID Client:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${echapperHTML(transaction.userID || 'Non attribué')}</td></tr>
+                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Type:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${echapperHTML(transaction.type)}</td></tr>
+                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Statut:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${echapperHTML(transaction.statut)}</td></tr>
+                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Client:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${echapperHTML(transaction.utilisateur)}</td></tr>
+                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Email:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${echapperHTML(transaction.email)}</td></tr>
+                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Date:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${echapperHTML(new Date(transaction.date).toLocaleString('fr-FR'))}</td></tr>
+                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Montant envoyé:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${echapperHTML(transaction.montant)} ${transaction.type === 'ACHAT' ? 'Ar' : transaction.crypto}</td></tr>
+                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Vous recevez:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee; color: #059669; font-weight: bold;">${echapperHTML(montantRecu)}</td></tr>
+                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Réseau:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee;">${echapperHTML(transaction.reseau || 'N/A')}</td></tr>
                     ${beneficiaireInfo}
-                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>TXID:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee; font-size: 0.8rem; word-break: break-all;">${transaction.txid || 'Non fourni'}</td></tr>
+                    <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>TXID:</strong></td><td style="padding: 8px; border-bottom: 1px solid #eee; font-size: 0.8rem; word-break: break-all;">${echapperHTML(transaction.txid || 'Non fourni')}</td></tr>
                 </table>
             `;
             
-            dateGeneration.textContent = new Date().toLocaleString('fr-FR');
+            dateGeneration.textContent = echapperHTML(new Date().toLocaleString('fr-FR'));
             
             const template = document.getElementById('template-recu');
             
@@ -2912,33 +2965,33 @@
             let detailsHtml = `
                 <div class="info-row">
                     <span class="info-label">ID:</span>
-                    <span class="info-value">${transaction.id}</span>
+                    <span class="info-value">${echapperHTML(transaction.id)}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">ID Client:</span>
-                    <span class="info-value">${transaction.userID || 'Non attribué'}</span>
+                    <span class="info-value">${echapperHTML(transaction.userID || 'Non attribué')}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Type:</span>
                     <span class="info-value" style="color: ${transaction.type === 'ACHAT' ? 'var(--success)' : 'var(--warning)'}">
-                        <i class="fas ${transaction.type === 'ACHAT' ? 'fa-arrow-down' : 'fa-arrow-up'}"></i> ${transaction.type}
+                        <i class="fas ${transaction.type === 'ACHAT' ? 'fa-arrow-down' : 'fa-arrow-up'}"></i> ${echapperHTML(transaction.type)}
                     </span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Statut:</span>
-                    <span class="info-value badge-statut ${transaction.statut}">${transaction.statut}</span>
+                    <span class="info-value badge-statut ${transaction.statut}">${echapperHTML(transaction.statut)}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Client:</span>
-                    <span class="info-value">${transaction.utilisateur}</span>
+                    <span class="info-value">${echapperHTML(transaction.utilisateur)}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Email:</span>
-                    <span class="info-value">${transaction.email}</span>
+                    <span class="info-value">${echapperHTML(transaction.email)}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Date:</span>
-                    <span class="info-value">${new Date(transaction.date).toLocaleString()}</span>
+                    <span class="info-value">${echapperHTML(new Date(transaction.date).toLocaleString())}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Vous recevez:</span>
@@ -2950,54 +3003,54 @@
                 detailsHtml += `
                     <div class="info-row">
                         <span class="info-label">Opérateur:</span>
-                        <span class="info-value">${transaction.operateur || 'N/A'}</span>
+                        <span class="info-value">${echapperHTML(transaction.operateur || 'N/A')}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Montant envoyé:</span>
-                        <span class="info-value">${transaction.montant} Ar</span>
+                        <span class="info-value">${echapperHTML(transaction.montant)} Ar</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Réseau:</span>
-                        <span class="info-value">${transaction.reseau || 'N/A'}</span>
+                        <span class="info-value">${echapperHTML(transaction.reseau || 'N/A')}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Portefeuille:</span>
-                        <span class="info-value">${transaction.portefeuille || 'N/A'}</span>
+                        <span class="info-value">${echapperHTML(transaction.portefeuille || 'N/A')}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Adresse:</span>
-                        <span class="info-value" style="word-break: break-all;">${transaction.adresse || 'N/A'}</span>
+                        <span class="info-value" style="word-break: break-all;">${echapperHTML(transaction.adresse || 'N/A')}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Numéro débité:</span>
-                        <span class="info-value">${transaction.nomNumero ? transaction.nomNumero + ' (' + transaction.numero + ')' : transaction.numero || 'Non spécifié'}</span>
+                        <span class="info-value">${transaction.nomNumero ? echapperHTML(transaction.nomNumero) + ' (' + echapperHTML(transaction.numero) + ')' : echapperHTML(transaction.numero || 'Non spécifié')}</span>
                     </div>
                 `;
             } else {
                 detailsHtml += `
                     <div class="info-row">
                         <span class="info-label">Crypto envoyée:</span>
-                        <span class="info-value">${transaction.montant} ${transaction.crypto}</span>
+                        <span class="info-value">${echapperHTML(transaction.montant)} ${echapperHTML(transaction.crypto)}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Réseau:</span>
-                        <span class="info-value">${transaction.reseau || 'N/A'}</span>
+                        <span class="info-value">${echapperHTML(transaction.reseau || 'N/A')}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Opérateur:</span>
-                        <span class="info-value">${transaction.operateur || 'N/A'}</span>
+                        <span class="info-value">${echapperHTML(transaction.operateur || 'N/A')}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Portefeuille:</span>
-                        <span class="info-value">${transaction.portefeuille || 'N/A'}</span>
+                        <span class="info-value">${echapperHTML(transaction.portefeuille || 'N/A')}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Bénéficiaire:</span>
-                        <span class="info-value">${transaction.nomNumero || transaction.utilisateur}</span>
+                        <span class="info-value">${echapperHTML(transaction.nomNumero || transaction.utilisateur)}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Numéro crédité:</span>
-                        <span class="info-value">${transaction.numero || 'N/A'}</span>
+                        <span class="info-value">${echapperHTML(transaction.numero || 'N/A')}</span>
                     </div>
                 `;
             }
@@ -3005,12 +3058,12 @@
             detailsHtml += `
                 <div class="info-row">
                     <span class="info-label">TXID:</span>
-                    <span class="info-value" style="word-break: break-all;">${transaction.txid || 'Non fourni'}</span>
+                    <span class="info-value" style="word-break: break-all;">${echapperHTML(transaction.txid || 'Non fourni')}</span>
                 </div>
                 ${transaction.messagePaiement ? `
                 <div class="info-row">
                     <span class="info-label">Message:</span>
-                    <span class="info-value">${transaction.messagePaiement}</span>
+                    <span class="info-value">${echapperHTML(transaction.messagePaiement)}</span>
                 </div>
                 ` : ''}
             `;
@@ -3021,8 +3074,8 @@
             if (transaction.historique && transaction.historique.length > 0) {
                 historiqueHtml = transaction.historique.sort((a,b) => new Date(b.date) - new Date(a.date)).map(h => `
                     <div class="historique-item">
-                        <span class="historique-date">${new Date(h.date).toLocaleString()}</span>
-                        <span class="historique-action">${h.action}</span>
+                        <span class="historique-date">${echapperHTML(new Date(h.date).toLocaleString())}</span>
+                        <span class="historique-action">${echapperHTML(h.action)}</span>
                     </div>
                 `).join('');
             } else {
@@ -3100,7 +3153,6 @@
                     console.log('🔄 Changement détecté');
                     donnees = data;
                     
-                    // S'assurer que les utilisateurs ont un ID stable
                     if (donnees.utilisateurs) {
                         donnees.utilisateurs.forEach((user) => {
                             if (!user.id) {
@@ -3130,6 +3182,10 @@
                 }
             });
         }
+
+        window.addEventListener('load', function() {
+            // Firebase gère la session
+        });
 
         ecouterChangements();
     </script>

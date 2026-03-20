@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         * {
@@ -1418,7 +1419,7 @@
             text-decoration: underline;
         }
 
-        /* Styles pour les limites dynamiques */
+        /* Styles pour les limites */
         .limite-info {
             background: rgba(59, 130, 246, 0.1);
             border: 1px solid var(--accent);
@@ -1451,7 +1452,7 @@
             display: block;
         }
         
-        /* Style pour le message spécial TRX dynamique */
+        /* Style pour le message spécial TRX */
         .frais-special {
             color: var(--warning);
             font-weight: 600;
@@ -1462,6 +1463,20 @@
             border-radius: 16px;
             text-align: center;
             border: 1px dashed var(--warning);
+        }
+
+        /* Style pour reCAPTCHA */
+        #recaptcha-container {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            transform: scale(0.9);
+        }
+        
+        @media (max-width: 480px) {
+            #recaptcha-container {
+                transform: scale(0.8);
+            }
         }
     </style>
 </head>
@@ -1713,9 +1728,9 @@
                         <div class="input-wrapper"><select id="reseau-achat" onchange="estimerAchat(); afficherFraisReseauAchat()"></select></div>
                     </div>
                     
-                    <!-- Message spécial pour TRX/TRC20 dynamique -->
+                    <!-- Message spécial pour TRX/TRC20 -->
                     <div id="message-trx-special" class="frais-special" style="display: none;">
-                        <i class="fas fa-info-circle"></i> <span id="message-trx-texte">Frais réseau TRC20 : 3% ou -1 TRX si activation</span>
+                        <i class="fas fa-info-circle"></i> Frais réseau TRC20 : 3% ou -1 TRX si activation
                     </div>
                     
                     <div class="form-group">
@@ -1926,12 +1941,17 @@
                         <i class="fas fa-question-circle"></i> Mot de passe oublié ?
                     </span>
                 </div>
+                
+                <!-- reCAPTCHA pour la connexion (après plusieurs échecs) -->
+                <div id="recaptcha-container-connexion" style="margin: 20px 0; display: none; justify-content: center;"></div>
             </div>
             
             <div id="inscription-form" style="display: none;">
                 <input type="text" id="nom-inscription" class="modal-input" placeholder="Nom complet">
                 <input type="email" id="email-inscription" class="modal-input" placeholder="Email">
                 <input type="password" id="password-inscription" class="modal-input" placeholder="Mot de passe">
+                <!-- reCAPTCHA pour l'inscription -->
+                <div id="recaptcha-container-inscription" style="margin: 20px 0; display: flex; justify-content: center;"></div>
             </div>
             
             <div class="error-message" id="erreur-auth"><i class="fas fa-exclamation-triangle"></i> <span id="erreur-texte"></span></div>
@@ -2194,7 +2214,7 @@
     </div>
 
     <script>
-        // Configuration Firebase (identique)
+        // Configuration Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAC6xQXWg_5EplLDPQu_7RuuQ0NrCUSQ2g",
             authDomain: "typhxchain.firebaseapp.com",
@@ -2206,10 +2226,12 @@
             measurementId: "G-DHMY4MSP9Y"
         };
 
+        // Initialiser Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        console.log('✅ Firebase connecté');
-
+        const auth = firebase.auth();
+        
+        // Variables globales
         let donnees = {
             utilisateurs: [],
             portefeuilles: [],
@@ -2239,18 +2261,6 @@
         let sessionValide = false;
         let enCoursDeMiseAJour = false;
         let dernierHashDonnees = '';
-        
-        // Vérifier la session au chargement
-        let sessionUtilisateur = localStorage.getItem('typhSession');
-        if (sessionUtilisateur) {
-            try {
-                utilisateurCourant = JSON.parse(sessionUtilisateur);
-                sessionValide = true;
-            } catch (e) {
-                localStorage.removeItem('typhSession');
-            }
-        }
-        
         let modeAuth = 'connexion';
         let transactionEnAttente = null;
         let tentativePIN = 0;
@@ -2259,15 +2269,17 @@
         let pinVerifValue = '';
         let timerInterval = null;
         let tempsRestant = 900;
-        
         let montantRecuAchat = 0;
         let montantRecuVente = 0;
         let cryptoAchat = '';
         let cryptoVente = '';
-        
         let binanceInterval = null;
         let tauxUSD_MGA = 4700;
-        let pairesBinance = {
+        let recaptchaVerifierInscription = null;
+        let recaptchaVerifierConnexion = null;
+        let tentativesConnexion = 0;
+        
+        const pairesBinance = {
             'USDT': 'USDTUSDT',
             'BTC': 'BTCUSDT',
             'ETH': 'ETHUSDT',
@@ -2284,6 +2296,40 @@
             'USDC': 'USDCUSDT'
         };
 
+        // Fonction d'échappement XSS
+        function echapperHTML(texte) {
+            if (!texte) return '';
+            return String(texte)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // Fonction pour générer un ID stable
+        function genererIDStable(email, nom) {
+            const hash = btoa(email + nom).replace(/[^a-zA-Z0-9]/g, '').substring(0, 8);
+            return `TX-${hash}`;
+        }
+
+        // Fonction pour hasher le PIN avec salt
+        async function hasherPIN(pin) {
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const saltHex = Array.from(salt)
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
+            
+            const encoder = new TextEncoder();
+            const data = encoder.encode(pin + saltHex);
+            
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            return { hash: hashHex, salt: saltHex };
+        }
+
         // Fonction pour calculer un hash simple des données
         function calculerHashDonnees() {
             const donneesSansDates = JSON.parse(JSON.stringify(donnees, (key, value) => {
@@ -2298,122 +2344,63 @@
             return crypto === 'TRX' ? (donnees.limites?.minAchatTRX || 5000) : (donnees.limites?.minAchat || 2000);
         }
 
-        // Fonction pour mettre à jour l'affichage des limites
-        function mettreAJourLimiteAchat() {
-            const crypto = document.getElementById('crypto-achat')?.value;
-            const min = getMinimumAchat(crypto);
-            const max = donnees.limites?.maxAchat || 100000;
-            const input = document.getElementById('montant-achat');
-            const limiteSpan = document.getElementById('montant-limite-achat');
-            const limiteAffichee = document.getElementById('limite-affichee-achat');
-            const minSpan = document.getElementById('min-affichage-achat');
-            const maxSpan = document.getElementById('max-affichage-achat');
-            
-            if (input) {
-                input.min = min;
-                input.max = max;
-                if (input.value < min) {
-                    input.value = min;
-                }
-                if (input.value > max) {
-                    input.value = max;
-                }
-            }
-            
-            if (limiteSpan) {
-                limiteSpan.innerHTML = `(Min: ${min.toLocaleString()} Ar - Max: ${max.toLocaleString()} Ar)`;
-            }
-            
-            if (limiteAffichee) {
-                limiteAffichee.innerHTML = `${min.toLocaleString()} Ar - ${max.toLocaleString()} Ar`;
-            }
-            
-            if (minSpan) {
-                minSpan.innerHTML = min.toLocaleString();
-            }
-            
-            if (maxSpan) {
-                maxSpan.innerHTML = max.toLocaleString();
-            }
-            
-            verifierLimitesAchat();
-            estimerAchat();
-        }
-
-        // Fonction pour générer un ID unique pour un utilisateur (UNE SEULE FOIS)
-        function genererIDUtilisateur(email, nom) {
-            // Créer un ID basé sur l'email pour qu'il soit stable
-            const hash = btoa(email + nom).replace(/[^a-zA-Z0-9]/g, '').substring(0, 8);
-            return `TX-${hash}`;
-        }
-
-        // Fonction pour attribuer des IDs stables aux utilisateurs
-        function attribuerIDsStables() {
-            if (!donnees.utilisateurs) return;
-            
-            let besoinDeSauvegarde = false;
-            
-            donnees.utilisateurs.forEach((user) => {
-                if (!user.id) {
-                    user.id = genererIDUtilisateur(user.email, user.nom);
-                    besoinDeSauvegarde = true;
-                }
-            });
-            
-            if (besoinDeSauvegarde) {
-                console.log('✅ IDs stables attribués');
-                sauvegarderDonnees();
+        // Vérifier la session au chargement
+        let sessionUtilisateur = localStorage.getItem('typhSession');
+        if (sessionUtilisateur) {
+            try {
+                utilisateurCourant = JSON.parse(sessionUtilisateur);
+                sessionValide = true;
+            } catch (e) {
+                localStorage.removeItem('typhSession');
             }
         }
 
-        function obtenirDonneesParDefaut() {
-            return {
-                utilisateurs: [],
-                portefeuilles: [
-                    { nom: "Principal", reponse: "Portefeuille principal", messageConfirmation: "Envoyez à principal@typh.com", reseau: "BEP20" },
-                    { nom: "Épargne", reponse: "Portefeuille épargne", messageConfirmation: "Envoyez à epargne123", reseau: "ERC20" }
-                ],
-                operateurs: [
-                    { nom: "MVola", messageConfirmation: "034 51 547 81" },
-                    { nom: "Orange Money", messageConfirmation: "034 99 999 99" },
-                    { nom: "Airtel Money", messageConfirmation: "033 88 888 88" }
-                ],
-                cryptos: ["USDT", "BTC", "ETH", "BNB", "LTC", "SOL", "TRX", "DOGE", "MATIC", "SUI", "XRP", "TON", "USDC"],
-                reseaux: [
-                    { nom: "BEP20", crypto: "USDT", fraisReseau: 0.5 },
-                    { nom: "ERC20", crypto: "USDT", fraisReseau: 1.2 },
-                    { nom: "TRC20", crypto: "USDT", fraisReseau: 0.8 },
-                    { nom: "TRC20", crypto: "TRX", fraisReseau: 3.0 }
-                ],
-                frais: { achat: 1.5, vente: 2.0 },
-                pause: { achat: false, vente: false },
-                taux: {},
-                demandes: [],
-                news: [
-                    {
-                        id: 'NEWS-' + Date.now(),
-                        titre: 'Bienvenue sur TYPH X-CHAIN',
-                        contenu: 'Nous sommes ravis de vous accueillir sur notre plateforme d\'échange crypto. Profitez de nos meilleurs taux en direct depuis Binance !',
-                        date: new Date().toISOString(),
-                        auteur: 'Typh Exchange',
-                        important: true
+        // Gestion de l'état d'authentification Firebase
+        auth.onAuthStateChanged(async (firebaseUser) => {
+            if (firebaseUser) {
+                console.log('✅ Utilisateur Firebase connecté:', firebaseUser.email);
+                
+                const userExists = donnees.utilisateurs?.find(u => u.email === firebaseUser.email);
+                
+                if (userExists) {
+                    if (!userExists.uid) {
+                        userExists.uid = firebaseUser.uid;
+                        sauvegarderDonnees();
                     }
-                ],
-                tauxMode: 'auto',
-                usdMGA: 4700,
-                limites: {
-                    minAchat: 2000,
-                    minAchatTRX: 5000,
-                    maxAchat: 100000,
-                    minVente: 2000,
-                    maxVente: 100000
-                },
-                messagesSpeciaux: {
-                    trx: "Frais réseau TRC20 : 3% ou -1 TRX si activation"
+                    utilisateurCourant = userExists;
+                } else {
+                    const nouvelUtilisateur = {
+                        id: genererIDStable(firebaseUser.email, firebaseUser.displayName || 'Utilisateur'),
+                        uid: firebaseUser.uid,
+                        nom: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+                        email: firebaseUser.email,
+                        dateInscription: new Date().toISOString(),
+                        numeros: [],
+                        codePIN: { hash: null, salt: null, actif: false, tentativeEchouees: 0, bloque: false }
+                    };
+                    
+                    if (!donnees.utilisateurs) donnees.utilisateurs = [];
+                    donnees.utilisateurs.push(nouvelUtilisateur);
+                    utilisateurCourant = nouvelUtilisateur;
+                    sauvegarderDonnees();
                 }
-            };
-        }
+                
+                sessionValide = true;
+                mettreAJourAffichage();
+                
+                if (document.getElementById('landing-page').style.display !== 'none') {
+                    showPlatform();
+                }
+            } else {
+                console.log('❌ Utilisateur déconnecté');
+                if (!sessionUtilisateur) {
+                    utilisateurCourant = null;
+                    sessionValide = false;
+                }
+            }
+        });
 
+        // Fonctions Binance
         async function demarrerSyncBinance() {
             if (binanceInterval) clearInterval(binanceInterval);
             await syncBinance();
@@ -2469,8 +2456,6 @@
                                 lastUpdate: new Date().toISOString(),
                                 source: 'binance'
                             };
-                        } else {
-                            console.warn(`Paire ${paire} non trouvée sur Binance`);
                         }
                     }
                 });
@@ -2493,6 +2478,13 @@
                 
                 await database.ref().update(updates);
                 
+                const snapshot = await database.ref('donnees/taux').once('value');
+                if (snapshot.val()) {
+                    donnees.taux = snapshot.val();
+                }
+                
+                afficherTauxSimplifies();
+                
             } catch (error) {
                 console.error('Erreur sync Binance:', error);
             }
@@ -2505,7 +2497,6 @@
                     if (data) {
                         donnees = data;
                         
-                        // Initialiser les nouvelles propriétés si absentes
                         if (!donnees.limites) {
                             donnees.limites = {
                                 minAchat: 2000,
@@ -2530,40 +2521,14 @@
                         
                         tauxUSD_MGA = donnees.usdMGA;
                         
-                        // Attribuer des IDs stables
-                        attribuerIDsStables();
-                        
-                        // Mettre à jour la session si nécessaire
-                        if (sessionValide && utilisateurCourant) {
-                            const userToujoursPresent = donnees.utilisateurs?.find(u => u.email === utilisateurCourant.email);
-                            if (userToujoursPresent) {
-                                // Comparer uniquement les champs essentiels
-                                if (userToujoursPresent.id !== utilisateurCourant.id || 
-                                    userToujoursPresent.nom !== utilisateurCourant.nom) {
-                                    utilisateurCourant = userToujoursPresent;
-                                    // Mettre à jour la session
-                                    const sessionData = {
-                                        email: utilisateurCourant.email,
-                                        nom: utilisateurCourant.nom,
-                                        id: utilisateurCourant.id,
-                                        dateConnexion: new Date().toISOString()
-                                    };
-                                    
-                                    if (localStorage.getItem('typhSession')) {
-                                        localStorage.setItem('typhSession', JSON.stringify(sessionData));
-                                    } else if (sessionStorage.getItem('typhSession')) {
-                                        sessionStorage.setItem('typhSession', JSON.stringify(sessionData));
-                                    }
+                        if (donnees.utilisateurs) {
+                            donnees.utilisateurs.forEach((user) => {
+                                if (!user.id) {
+                                    user.id = genererIDStable(user.email, user.nom);
                                 }
-                            } else {
-                                utilisateurCourant = null;
-                                sessionValide = false;
-                                localStorage.removeItem('typhSession');
-                                sessionStorage.removeItem('typhSession');
-                            }
+                            });
                         }
                         
-                        // Mettre à jour le hash
                         dernierHashDonnees = calculerHashDonnees();
                     } else {
                         donnees = obtenirDonneesParDefaut();
@@ -2586,6 +2551,54 @@
                     afficherNews();
                     demarrerSyncBinance();
                 });
+        }
+
+        function obtenirDonneesParDefaut() {
+            return {
+                utilisateurs: [],
+                portefeuilles: [
+                    { nom: "Principal", reponse: "Portefeuille principal", messageConfirmation: "Envoyez à principal@typh.com", reseau: "BEP20" },
+                    { nom: "Épargne", reponse: "Portefeuille épargne", messageConfirmation: "Envoyez à epargne123", reseau: "ERC20" }
+                ],
+                operateurs: [
+                    { nom: "MVola", messageConfirmation: "034 51 547 81" },
+                    { nom: "Orange Money", messageConfirmation: "034 99 999 99" },
+                    { nom: "Airtel Money", messageConfirmation: "033 88 888 88" }
+                ],
+                cryptos: ["USDT", "BTC", "ETH", "BNB", "LTC", "SOL", "TRX", "DOGE", "MATIC", "SUI", "XRP", "TON", "USDC"],
+                reseaux: [
+                    { nom: "BEP20", crypto: "USDT", fraisReseau: 0.5 },
+                    { nom: "ERC20", crypto: "USDT", fraisReseau: 1.2 },
+                    { nom: "TRC20", crypto: "USDT", fraisReseau: 0.8 },
+                    { nom: "TRC20", crypto: "TRX", fraisReseau: 3.0 }
+                ],
+                frais: { achat: 1.5, vente: 2.0 },
+                pause: { achat: false, vente: false },
+                taux: {},
+                demandes: [],
+                news: [
+                    {
+                        id: 'NEWS-' + Date.now(),
+                        titre: 'Bienvenue sur TYPH X-CHAIN',
+                        contenu: 'Nous sommes ravis de vous accueillir sur notre plateforme d\'échange crypto. Profitez de nos meilleurs taux en direct depuis Binance !',
+                        date: new Date().toISOString(),
+                        auteur: 'Typh Exchange',
+                        important: true
+                    }
+                ],
+                tauxMode: 'auto',
+                usdMGA: 4700,
+                limites: {
+                    minAchat: 2000,
+                    minAchatTRX: 5000,
+                    maxAchat: 100000,
+                    minVente: 2000,
+                    maxVente: 100000
+                },
+                messagesSpeciaux: {
+                    trx: "Frais réseau TRC20 : 3% ou -1 TRX si activation"
+                }
+            };
         }
 
         function sauvegarderDonnees() {
@@ -2684,19 +2697,19 @@
                 const dateFormatee = dateObj.toLocaleDateString('fr-FR') + ' à ' + dateObj.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
                 
                 return `
-                <div class="news-item" onclick="voirDetailNews('${news.id}')">
+                <div class="news-item" onclick="voirDetailNews('${echapperHTML(news.id)}')">
                     <div class="news-header">
                         <div class="news-title">
                             <i class="fas ${news.important ? 'fa-exclamation-circle' : 'fa-newspaper'}"></i>
-                            ${news.titre}
+                            ${echapperHTML(news.titre)}
                         </div>
-                        <div class="news-date">${dateFormatee}</div>
+                        <div class="news-date">${echapperHTML(dateFormatee)}</div>
                     </div>
                     <div class="news-content">
-                        ${news.contenu.length > 100 ? news.contenu.substring(0, 100) + '...' : news.contenu}
+                        ${echapperHTML(news.contenu.length > 100 ? news.contenu.substring(0, 100) + '...' : news.contenu)}
                     </div>
                     <div class="news-footer">
-                        <span class="news-author"><i class="fas fa-user-shield"></i> ${news.auteur || 'Admin'}</span>
+                        <span class="news-author"><i class="fas fa-user-shield"></i> ${echapperHTML(news.auteur || 'Admin')}</span>
                         ${news.important ? '<span class="news-important">IMPORTANT</span>' : ''}
                     </div>
                 </div>
@@ -2707,10 +2720,10 @@
             const news = donnees.news.find(n => n.id === id);
             if (!news) return;
             
-            document.getElementById('modal-news-title').innerHTML = `<i class="fas fa-newspaper"></i> ${news.titre}`;
-            document.getElementById('modal-news-content').innerHTML = news.contenu.replace(/\n/g, '<br>');
-            document.getElementById('modal-news-date').innerHTML = `<i class="far fa-calendar"></i> ${new Date(news.date).toLocaleString('fr-FR')}`;
-            document.getElementById('modal-news-author').innerHTML = `<i class="fas fa-user-shield"></i> ${news.auteur || 'Admin'}`;
+            document.getElementById('modal-news-title').innerHTML = `<i class="fas fa-newspaper"></i> ${echapperHTML(news.titre)}`;
+            document.getElementById('modal-news-content').innerHTML = echapperHTML(news.contenu).replace(/\n/g, '<br>');
+            document.getElementById('modal-news-date').innerHTML = `<i class="far fa-calendar"></i> ${echapperHTML(new Date(news.date).toLocaleString('fr-FR'))}`;
+            document.getElementById('modal-news-author').innerHTML = `<i class="fas fa-user-shield"></i> ${echapperHTML(news.auteur || 'Admin')}`;
             document.getElementById('modal-news-detail').classList.add('active');
         }
 
@@ -2747,12 +2760,33 @@
                 btnConnexion.className = 'btn';
                 btnInscription.className = 'btn btn-success';
                 btnAuth.innerHTML = '<i class="fas fa-user-plus"></i> S\'inscrire';
+                
+                setTimeout(() => {
+                    if (!recaptchaVerifierInscription) {
+                        recaptchaVerifierInscription = new firebase.auth.RecaptchaVerifier('recaptcha-container-inscription', {
+                            'size': 'normal',
+                            'callback': (response) => {
+                                console.log('✅ reCAPTCHA inscription validé');
+                            },
+                            'expired-callback': () => {
+                                console.log('❌ reCAPTCHA inscription expiré');
+                                document.getElementById('erreur-texte').textContent = 'Captcha expiré, veuillez réessayer';
+                                document.getElementById('erreur-auth').classList.add('show');
+                            }
+                        });
+                    }
+                    recaptchaVerifierInscription.render().then((widgetId) => {
+                        console.log('reCAPTCHA inscription rendu');
+                    });
+                }, 500);
             }
         }
 
         function showAuthModal() {
             document.getElementById('modal-auth').classList.add('active');
             switchAuthMode('connexion');
+            tentativesConnexion = 0;
+            document.getElementById('recaptcha-container-connexion').style.display = 'none';
         }
 
         function hideAuthModal() {
@@ -2760,15 +2794,15 @@
             document.getElementById('erreur-auth').classList.remove('show');
         }
 
-        function authentifier() {
+        async function authentifier() {
             if (modeAuth === 'connexion') {
-                connexion();
+                await connexion();
             } else {
-                inscription();
+                await inscription();
             }
         }
 
-        function connexion() {
+        async function connexion() {
             const email = document.getElementById('email-connexion').value.trim();
             const password = document.getElementById('password-connexion').value.trim();
             const resterConnecte = document.getElementById('check-rester-connecte')?.checked || false;
@@ -2778,16 +2812,53 @@
                 return;
             }
 
-            const user = donnees.utilisateurs?.find(u => u.email === email && u.motDePasse === password);
-            
-            if (user) {
-                utilisateurCourant = user;
-                sessionValide = true;
+            if (tentativesConnexion >= 3) {
+                document.getElementById('recaptcha-container-connexion').style.display = 'flex';
+                
+                if (!recaptchaVerifierConnexion) {
+                    recaptchaVerifierConnexion = new firebase.auth.RecaptchaVerifier('recaptcha-container-connexion', {
+                        'size': 'normal',
+                        'callback': (response) => {
+                            console.log('✅ reCAPTCHA connexion validé');
+                        },
+                        'expired-callback': () => {
+                            console.log('❌ reCAPTCHA connexion expiré');
+                        }
+                    });
+                    await recaptchaVerifierConnexion.render();
+                }
+                
+                try {
+                    await recaptchaVerifierConnexion.verify();
+                } catch {
+                    afficherErreur('Veuillez valider le captcha');
+                    return;
+                }
+            }
+
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const firebaseUser = userCredential.user;
+                
+                const oldUser = donnees.utilisateurs?.find(u => u.email === email);
+                
+                if (oldUser && !oldUser.uid) {
+                    oldUser.uid = firebaseUser.uid;
+                    delete oldUser.motDePasse;
+                    
+                    const index = donnees.utilisateurs.findIndex(u => u.email === email);
+                    donnees.utilisateurs[index] = oldUser;
+                    sauvegarderDonnees();
+                    console.log('✅ Utilisateur migré vers Firebase Auth');
+                }
+                
+                tentativesConnexion = 0;
+                document.getElementById('recaptcha-container-connexion').style.display = 'none';
                 
                 const sessionData = {
-                    email: user.email,
-                    nom: user.nom,
-                    id: user.id,
+                    email: firebaseUser.email,
+                    nom: firebaseUser.displayName || email.split('@')[0],
+                    uid: firebaseUser.uid,
                     dateConnexion: new Date().toISOString()
                 };
                 
@@ -2798,14 +2869,34 @@
                 }
                 
                 hideAuthModal();
-                mettreAJourAffichage();
-                showPlatform();
-            } else {
-                afficherErreur('Email ou mot de passe incorrect');
+                
+                if (recaptchaVerifierConnexion) {
+                    recaptchaVerifierConnexion.reset();
+                }
+                
+            } catch (error) {
+                console.error('Erreur connexion:', error);
+                tentativesConnexion++;
+                
+                if (error.code === 'auth/user-not-found') {
+                    afficherErreur('Utilisateur non trouvé');
+                } else if (error.code === 'auth/wrong-password') {
+                    afficherErreur('Mot de passe incorrect');
+                } else if (error.code === 'auth/invalid-email') {
+                    afficherErreur('Email invalide');
+                } else if (error.code === 'auth/too-many-requests') {
+                    afficherErreur('Trop de tentatives, réessayez plus tard');
+                } else {
+                    afficherErreur('Erreur de connexion');
+                }
+                
+                if (recaptchaVerifierConnexion) {
+                    recaptchaVerifierConnexion.reset();
+                }
             }
         }
 
-        function inscription() {
+        async function inscription() {
             const nom = document.getElementById('nom-inscription').value.trim();
             const email = document.getElementById('email-inscription').value.trim();
             const password = document.getElementById('password-inscription').value.trim();
@@ -2815,53 +2906,93 @@
                 return;
             }
 
-            if (donnees.utilisateurs?.some(u => u.email === email)) {
-                afficherErreur('Cet email est déjà utilisé');
+            if (password.length < 6) {
+                afficherErreur('Mot de passe trop court (6 caractères minimum)');
                 return;
             }
 
-            const nouvelID = genererIDUtilisateur(email, nom);
+            if (!recaptchaVerifierInscription) {
+                afficherErreur('Captcha non initialisé');
+                return;
+            }
 
-            const nouvelUtilisateur = {
-                id: nouvelID,
-                nom: nom,
-                email: email,
-                motDePasse: password,
-                dateInscription: new Date().toISOString(),
-                numeros: [],
-                codePIN: { hash: null, actif: false, tentativeEchouees: 0, bloque: false }
-            };
+            try {
+                await recaptchaVerifierInscription.verify();
+                
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const firebaseUser = userCredential.user;
+                
+                await firebaseUser.updateProfile({
+                    displayName: nom
+                });
+                
+                const nouvelID = genererIDStable(email, nom);
+                
+                const nouvelUtilisateur = {
+                    id: nouvelID,
+                    uid: firebaseUser.uid,
+                    nom: nom,
+                    email: email,
+                    dateInscription: new Date().toISOString(),
+                    numeros: [],
+                    codePIN: { hash: null, salt: null, actif: false, tentativeEchouees: 0, bloque: false }
+                };
 
-            if (!donnees.utilisateurs) donnees.utilisateurs = [];
-            donnees.utilisateurs.push(nouvelUtilisateur);
-            utilisateurCourant = nouvelUtilisateur;
-            sessionValide = true;
-            
-            const sessionData = {
-                email: nouvelUtilisateur.email,
-                nom: nouvelUtilisateur.nom,
-                id: nouvelUtilisateur.id,
-                dateConnexion: new Date().toISOString()
-            };
-            
-            localStorage.setItem('typhSession', JSON.stringify(sessionData));
-            
-            sauvegarderDonnees();
-            hideAuthModal();
-            mettreAJourAffichage();
-            showPlatform();
-            switchPlatformSection('profil');
-            alert('Inscription réussie ! Ajoutez vos numéros dans votre profil pour commencer à échanger. Ils seront validés par l\'administrateur.');
+                if (!donnees.utilisateurs) donnees.utilisateurs = [];
+                donnees.utilisateurs.push(nouvelUtilisateur);
+                
+                sauvegarderDonnees();
+                
+                const sessionData = {
+                    email: firebaseUser.email,
+                    nom: nom,
+                    uid: firebaseUser.uid,
+                    dateConnexion: new Date().toISOString()
+                };
+                
+                localStorage.setItem('typhSession', JSON.stringify(sessionData));
+                
+                hideAuthModal();
+                mettreAJourAffichage();
+                showPlatform();
+                switchPlatformSection('profil');
+                alert('Inscription réussie ! Ajoutez vos numéros dans votre profil pour commencer à échanger.');
+                
+                if (recaptchaVerifierInscription) {
+                    recaptchaVerifierInscription.reset();
+                }
+                
+            } catch (error) {
+                console.error('Erreur inscription:', error);
+                
+                if (error.code === 'auth/email-already-in-use') {
+                    afficherErreur('Cet email est déjà utilisé');
+                } else if (error.code === 'auth/weak-password') {
+                    afficherErreur('Mot de passe trop faible');
+                } else if (error.code === 'auth/invalid-email') {
+                    afficherErreur('Email invalide');
+                } else if (error.message && error.message.includes('captcha')) {
+                    afficherErreur('Captcha invalide, veuillez réessayer');
+                } else {
+                    afficherErreur('Erreur lors de l\'inscription');
+                }
+                
+                if (recaptchaVerifierInscription) {
+                    recaptchaVerifierInscription.reset();
+                }
+            }
         }
 
         function deconnexion() {
             if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-                utilisateurCourant = null;
-                sessionValide = false;
-                localStorage.removeItem('typhSession');
-                sessionStorage.removeItem('typhSession');
-                showLandingPage();
-                mettreAJourAffichage();
+                auth.signOut().then(() => {
+                    utilisateurCourant = null;
+                    sessionValide = false;
+                    localStorage.removeItem('typhSession');
+                    sessionStorage.removeItem('typhSession');
+                    showLandingPage();
+                    mettreAJourAffichage();
+                });
             }
         }
 
@@ -2871,7 +3002,6 @@
         }
 
         function mettreAJourAffichage() {
-            // Sauvegarder l'état des formulaires
             const etatFormulaires = {
                 achat: {
                     operateur: document.getElementById('operateur-achat')?.value,
@@ -2901,9 +3031,8 @@
             verifierPause();
             mettreAJourListeNumerosVente();
             mettreAJourListeNumerosAchat();
-            mettreAJourMessageSpecialTRX();
+            mettreAJourLimiteAchat();
             
-            // Restaurer l'état des formulaires si possible
             setTimeout(() => {
                 if (document.getElementById('achat-section').classList.contains('active')) {
                     if (etatFormulaires.achat.operateur) document.getElementById('operateur-achat').value = etatFormulaires.achat.operateur;
@@ -2943,7 +3072,7 @@
             }, 100);
             
             if (utilisateurCourant) {
-                document.getElementById('userBadge').innerHTML = `<i class="fas fa-user-check"></i> ${utilisateurCourant.nom}`;
+                document.getElementById('userBadge').innerHTML = `<i class="fas fa-user-check"></i> ${echapperHTML(utilisateurCourant.nom)}`;
                 
                 const carteDeconnexion = document.getElementById('carte-deconnexion');
                 if (carteDeconnexion) {
@@ -2956,15 +3085,6 @@
                 if (carteDeconnexion) {
                     carteDeconnexion.style.display = 'none';
                 }
-            }
-        }
-
-        function mettreAJourMessageSpecialTRX() {
-            const messageTRX = document.getElementById('message-trx-special');
-            const texteTRX = document.getElementById('message-trx-texte');
-            
-            if (messageTRX && texteTRX && donnees.messagesSpeciaux?.trx) {
-                texteTRX.textContent = donnees.messagesSpeciaux.trx;
             }
         }
 
@@ -3002,17 +3122,17 @@
             ['achat', 'vente'].forEach(t => {
                 const op = document.getElementById(`operateur-${t}`);
                 if (op && donnees.operateurs) {
-                    op.innerHTML = donnees.operateurs.map(o => `<option value="${o.nom}">${o.nom}</option>`).join('');
+                    op.innerHTML = donnees.operateurs.map(o => `<option value="${echapperHTML(o.nom)}">${echapperHTML(o.nom)}</option>`).join('');
                 }
                 
                 const cr = document.getElementById(`crypto-${t}`);
                 if (cr && donnees.cryptos) {
-                    cr.innerHTML = donnees.cryptos.map(c => `<option value="${c}">${c}</option>`).join('');
+                    cr.innerHTML = donnees.cryptos.map(c => `<option value="${echapperHTML(c)}">${echapperHTML(c)}</option>`).join('');
                 }
                 
                 const pf = document.getElementById(`portefeuille-${t}`);
                 if (pf && donnees.portefeuilles) {
-                    pf.innerHTML = donnees.portefeuilles.map(p => `<option value="${p.nom}">${p.nom} ${p.reseau || ''}</option>`).join('');
+                    pf.innerHTML = donnees.portefeuilles.map(p => `<option value="${echapperHTML(p.nom)}">${echapperHTML(p.nom)} ${p.reseau ? echapperHTML(p.reseau) : ''}</option>`).join('');
                 }
             });
 
@@ -3040,7 +3160,7 @@
             const reseauxFiltres = donnees.reseaux.filter(r => r.crypto === crypto);
             
             selectReseau.innerHTML = reseauxFiltres.map(r => 
-                `<option value="${r.nom}" data-frais="${r.fraisReseau || 0}">${r.nom}</option>`
+                `<option value="${echapperHTML(r.nom)}" data-frais="${r.fraisReseau || 0}">${echapperHTML(r.nom)}</option>`
             ).join('');
             
             if (ancienneValeur) {
@@ -3053,7 +3173,6 @@
             if (type === 'achat') {
                 estimerAchat();
                 afficherFraisReseauAchat();
-                mettreAJourMessageSpecialTRX();
             } else {
                 estimerVente();
                 afficherFraisReseauVente();
@@ -3074,7 +3193,6 @@
                 }
             }
             
-            // Afficher le message spécial pour TRX + TRC20
             if (messageTRX) {
                 if (crypto === 'TRX' && select?.value === 'TRC20') {
                     messageTRX.style.display = 'block';
@@ -3094,6 +3212,47 @@
                     fraisSpan.innerHTML = `(frais réseau: ${frais}%)`;
                 }
             }
+        }
+
+        function mettreAJourLimiteAchat() {
+            const crypto = document.getElementById('crypto-achat')?.value;
+            const min = getMinimumAchat(crypto);
+            const max = donnees.limites?.maxAchat || 100000;
+            const input = document.getElementById('montant-achat');
+            const limiteSpan = document.getElementById('montant-limite-achat');
+            const limiteAffichee = document.getElementById('limite-affichee-achat');
+            const minSpan = document.getElementById('min-affichage-achat');
+            const maxSpan = document.getElementById('max-affichage-achat');
+            
+            if (input) {
+                input.min = min;
+                input.max = max;
+                if (input.value < min) {
+                    input.value = min;
+                }
+                if (input.value > max) {
+                    input.value = max;
+                }
+            }
+            
+            if (limiteSpan) {
+                limiteSpan.innerHTML = `(Min: ${min.toLocaleString()} Ar - Max: ${max.toLocaleString()} Ar)`;
+            }
+            
+            if (limiteAffichee) {
+                limiteAffichee.innerHTML = `${min.toLocaleString()} Ar - ${max.toLocaleString()} Ar`;
+            }
+            
+            if (minSpan) {
+                minSpan.innerHTML = min.toLocaleString();
+            }
+            
+            if (maxSpan) {
+                maxSpan.innerHTML = max.toLocaleString();
+            }
+            
+            verifierLimitesAchat();
+            estimerAchat();
         }
 
         function verifierLimitesAchat() {
@@ -3147,7 +3306,7 @@
             const reponseDiv = document.getElementById('reponse-portefeuille-vente');
             if (select && reponseDiv && donnees.portefeuilles) {
                 const p = donnees.portefeuilles.find(p => p.nom === select.value);
-                if (p) reponseDiv.textContent = p.reponse || 'Aucune description';
+                if (p) reponseDiv.textContent = echapperHTML(p.reponse || 'Aucune description');
             }
         }
 
@@ -3157,10 +3316,10 @@
             
             if (utilisateurCourant) {
                 profil.innerHTML = `
-                    <div class="profile-row"><span class="profile-label">ID</span><span class="profile-value" style="color: var(--accent); font-weight: 700;">${utilisateurCourant.id || 'Non attribué'}</span></div>
-                    <div class="profile-row"><span class="profile-label">Nom</span><span class="profile-value">${utilisateurCourant.nom}</span></div>
-                    <div class="profile-row"><span class="profile-label">Email</span><span class="profile-value">${utilisateurCourant.email || 'Non renseigné'}</span></div>
-                    <div class="profile-row"><span class="profile-label">Membre depuis</span><span class="profile-value">${new Date(utilisateurCourant.dateInscription).toLocaleDateString()}</span></div>
+                    <div class="profile-row"><span class="profile-label">ID</span><span class="profile-value" style="color: var(--accent); font-weight: 700;">${echapperHTML(utilisateurCourant.id || 'Non attribué')}</span></div>
+                    <div class="profile-row"><span class="profile-label">Nom</span><span class="profile-value">${echapperHTML(utilisateurCourant.nom)}</span></div>
+                    <div class="profile-row"><span class="profile-label">Email</span><span class="profile-value">${echapperHTML(utilisateurCourant.email || 'Non renseigné')}</span></div>
+                    <div class="profile-row"><span class="profile-label">Membre depuis</span><span class="profile-value">${echapperHTML(new Date(utilisateurCourant.dateInscription).toLocaleDateString())}</span></div>
                     <div class="profile-row"><span class="profile-label">Numéros</span><span class="profile-value">${utilisateurCourant.numeros?.length || 0} enregistré(s)</span></div>
                 `;
             } else {
@@ -3182,7 +3341,7 @@
             } else {
                 select.disabled = false;
                 select.innerHTML = numerosApprouves.map(num => 
-                    `<option value="${num.numero}" data-nom="${num.nom}">${num.nom} - ${num.numero}</option>`
+                    `<option value="${echapperHTML(num.numero)}" data-nom="${echapperHTML(num.nom)}">${echapperHTML(num.nom)} - ${echapperHTML(num.numero)}</option>`
                 ).join('');
                 
                 if (ancienneValeur) {
@@ -3211,7 +3370,7 @@
                 const ancienneValeur = select.value;
                 
                 select.innerHTML = numerosApprouves.map(num => 
-                    `<option value="${num.numero}" data-nom="${num.nom}">${num.nom} - ${num.numero}</option>`
+                    `<option value="${echapperHTML(num.numero)}" data-nom="${echapperHTML(num.nom)}">${echapperHTML(num.nom)} - ${echapperHTML(num.numero)}</option>`
                 ).join('');
                 
                 if (ancienneValeur) {
@@ -3241,7 +3400,7 @@
                 const numero = selectedOption.value;
                 infoDiv.innerHTML = `
                     <i class="fas fa-check-circle" style="color: var(--success);"></i> 
-                    Bénéficiaire: <strong>${nom}</strong> (${numero})
+                    Bénéficiaire: <strong>${echapperHTML(nom)}</strong> (${echapperHTML(numero)})
                 `;
             } else {
                 infoDiv.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i> Veuillez sélectionner un numéro';
@@ -3261,7 +3420,7 @@
                 const numero = selectedOption.value;
                 infoDiv.innerHTML = `
                     <i class="fas fa-check-circle" style="color: var(--success);"></i> 
-                    Compte à débiter: <strong>${nom}</strong> (${numero})
+                    Compte à débiter: <strong>${echapperHTML(nom)}</strong> (${echapperHTML(numero)})
                 `;
             } else {
                 infoDiv.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i> Veuillez sélectionner un numéro';
@@ -3286,7 +3445,7 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                     <div>
                         <span class="estimated-label">Vous recevez:</span>
-                        <span class="estimated-amount">${estimation.toFixed(4)} ${crypto}</span>
+                        <span class="estimated-amount">${estimation.toFixed(4)} ${echapperHTML(crypto)}</span>
                     </div>
                 </div>
             `;
@@ -3406,7 +3565,7 @@
                 date: new Date().toISOString(),
                 utilisateur: utilisateurCourant.nom,
                 email: utilisateurCourant.email,
-                userID: utilisateurCourant.id,
+                userID: utilisateurCourant.uid || utilisateurCourant.id,
                 montantRecu: type === 'ACHAT' ? montantRecuAchat : montantRecuVente,
                 cryptoAffichee: type === 'ACHAT' ? crypto : 'Ar'
             };
@@ -3427,22 +3586,22 @@
             let infoDestinataire = '';
             if (transaction.type === 'ACHAT') {
                 infoDestinataire = `
-                    <p><i class="fas fa-qrcode"></i> Adresse: <span>${transaction.adresse || 'Non spécifiée'}</span></p>
-                    <p><i class="fas fa-phone-alt"></i> Numéro débité: <span>${transaction.nomNumero} (${transaction.numero})</span></p>
+                    <p><i class="fas fa-qrcode"></i> Adresse: <span>${echapperHTML(transaction.adresse || 'Non spécifiée')}</span></p>
+                    <p><i class="fas fa-phone-alt"></i> Numéro débité: <span>${echapperHTML(transaction.nomNumero)} (${echapperHTML(transaction.numero)})</span></p>
                 `;
             } else {
                 infoDestinataire = `
-                    <p><i class="fas fa-user"></i> Bénéficiaire: <span>${transaction.nomNumero || transaction.utilisateur}</span></p>
-                    <p><i class="fas fa-phone-alt"></i> Numéro crédité: <span>${transaction.numero || 'Non spécifié'}</span></p>
+                    <p><i class="fas fa-user"></i> Bénéficiaire: <span>${echapperHTML(transaction.nomNumero || transaction.utilisateur)}</span></p>
+                    <p><i class="fas fa-phone-alt"></i> Numéro crédité: <span>${echapperHTML(transaction.numero || 'Non spécifié')}</span></p>
                 `;
             }
             
             document.getElementById('details-demande').innerHTML = `
-                <p><i class="fas fa-tag"></i> Type: <span>${transaction.type}</span></p>
-                <p><i class="fas fa-coins" style="color: var(--success);"></i> Vous recevez: <span style="color: var(--success); font-weight: 700;">${montantRecu}</span></p>
-                <p><i class="fas fa-network-wired"></i> Réseau: <span>${transaction.reseau || ' '}</span></p>
+                <p><i class="fas fa-tag"></i> Type: <span>${echapperHTML(transaction.type)}</span></p>
+                <p><i class="fas fa-coins" style="color: var(--success);"></i> Vous recevez: <span style="color: var(--success); font-weight: 700;">${echapperHTML(montantRecu)}</span></p>
+                <p><i class="fas fa-network-wired"></i> Réseau: <span>${echapperHTML(transaction.reseau || ' ')}</span></p>
                 ${infoDestinataire}
-                <p><i class="fas fa-hashtag"></i> TXID: <span>${transaction.txid || 'À fournir'}</span></p>
+                <p><i class="fas fa-hashtag"></i> TXID: <span>${echapperHTML(transaction.txid || 'À fournir')}</span></p>
             `;
 
             let messagePaiement = '';
@@ -3560,42 +3719,66 @@
             if (selectedDiv) selectedDiv.classList.add('selected');
         }
 
-        function verifierPIN() {
+        async function verifierPIN() {
             if (pinVerifValue.length !== 6) {
                 document.getElementById('pin-error').textContent = 'Entrez 6 chiffres';
                 document.getElementById('pin-error').classList.add('show');
                 return;
             }
             
-            const pinAttendu = atob(utilisateurCourant.codePIN.hash);
+            const saltStocke = utilisateurCourant.codePIN.salt;
+            const hashStocke = utilisateurCourant.codePIN.hash;
             
-            if (pinVerifValue === pinAttendu) {
-                utilisateurCourant.codePIN.tentativeEchouees = 0;
-                fermerModalPIN();
-                creerDemande(transactionEnAttente);
-            } else {
-                tentativePIN++;
-                utilisateurCourant.codePIN.tentativeEchouees = (utilisateurCourant.codePIN.tentativeEchouees || 0) + 1;
-                
-                if (utilisateurCourant.codePIN.tentativeEchouees >= 3) {
-                    utilisateurCourant.codePIN.bloque = true;
+            if (!saltStocke) {
+                const pinAttendu = atob(hashStocke);
+                if (pinVerifValue === pinAttendu) {
+                    const { hash, salt } = await hasherPIN(pinVerifValue);
+                    utilisateurCourant.codePIN.hash = hash;
+                    utilisateurCourant.codePIN.salt = salt;
+                    utilisateurCourant.codePIN.tentativeEchouees = 0;
+                    utilisateurCourant.codePIN.bloque = false;
                     sauvegarderDonnees();
-                    alert('❌ Code PIN bloqué');
+                    
                     fermerModalPIN();
+                    creerDemande(transactionEnAttente);
                     return;
                 }
+            } else {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(pinVerifValue + saltStocke);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashCalcule = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
                 
-                document.getElementById('pin-error').textContent = `Code incorrect. ${utilisateurCourant.codePIN.tentativeEchouees}/3`;
-                document.getElementById('pin-error').classList.add('show');
-                document.getElementById('pin-tentatives').textContent = `Plus que ${3 - utilisateurCourant.codePIN.tentativeEchouees} tentative(s)`;
-                
-                pinVerifValue = '';
-                for (let i = 1; i <= 6; i++) {
-                    const digitDiv = document.getElementById(`verif-digit${i}`);
-                    if (digitDiv) {
-                        digitDiv.textContent = '';
-                        digitDiv.classList.remove('filled');
-                    }
+                if (hashCalcule === hashStocke) {
+                    utilisateurCourant.codePIN.tentativeEchouees = 0;
+                    fermerModalPIN();
+                    creerDemande(transactionEnAttente);
+                    return;
+                }
+            }
+            
+            tentativePIN++;
+            utilisateurCourant.codePIN.tentativeEchouees = (utilisateurCourant.codePIN.tentativeEchouees || 0) + 1;
+            
+            if (utilisateurCourant.codePIN.tentativeEchouees >= 3) {
+                utilisateurCourant.codePIN.bloque = true;
+                sauvegarderDonnees();
+                alert('❌ Code PIN bloqué après 3 tentatives');
+                fermerModalPIN();
+                return;
+            }
+            
+            document.getElementById('pin-error').textContent = `Code incorrect. ${utilisateurCourant.codePIN.tentativeEchouees}/3`;
+            document.getElementById('pin-error').classList.add('show');
+            document.getElementById('pin-tentatives').textContent = `Plus que ${3 - utilisateurCourant.codePIN.tentativeEchouees} tentative(s)`;
+            
+            pinVerifValue = '';
+            for (let i = 1; i <= 6; i++) {
+                const digitDiv = document.getElementById(`verif-digit${i}`);
+                if (digitDiv) {
+                    digitDiv.textContent = '';
+                    digitDiv.classList.remove('filled');
                 }
             }
         }
@@ -3630,11 +3813,23 @@
 
             const demande = {
                 id: 'DEM-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
-                type, utilisateur: utilisateurCourant.nom, email: utilisateurCourant.email,
-                userID: utilisateurCourant.id,
-                montant, crypto, operateur, portefeuille, reseau, adresse, numero, nomNumero,
-                messagePaiement, txid,
-                statut: 'en_attente', date: new Date().toISOString(), avecPIN: true,
+                type, 
+                utilisateur: utilisateurCourant.nom, 
+                email: utilisateurCourant.email,
+                userID: utilisateurCourant.uid || utilisateurCourant.id,
+                montant, 
+                crypto, 
+                operateur, 
+                portefeuille, 
+                reseau, 
+                adresse, 
+                numero, 
+                nomNumero,
+                messagePaiement, 
+                txid,
+                statut: 'en_attente', 
+                date: new Date().toISOString(), 
+                avecPIN: true,
                 montantRecu: transaction.montantRecu
             };
 
@@ -3648,8 +3843,8 @@
         function ouvrirModalSucces(demande) {
             document.getElementById('details-demande').innerHTML = `
                 <p><i class="fas fa-check-circle" style="color: var(--success);"></i> <span style="color: var(--success);">DEMANDE CRÉÉE</span></p>
-                <p><i class="fas fa-tag"></i> ID: <span>${demande.id}</span></p>
-                <p><i class="fas fa-hashtag"></i> TXID: <span style="font-size: 0.8rem;">${demande.txid}</span></p>
+                <p><i class="fas fa-tag"></i> ID: <span>${echapperHTML(demande.id)}</span></p>
+                <p><i class="fas fa-hashtag"></i> TXID: <span style="font-size: 0.8rem;">${echapperHTML(demande.txid)}</span></p>
             `;
 
             document.getElementById('message-paiement-container').style.display = 'none';
@@ -3690,10 +3885,10 @@
             liste.innerHTML = utilisateurCourant.numeros.map(num => `
                 <div class="numero-item">
                     <div class="numero-info">
-                        <div class="numero-nom">${num.nom}</div>
-                        <div class="numero-value">${num.numero}</div>
+                        <div class="numero-nom">${echapperHTML(num.nom)}</div>
+                        <div class="numero-value">${echapperHTML(num.numero)}</div>
                     </div>
-                    <div class="numero-status status-${num.statut}">${num.statut}</div>
+                    <div class="numero-status status-${echapperHTML(num.statut)}">${echapperHTML(num.statut)}</div>
                 </div>
             `).join('');
         }
@@ -3815,7 +4010,7 @@
             }
         }
 
-        function sauvegarderPIN() {
+        async function sauvegarderPIN() {
             if (pinSetupValue.length !== 6 || pinSetupConfirmValue.length !== 6) {
                 document.getElementById('pin-setup-error').textContent = 'Code PIN complet requis';
                 document.getElementById('pin-setup-error').classList.add('show');
@@ -3830,7 +4025,10 @@
             
             if (!utilisateurCourant.codePIN) utilisateurCourant.codePIN = {};
             
-            utilisateurCourant.codePIN.hash = btoa(pinSetupValue);
+            const { hash, salt } = await hasherPIN(pinSetupValue);
+            
+            utilisateurCourant.codePIN.hash = hash;
+            utilisateurCourant.codePIN.salt = salt;
             utilisateurCourant.codePIN.actif = true;
             utilisateurCourant.codePIN.tentativeEchouees = 0;
             utilisateurCourant.codePIN.bloque = false;
@@ -3842,7 +4040,7 @@
             sauvegarderDonnees();
             fermerModalPIN();
             mettreAJourAffichage();
-            alert('✅ Code PIN configuré');
+            alert('✅ Code PIN configuré avec sécurité renforcée');
         }
 
         function mettreAJourActiviteRecente() {
@@ -3861,17 +4059,17 @@
             liste.innerHTML = recent.map(d => `
                 <li class="activity-item">
                     <div class="activity-left">
-                        <div class="activity-icon ${d.type}">
+                        <div class="activity-icon ${echapperHTML(d.type)}">
                             <i class="fas ${d.type === 'ACHAT' ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
                         </div>
                         <div class="activity-info">
-                            <h4>${d.type} ${d.crypto}</h4>
-                            <div class="activity-date">${new Date(d.date).toLocaleString()}</div>
+                            <h4>${echapperHTML(d.type)} ${echapperHTML(d.crypto)}</h4>
+                            <div class="activity-date">${echapperHTML(new Date(d.date).toLocaleString())}</div>
                         </div>
                     </div>
                     <div>
-                        <div class="activity-amount">${d.montant}</div>
-                        <div class="activity-status status-${d.statut}">${d.statut}</div>
+                        <div class="activity-amount">${echapperHTML(d.montant)}</div>
+                        <div class="activity-status status-${echapperHTML(d.statut)}">${echapperHTML(d.statut)}</div>
                     </div>
                 </li>
             `).join('');
@@ -3896,19 +4094,19 @@
             }
 
             liste.innerHTML = mes.map(d => `
-                <li class="activity-item" onclick="ouvrirRecu('${d.id}')">
+                <li class="activity-item" onclick="ouvrirRecu('${echapperHTML(d.id)}')">
                     <div class="activity-left">
-                        <div class="activity-icon ${d.type}">
+                        <div class="activity-icon ${echapperHTML(d.type)}">
                             <i class="fas ${d.type === 'ACHAT' ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
                         </div>
                         <div class="activity-info">
-                            <h4>${d.type} ${d.crypto}</h4>
-                            <div class="activity-date">${new Date(d.date).toLocaleString()}</div>
+                            <h4>${echapperHTML(d.type)} ${echapperHTML(d.crypto)}</h4>
+                            <div class="activity-date">${echapperHTML(new Date(d.date).toLocaleString())}</div>
                         </div>
                     </div>
                     <div>
-                        <div class="activity-amount">${d.montant}</div>
-                        <div class="activity-status status-${d.statut}">${d.statut}</div>
+                        <div class="activity-amount">${echapperHTML(d.montant)}</div>
+                        <div class="activity-status status-${echapperHTML(d.statut)}">${echapperHTML(d.statut)}</div>
                     </div>
                 </li>
             `).join('');
@@ -3951,35 +4149,35 @@
 
             const recuHTML = `
                 <div class="receipt-amount-large">
-                    <div class="amount">${montantPrincipal}</div>
-                    <div class="description">${description}</div>
-                    <div class="badge-statut ${classeStatut}">${demande.statut.toUpperCase()}</div>
+                    <div class="amount">${echapperHTML(montantPrincipal)}</div>
+                    <div class="description">${echapperHTML(description)}</div>
+                    <div class="badge-statut ${echapperHTML(classeStatut)}">${echapperHTML(demande.statut.toUpperCase())}</div>
                 </div>
                 
                 <div class="receipt-details">
                     <div class="detail-row">
                         <span class="detail-label">ID Transaction</span>
-                        <span class="detail-value small">${demande.id}</span>
+                        <span class="detail-value small">${echapperHTML(demande.id)}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">ID Client</span>
-                        <span class="detail-value small">${demande.userID || 'Non attribué'}</span>
+                        <span class="detail-value small">${echapperHTML(demande.userID || 'Non attribué')}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Date</span>
-                        <span class="detail-value">${new Date(demande.date).toLocaleString('fr-FR')}</span>
+                        <span class="detail-value">${echapperHTML(new Date(demande.date).toLocaleString('fr-FR'))}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Type</span>
-                        <span class="detail-value">${demande.type}</span>
+                        <span class="detail-value">${echapperHTML(demande.type)}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Crypto</span>
-                        <span class="detail-value">${demande.crypto}</span>
+                        <span class="detail-value">${echapperHTML(demande.crypto)}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Réseau</span>
-                        <span class="detail-value">${demande.reseau || 'N/A'}</span>
+                        <span class="detail-value">${echapperHTML(demande.reseau || 'N/A')}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Montant envoyé</span>
@@ -3987,12 +4185,12 @@
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Bénéficiaire / Débiteur</span>
-                        <span class="detail-value small">${beneficiaire}</span>
+                        <span class="detail-value small">${echapperHTML(beneficiaire)}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">TXID</span>
-                        <span class="detail-value small" style="cursor: pointer;" onclick="copierTexte('${demande.txid}')">
-                            ${demande.txid ? demande.txid.substring(0, 20) + '...' : 'Non fourni'} 
+                        <span class="detail-value small" style="cursor: pointer;" onclick="copierTexte('${echapperHTML(demande.txid)}')">
+                            ${demande.txid ? echapperHTML(demande.txid.substring(0, 20)) + '...' : 'Non fourni'} 
                             ${demande.txid ? '<i class="fas fa-copy" style="margin-left: 5px;"></i>' : ''}
                         </span>
                     </div>
@@ -4036,28 +4234,28 @@
             let infoDestinataire = '';
             if (demande.type === 'ACHAT') {
                 infoDestinataire = `
-                    <p><i class="fas fa-qrcode"></i> Adresse: <span>${demande.adresse || 'Non spécifiée'}</span></p>
-                    <p><i class="fas fa-phone-alt"></i> Numéro débité: <span>${demande.nomNumero} (${demande.numero})</span></p>
+                    <p><i class="fas fa-qrcode"></i> Adresse: <span>${echapperHTML(demande.adresse || 'Non spécifiée')}</span></p>
+                    <p><i class="fas fa-phone-alt"></i> Numéro débité: <span>${echapperHTML(demande.nomNumero)} (${echapperHTML(demande.numero)})</span></p>
                 `;
             } else {
                 infoDestinataire = `
-                    <p><i class="fas fa-user"></i> Bénéficiaire: <span>${demande.nomNumero || demande.utilisateur}</span></p>
-                    <p><i class="fas fa-phone-alt"></i> Numéro crédité: <span>${demande.numero || 'Non spécifié'}</span></p>
+                    <p><i class="fas fa-user"></i> Bénéficiaire: <span>${echapperHTML(demande.nomNumero || demande.utilisateur)}</span></p>
+                    <p><i class="fas fa-phone-alt"></i> Numéro crédité: <span>${echapperHTML(demande.numero || 'Non spécifié')}</span></p>
                 `;
             }
 
             document.getElementById('details-demande-complete').innerHTML = `
-                <p><i class="fas fa-tag"></i> ID: <span>${demande.id}</span></p>
-                <p><i class="fas fa-tag"></i> Type: <span>${demande.type}</span></p>
-                <p><i class="fas fa-user"></i> Client: <span>${demande.utilisateur}</span></p>
-                <p><i class="fas fa-id-card"></i> ID Client: <span>${demande.userID || 'Non attribué'}</span></p>
-                <p><i class="fas fa-coins"></i> Montant: <span>${demande.montant} ${demande.type === 'ACHAT' ? 'Ar' : demande.crypto}</span></p>
+                <p><i class="fas fa-tag"></i> ID: <span>${echapperHTML(demande.id)}</span></p>
+                <p><i class="fas fa-tag"></i> Type: <span>${echapperHTML(demande.type)}</span></p>
+                <p><i class="fas fa-user"></i> Client: <span>${echapperHTML(demande.utilisateur)}</span></p>
+                <p><i class="fas fa-id-card"></i> ID Client: <span>${echapperHTML(demande.userID || 'Non attribué')}</span></p>
+                <p><i class="fas fa-coins"></i> Montant: <span>${echapperHTML(demande.montant)} ${demande.type === 'ACHAT' ? 'Ar' : demande.crypto}</span></p>
                 <p><i class="fas fa-coins" style="color: var(--success);"></i> Vous recevez: <span style="color: var(--success); font-weight: 700;">${demande.type === 'ACHAT' ? (demande.montantRecu ? demande.montantRecu.toFixed(4) + ' ' + demande.crypto : 'Calcul...') : (demande.montantRecu ? demande.montantRecu.toLocaleString() + ' Ar' : 'Calcul...')}</span></p>
-                <p><i class="fas fa-network-wired"></i> Réseau: <span>${demande.reseau || ' '}</span></p>
+                <p><i class="fas fa-network-wired"></i> Réseau: <span>${echapperHTML(demande.reseau || ' ')}</span></p>
                 ${infoDestinataire}
-                <p><i class="fas fa-hashtag"></i> TXID: <span style="font-size: 0.8rem;">${demande.txid || 'Non fourni'}</span></p>
-                <p><i class="fas fa-info-circle"></i> Statut: <span>${demande.statut}</span></p>
-                <p><i class="far fa-calendar"></i> Date: <span>${new Date(demande.date).toLocaleString()}</span></p>
+                <p><i class="fas fa-hashtag"></i> TXID: <span style="font-size: 0.8rem;">${echapperHTML(demande.txid || 'Non fourni')}</span></p>
+                <p><i class="fas fa-info-circle"></i> Statut: <span>${echapperHTML(demande.statut)}</span></p>
+                <p><i class="far fa-calendar"></i> Date: <span>${echapperHTML(new Date(demande.date).toLocaleString())}</span></p>
             `;
 
             document.getElementById('modal-details-demande').classList.add('active');
@@ -4076,7 +4274,6 @@
             document.getElementById('testimonials').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // Fonctions pour mot de passe oublié
         function ouvrirModalMotDePasseOublie() {
             document.getElementById('modal-auth').classList.remove('active');
             document.getElementById('etape-1-mdp').style.display = 'block';
@@ -4194,7 +4391,6 @@
                 verifierLimitesAchat();
                 mettreAJourListeNumerosAchat();
                 mettreAJourLimiteAchat();
-                mettreAJourMessageSpecialTRX();
             }
             if (section === 'vente') {
                 mettreAJourReseaux('vente');
@@ -4225,7 +4421,6 @@
                 verifierLimitesAchat();
                 mettreAJourListeNumerosAchat();
                 mettreAJourLimiteAchat();
-                mettreAJourMessageSpecialTRX();
             }
             if (section === 'demandes' && utilisateurCourant) mettreAJourMesDemandes();
             if (section === 'profil') {
@@ -4250,12 +4445,10 @@
                     if (nouveauHash !== dernierHashDonnees) {
                         console.log('🔄 Changement détecté, mise à jour partielle');
                         
-                        // Sauvegarder les données utilisateur actuelles
                         const currentUserEmail = utilisateurCourant?.email;
                         
                         donnees = data;
                         
-                        // Initialiser les nouvelles propriétés si absentes
                         if (!donnees.limites) {
                             donnees.limites = {
                                 minAchat: 2000,
@@ -4272,24 +4465,15 @@
                             };
                         }
                         
-                        // Mettre à jour l'utilisateur courant si nécessaire
                         if (currentUserEmail) {
                             const userToujoursPresent = donnees.utilisateurs?.find(u => u.email === currentUserEmail);
                             if (userToujoursPresent) {
                                 utilisateurCourant = userToujoursPresent;
-                            } else {
-                                utilisateurCourant = null;
-                                sessionValide = false;
-                                localStorage.removeItem('typhSession');
-                                sessionStorage.removeItem('typhSession');
-                                showLandingPage();
-                                return;
                             }
                         }
                         
                         dernierHashDonnees = nouveauHash;
                         
-                        // Mise à jour sélective sans tout recharger
                         afficherTauxSimplifies();
                         afficherNews();
                         verifierPause();
@@ -4305,7 +4489,6 @@
                             verifierLimitesAchat();
                             mettreAJourListeNumerosAchat();
                             mettreAJourLimiteAchat();
-                            mettreAJourMessageSpecialTRX();
                         }
                         
                         if (document.getElementById('vente-section').classList.contains('active')) {
@@ -4330,36 +4513,9 @@
         }
 
         window.addEventListener('load', function() {
-            let session = sessionStorage.getItem('typhSession');
-            let storageType = 'session';
-            
-            if (!session) {
-                session = localStorage.getItem('typhSession');
-                storageType = 'local';
-            }
-            
-            if (session && donnees.utilisateurs) {
-                try {
-                    const sessionData = JSON.parse(session);
-                    const user = donnees.utilisateurs.find(u => u.email === sessionData.email);
-                    if (user) {
-                        utilisateurCourant = user;
-                        sessionValide = true;
-                        showPlatform();
-                        mettreAJourAffichage();
-                    } else {
-                        if (storageType === 'local') localStorage.removeItem('typhSession');
-                        else sessionStorage.removeItem('typhSession');
-                    }
-                } catch (e) {
-                    if (storageType === 'local') localStorage.removeItem('typhSession');
-                    else sessionStorage.removeItem('typhSession');
-                }
-            }
+            chargerDonnees();
+            ecouterChangements();
         });
-
-        chargerDonnees();
-        ecouterChangements();
     </script>
 </body>
 </html>
