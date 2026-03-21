@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/apk",
+      "destination": "https://raw.githubusercontent.com/Typh36557/typhXchain/main/TYPH%20X-CHAIN.apk",
+      "permanent": true
+    }
+  ]
+}
