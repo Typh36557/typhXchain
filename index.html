@@ -9,7 +9,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        /* ===== STYLES IDENTIQUES À L'ORIGINAL ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
             --bg-dark: #0A0F1F;
@@ -118,6 +117,7 @@
         .btn-success:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(16,185,129,0.3); }
         .btn-warning { background: linear-gradient(135deg, var(--warning), #D97706); color: white; }
         .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(245,158,11,0.3); }
+        .btn-refresh-small { background: var(--accent); padding: 10px 20px; font-size: 0.85rem; width: auto; }
         .btn-copy { background: var(--accent); color: white; padding: 12px 20px; border-radius: 40px; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; width: 100%; margin-top: 12px; }
         .btn-disabled { background: var(--gray-300); cursor: not-allowed; opacity: 0.6; transform: none !important; }
         .estimated-value { background: var(--primary); border-radius: 40px; padding: 16px 20px; border: 1px solid var(--gray-300); margin: 20px 0; text-align: center; }
@@ -198,8 +198,7 @@
         .frais-special { color: var(--warning); font-size: 0.8rem; margin-top: 5px; padding: 8px; background: rgba(245,158,11,0.1); border-radius: 16px; text-align: center; border: 1px dashed var(--warning); }
         .info-message { background: var(--primary); padding: 12px; border-radius: 16px; margin: 10px 0; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
         .btn-manual-sync { background: var(--binance); color: var(--bg-dark); margin-top: 10px; width: auto; display: inline-flex; padding: 8px 16px; font-size: 0.85rem; }
-        .alert-message-red { background: rgba(239,68,68,0.15); border: 1px solid var(--danger); border-radius: 16px; padding: 12px 16px; margin: 15px 0; color: var(--danger); font-size: 0.85rem; display: flex; align-items: center; gap: 10px; }
-        .alert-message-red i { font-size: 1rem; }
+        .refresh-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
         @media (max-width: 768px) { .hero-title { font-size: 2rem; } .rates-grid { grid-template-columns: repeat(2, 1fr); } .pin-digit { width: 45px; height: 45px; font-size: 1.3rem; } .modal-content { padding: 20px; } }
     </style>
 </head>
@@ -208,7 +207,7 @@
     <div class="container">
         <div id="landing-page" class="landing-page">
             <div class="hero-section"><h1 class="hero-title">TYPH X-CHAIN</h1><h2 class="hero-subtitle">Crypto ⇌ Mvola, Orange et Airtel</h2><p class="hero-description">La solution la plus simple pour convertir vos cryptos et Mobile Money.</p><button class="btn-hero" onclick="showAuthModal()"><i class="fas fa-rocket"></i> Echanger maintenant</button><div class="reviews-link" onclick="scrollToTestimonials()"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i> Premium Service</div></div>
-            <div style="display: flex; flex-direction: column; align-items: flex-end; margin: -10px 0 30px; padding-right: 10px;"><a href="https://typh-xchain.site/apk" target="_blank" class="btn-download-green"><i class="fas fa-arrow-down"></i></a><div style="margin-top:5px;"><span style="color:var(--text-secondary);font-size:0.85rem;"><i class="fas fa-download" style="color:#10B981;"></i> Télécharger l'application</span></div></div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; margin: -10px 0 30px; padding-right: 10px;"><a href="https://www.directfiles.link/ZDX9EOV5W" target="_blank" class="btn-download-green"><i class="fas fa-arrow-down"></i></a><div style="margin-top:5px;"><span style="color:var(--text-secondary);font-size:0.85rem;"><i class="fas fa-download" style="color:#10B981;"></i> Télécharger l'application</span></div></div>
             <div class="features-grid"><div class="feature-card"><div class="feature-icon"><i class="fas fa-bolt"></i></div><h3 class="feature-title">Rapide</h3><p class="feature-description">Transactions en moins de 5 minutes, 15h/24 et 7j/7</p></div><div class="feature-card"><div class="feature-icon"><i class="fas fa-shield-alt"></i></div><h3 class="feature-title">Sécurisé</h3><p class="feature-description">Validation par code PIN à 6 chiffres</p></div><div class="feature-card"><div class="feature-icon"><i class="fas fa-hand-holding-usd"></i></div><h3 class="feature-title">Meilleurs taux</h3><p class="feature-description">Des taux compétitifs mis à jour en temps réel depuis Binance</p></div><div class="feature-card"><div class="feature-icon"><i class="fas fa-mobile-alt"></i></div><h3 class="feature-title">Mobile Money</h3><p class="feature-description">Compatible MVola, Orange Money, Airtel Money</p></div></div>
             <div class="stats-section"><div class="stat-item"><div class="stat-number">1K+</div><div class="stat-label">Utilisateurs</div></div><div class="stat-item"><div class="stat-number">5K+</div><div class="stat-label">Transactions</div></div><div class="stat-item"><div class="stat-number">4.8</div><div class="stat-label">Note moyenne</div></div><div class="stat-item"><div class="stat-number">24/7</div><div class="stat-label">Support</div></div></div>
             <div id="testimonials" class="testimonials-section"><h2 class="section-title">Ce que disent nos clients</h2><div class="testimonials-grid"><div class="testimonial-card"><div class="testimonial-header"><div class="testimonial-avatar"><i class="fas fa-user"></i></div><div><div class="testimonial-name">Rojo Anaïs</div><div class="testimonial-date">Il y a 2 jours</div></div></div><div class="testimonial-text">"Atokisana à 100% no sady rapide !"</div><div class="testimonial-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div></div><div class="testimonial-card"><div class="testimonial-header"><div class="testimonial-avatar"><i class="fas fa-user"></i></div><div><div class="testimonial-name">Santatra Cedrick</div><div class="testimonial-date">Il y a 5 jours</div></div></div><div class="testimonial-text">"Mahay mandray olona sady manoro sy manampy"</div><div class="testimonial-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i></div></div><div class="testimonial-card"><div class="testimonial-header"><div class="testimonial-avatar"><i class="fas fa-user"></i></div><div><div class="testimonial-name">Mahefa Rakotonirina</div><div class="testimonial-date">Il y a 1 semaine</div></div></div><div class="testimonial-text">"Efa 02 taona niarahana fa milam sady atokisana hatrany foana."</div><div class="testimonial-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div></div></div><div style="text-align:center;margin-top:30px;"><a href="https://www.facebook.com/Typh.Exchange.Ofisialy" target="_blank" class="btn-support"><i class="fab fa-facebook-f"></i> Support Facebook</a></div></div>
@@ -217,7 +216,15 @@
         <div id="accueil-section" class="platform-section"><div class="card"><div class="card-header"><h2 class="card-title"><i class="fas fa-chart-line"></i> Taux en direct <span class="binance-badge"><i class="fab fa-binance"></i> Binance</span></h2></div><div class="info-message"><i class="fas fa-info-circle"></i><span>Les taux sont actualisés toutes les 30 minutes. <a href="#" onclick="syncBinanceManuel()" style="color: var(--accent);">Actualiser maintenant</a></span></div><div class="last-update" id="taux-last-update">Mise à jour: ...</div><div class="rates-grid" id="taux-direct"></div></div><div class="card"><h2 class="card-title" style="margin-bottom:16px;"><i class="fas fa-history"></i> Transactions par nos clients</h2><ul class="activity-list" id="recent-activity"></ul></div><div class="card"><h2 class="card-title" style="margin-bottom:16px;"><i class="fas fa-newspaper"></i> Actualités & Annonces</h2><div class="news-container" id="news-container"></div></div></div>
         <div id="achat-section" class="platform-section"><div class="card"><h2 class="card-title"><i class="fas fa-arrow-down"></i> Achat crypto</h2><div id="pause-message-achat" class="pause-message" style="display:none;"><i class="fas fa-pause-circle"></i><span>Service temporairement suspendu</span></div><div id="achat-content"><div class="form-group"><label class="form-label"><i class="fas fa-sim-card"></i> Opérateur</label><div class="input-wrapper"><select id="operateur-achat"></select></div></div><div class="form-group"><label class="form-label"><i class="fas fa-coins"></i> Montant <span id="montant-limite-achat" style="color:var(--warning);font-size:0.7rem;"></span></label><div class="input-wrapper"><input type="number" id="montant-achat" value="2000" oninput="estimerAchat(); verifierLimitesAchat()"></div><div class="limite-error" id="limite-error-achat">Le montant doit être entre <span id="min-affichage-achat">2 000</span> Ar et <span id="max-affichage-achat">100 000</span> Ar</div></div><div class="form-group"><label class="form-label"><i class="fas fa-coins"></i> Crypto</label><div class="input-wrapper"><select id="crypto-achat" onchange="estimerAchat(); mettreAJourReseaux('achat'); mettreAJourLimiteAchat()"></select></div></div><div class="form-group"><label class="form-label"><i class="fas fa-network-wired"></i> Réseau <span class="frais-valeur" id="frais-reseau-achat-affichage" style="font-size:0.7rem;"></span></label><div class="input-wrapper"><select id="reseau-achat" onchange="estimerAchat(); afficherFraisReseauAchat()"></select></div></div><div id="message-trx-special" class="frais-special" style="display:none;"><i class="fas fa-info-circle"></i> Frais réseau TRC20 : 3% ou -1 TRX si activation</div><div class="form-group"><label class="form-label"><i class="fas fa-briefcase"></i> Portefeuille</label><div class="input-wrapper"><select id="portefeuille-achat"></select></div></div><div class="form-group"><label class="form-label"><i class="fas fa-qrcode"></i> Adresse</label><div class="input-wrapper"><input type="text" placeholder="ID ou Email ou Adresse..." id="adresse-achat"></div></div><div class="form-group" id="groupe-numero-achat" style="display:none;"><label class="form-label"><i class="fas fa-phone-alt"></i> Numéro à débiter</label><div class="input-wrapper"><select id="numero-achat-select" onchange="afficherInfosNumeroAchat()"><option value="">Sélectionnez un numéro</option></select></div><div id="info-numero-achat-selectionne" style="margin-top:8px;font-size:0.8rem;color:var(--text-secondary);"></div></div><div class="limite-info"><span class="limite-label"><i class="fas fa-info-circle"></i> Limites d'échange</span><span class="limite-valeur" id="limite-affichee-achat">2 000 Ar - 100 000 Ar</span></div><div class="estimated-value" id="estimation-achat-container"></div><button class="btn btn-success" onclick="preparerConfirmation('ACHAT')" id="btn-confirmer-achat"><i class="fas fa-lock"></i> Suivant</button></div></div></div>
         <div id="vente-section" class="platform-section"><div class="card"><h2 class="card-title"><i class="fas fa-arrow-up"></i> Vente crypto</h2><div id="pause-message-vente" class="pause-message" style="display:none;"><i class="fas fa-pause-circle"></i><span>Service temporairement suspendu</span></div><div id="vente-content"><div class="form-group"><label class="form-label"><i class="fas fa-coins"></i> Crypto</label><div class="input-wrapper"><select id="crypto-vente" onchange="estimerVente(); mettreAJourReseaux('vente')"></select></div></div><div class="form-group"><label class="form-label"><i class="fas fa-coins"></i> Montant</label><div class="input-wrapper"><input type="number" id="montant-vente" value="0.01" oninput="estimerVente()"></div></div><div class="form-group"><label class="form-label"><i class="fas fa-network-wired"></i> Réseau <span class="frais-valeur" id="frais-reseau-vente-affichage" style="font-size:0.7rem;"></span></label><div class="input-wrapper"><select id="reseau-vente" onchange="estimerVente(); afficherFraisReseauVente()"></select></div></div><div class="form-group"><label class="form-label"><i class="fas fa-sim-card"></i> Opérateur</label><div class="input-wrapper"><select id="operateur-vente"></select></div></div><div class="form-group"><label class="form-label"><i class="fas fa-briefcase"></i> Portefeuille</label><div class="input-wrapper"><select id="portefeuille-vente" onchange="afficherReponseVente()"></select></div></div><div class="form-group"><label class="form-label"><i class="fas fa-phone-alt"></i> Numéro à créditer</label><div class="input-wrapper"><select id="numero-vente-select" onchange="afficherInfosNumeroVente()"><option value="">Sélectionnez un numéro</option></select></div><div id="info-numero-selectionne" style="margin-top:8px;font-size:0.8rem;color:var(--text-secondary);"></div></div><div class="limite-info"><span class="limite-label"><i class="fas fa-info-circle"></i> Limites d'échange</span><span class="limite-valeur" id="limite-affichee-vente">2 000 Ar - 100 000 Ar</span></div><div class="limite-error" id="limite-error-vente">La valeur doit être entre 2 000 Ar et 100 000 Ar</div><div class="estimated-value" id="estimation-vente-container"></div><div class="portfolio-response" id="reponse-portefeuille-vente-container"><strong><i class="fas fa-info-circle"></i> Détails du portefeuille</strong><div id="reponse-portefeuille-vente" class="response-text"></div></div><button class="btn btn-warning" onclick="preparerConfirmation('VENTE')" id="btn-confirmer-vente"><i class="fas fa-lock"></i> Suivant</button></div></div></div>
-        <div id="demandes-section" class="platform-section"><div class="card"><h2 class="card-title"><i class="fas fa-clipboard-list"></i> Mes demandes</h2><div class="alert-message-red"><i class="fas fa-exclamation-triangle"></i> <strong>Important :</strong> Si votre dernière transaction ne s'affiche pas ici, vous pouvez envoyer une autre pour éviter le retard (même TXID)</div><div id="mes-demandes-liste" class="activity-list"></div></div></div>
+        <div id="demandes-section" class="platform-section">
+            <div class="card">
+                <div class="refresh-header">
+                    <h2 class="card-title"><i class="fas fa-clipboard-list"></i> Mes demandes</h2>
+                    <button class="btn btn-refresh-small" onclick="rafraichirMesDemandes()"><i class="fas fa-sync-alt"></i> Actualiser</button>
+                </div>
+                <div id="mes-demandes-liste" class="activity-list"></div>
+            </div>
+        </div>
         <div id="profil-section" class="platform-section"><div class="card"><h2 class="card-title"><i class="fas fa-user-circle"></i> Profil</h2><div class="profile-info" id="profil-infos"></div></div><div class="card"><h2 class="card-title"><i class="fas fa-key"></i> Code PIN de sécurité</h2><div id="pin-management"></div><button class="btn btn-success" onclick="gererPIN()" id="btn-gerer-pin"><i class="fas fa-key"></i> Configurer mon code PIN</button></div><div class="card"><h2 class="card-title"><i class="fas fa-phone-alt"></i> Mes numéros (max 3)</h2><div id="liste-numeros-utilisateur" class="activity-list"></div><div id="form-ajout-numero" style="margin-top:20px;"><div class="form-group"><label class="form-label">Nom complet</label><div class="input-wrapper"><input type="text" id="nouveau-nom" placeholder="Rakoto Jean"></div></div><div class="form-group"><label class="form-label">Numéro</label><div class="input-wrapper"><input type="tel" id="nouveau-numero" placeholder="034 00 000 00"></div></div><button class="btn btn-success" onclick="ajouterNumero()" id="btn-ajouter-numero"><i class="fas fa-plus"></i> Ajouter un numéro</button></div><div style="margin-top:20px;text-align:center;"><a href="https://www.facebook.com/Typh.Exchange.Ofisialy" target="_blank" class="btn-support"><i class="fab fa-facebook-f"></i> Support Facebook</a></div></div><div class="card" id="carte-deconnexion"><h2 class="card-title" style="margin-bottom:16px;"><i class="fas fa-sign-out-alt"></i> Session</h2><button class="btn btn-warning" onclick="deconnexion()" style="background:var(--danger);"><i class="fas fa-power-off"></i> Se déconnecter</button></div></div>
     </div>
     <div class="bottom-nav" id="bottom-nav"><div class="nav-menu"><div class="nav-item" onclick="switchPlatformSection('accueil')" id="nav-accueil"><i class="fas fa-home"></i><span>Accueil</span></div><div class="nav-item" onclick="verifierAvantAcces('achat')" id="nav-achat"><i class="fas fa-arrow-down"></i><span>Dépôt</span></div><div class="nav-item" onclick="verifierAvantAcces('vente')" id="nav-vente"><i class="fas fa-arrow-up"></i><span>Retrait</span></div><div class="nav-item" onclick="verifierAvantAcces('demandes')" id="nav-demandes"><i class="fas fa-clipboard-list"></i><span>Demandes</span></div><div class="nav-item" onclick="switchPlatformSection('profil')" id="nav-profil"><i class="fas fa-user-circle"></i><span>Profil</span></div></div></div>
@@ -247,7 +254,7 @@
 
         let donnees = {
             portefeuilles: [], operateurs: [], cryptos: ["USDT","BTC","ETH","BNB","LTC","SOL","TRX","DOGE","MATIC","SUI","XRP","TON","USDC"],
-            taux: {}, reseaux: [], frais: { achat: 1.5, vente: 2.0 }, pause: { achat: false, vente: false }, demandes: [], news: [],
+            taux: {}, reseaux: [], frais: { achat: 1.5, vente: 2.0 }, pause: { achat: false, vente: false }, demandes: {}, news: [],
             tauxMode: 'auto', usdMGA: 4700,
             limites: { minAchat: 2000, minAchatTRX: 5000, maxAchat: 100000, minVente: 2000, maxVente: 100000 },
             messagesSpeciaux: { trx: "Frais réseau TRC20 : 3% ou -1 TRX si activation" }
@@ -266,19 +273,48 @@
         let typeTransactionEnCours = null;
         let dernierSyncTaux = null;
         
-        // FONCTION DE NORMALISATION DES DEMANDES (convertit objet Firebase en tableau)
-        function normaliserDemandes(demandes) {
-            if (!demandes) return [];
-            if (Array.isArray(demandes)) return demandes;
-            if (typeof demandes === 'object') return Object.values(demandes);
-            return [];
+        // Convertir les demandes en tableau (gère à la fois tableau et objet)
+        function getDemandesTableau() {
+            if(!donnees.demandes) return [];
+            if(Array.isArray(donnees.demandes)) return donnees.demandes;
+            return Object.values(donnees.demandes);
+        }
+        
+        // Sauvegarder les demandes en tant qu'objet (pas tableau)
+        function sauvegarderDemandes(demandesArray) {
+            const demandesObj = {};
+            demandesArray.forEach(d => { if(d && d.id) demandesObj[d.id] = d; });
+            donnees.demandes = demandesObj;
+            database.ref('donnees/demandes').set(demandesObj);
         }
         
         const cacheTaux = {
-            donnees: null, timestamp: 0, duree: 30 * 60 * 1000,
-            get() { if(this.donnees && (Date.now() - this.timestamp) < this.duree) return this.donnees; return null; },
-            set(donnees) { this.donnees = donnees; this.timestamp = Date.now(); try { localStorage.setItem('tauxCache', JSON.stringify({ data: donnees, timestamp: this.timestamp })); } catch(e) {} },
-            chargerLocal() { try { const cache = localStorage.getItem('tauxCache'); if(cache) { const { data, timestamp } = JSON.parse(cache); if((Date.now() - timestamp) < 3600000) { this.donnees = data; this.timestamp = timestamp; return true; } } } catch(e) {} return false; }
+            donnees: null,
+            timestamp: 0,
+            duree: 30 * 60 * 1000,
+            get() {
+                if(this.donnees && (Date.now() - this.timestamp) < this.duree) return this.donnees;
+                return null;
+            },
+            set(donnees) {
+                this.donnees = donnees;
+                this.timestamp = Date.now();
+                try { localStorage.setItem('tauxCache', JSON.stringify({ data: donnees, timestamp: this.timestamp })); } catch(e) {}
+            },
+            chargerLocal() {
+                try {
+                    const cache = localStorage.getItem('tauxCache');
+                    if(cache) {
+                        const { data, timestamp } = JSON.parse(cache);
+                        if((Date.now() - timestamp) < 3600000) {
+                            this.donnees = data;
+                            this.timestamp = timestamp;
+                            return true;
+                        }
+                    }
+                } catch(e) {}
+                return false;
+            }
         };
         
         class RateLimiter { constructor(limite = 15, fenetre = 60000) { this.limite = limite; this.fenetre = fenetre; this.requetes = []; } peutExecuter() { const maintenant = Date.now(); this.requetes = this.requetes.filter(t => t > maintenant - this.fenetre); if(this.requetes.length >= this.limite) return false; this.requetes.push(maintenant); return true; } }
@@ -310,7 +346,7 @@
                     { nom: "TRC20", crypto: "USDT", fraisReseau: 0.8 }, { nom: "TRC20", crypto: "TRX", fraisReseau: 3.0 },
                     { nom: "SOL", crypto: "SOL", fraisReseau: 0.1 }
                 ],
-                frais: { achat: 1.5, vente: 2.0 }, pause: { achat: false, vente: false }, taux: {}, demandes: [],
+                frais: { achat: 1.5, vente: 2.0 }, pause: { achat: false, vente: false }, taux: {}, demandes: {},
                 news: [{ id: 'NEWS-'+Date.now(), titre: '🎉 Bienvenue sur TYPH X-CHAIN', contenu: 'Bienvenue sur notre plateforme d\'échange crypto.', date: new Date().toISOString(), auteur: 'Administrateur', important: true, statut: true }],
                 tauxMode: 'auto', usdMGA: 4700,
                 limites: { minAchat: 2000, minAchatTRX: 5000, maxAchat: 100000, minVente: 2000, maxVente: 100000 },
@@ -364,7 +400,6 @@
         function chargerDonnees() {
             if(cacheTaux.chargerLocal() && cacheTaux.donnees) {
                 donnees.taux = cacheTaux.donnees;
-                console.log('📦 Taux chargés depuis le cache local');
                 afficherTauxSimplifies();
             }
             
@@ -372,9 +407,6 @@
                 const data = s.val();
                 if(data && Object.keys(data).length > 0){
                     donnees = { ...obtenirDonneesParDefaut(), ...data };
-                    if(donnees.demandes) {
-                        donnees.demandes = normaliserDemandes(donnees.demandes);
-                    }
                     if(!donnees.limites) donnees.limites = obtenirDonneesParDefaut().limites;
                     if(!donnees.messagesSpeciaux) donnees.messagesSpeciaux = obtenirDonneesParDefaut().messagesSpeciaux;
                     if(!donnees.taux) donnees.taux = {};
@@ -383,6 +415,7 @@
                     if(!donnees.portefeuilles) donnees.portefeuilles = obtenirDonneesParDefaut().portefeuilles;
                     if(!donnees.operateurs) donnees.operateurs = obtenirDonneesParDefaut().operateurs;
                     if(!donnees.cryptos) donnees.cryptos = obtenirDonneesParDefaut().cryptos;
+                    if(!donnees.demandes) donnees.demandes = {};
                     tauxUSD_MGA = donnees.usdMGA || 4700;
                 } else {
                     donnees = obtenirDonneesParDefaut();
@@ -459,10 +492,7 @@
         
         async function syncBinance() {
             if(donnees.tauxMode !== 'auto') return;
-            if(!rateLimiter.peutExecuter()) {
-                console.log('🛑 Sync Binance ignorée - limite de requêtes atteinte');
-                return;
-            }
+            if(!rateLimiter.peutExecuter()) return;
             try{ 
                 const tauxMGA=await getTauxMGA(); 
                 const r=await fetch('https://api.binance.com/api/v3/ticker/price'); 
@@ -1075,8 +1105,8 @@
                 pinVerifValue = '';
                 mettreAJourAffichagePINVerification();
                 document.getElementById('pin-error').classList.remove('show');
-                const tentatives = utilisateurCourant.codePIN.tentativeEchouees || 0;
-                document.getElementById('pin-tentatives').textContent = `Tentatives restantes: ${3 - tentatives}`;
+                const tentativas = utilisateurCourant.codePIN.tentativeEchouees || 0;
+                document.getElementById('pin-tentatives').textContent = `Tentatives restantes: ${3 - tentativas}`;
             } else {
                 setupDiv.style.display = 'block';
                 verificationDiv.style.display = 'none';
@@ -1243,19 +1273,19 @@
                 fermerModalPIN();
                 creerDemande();
             } else {
-                let tentatives = (utilisateurCourant.codePIN.tentativeEchouees || 0) + 1;
-                await database.ref(`donnees/utilisateurs/${monUid}/codePIN/tentativeEchouees`).set(tentatives);
-                if(utilisateurCourant.codePIN) utilisateurCourant.codePIN.tentativeEchouees = tentatives;
+                let tentativas = (utilisateurCourant.codePIN.tentativeEchouees || 0) + 1;
+                await database.ref(`donnees/utilisateurs/${monUid}/codePIN/tentativeEchouees`).set(tentativas);
+                if(utilisateurCourant.codePIN) utilisateurCourant.codePIN.tentativeEchouees = tentativas;
                 
-                if(tentatives >= 3){
+                if(tentativas >= 3){
                     await database.ref(`donnees/utilisateurs/${monUid}/codePIN/bloque`).set(true);
                     if(utilisateurCourant.codePIN) utilisateurCourant.codePIN.bloque = true;
                     alert('Code PIN bloqué après 3 tentatives échouées. Contactez l\'administrateur.');
                     fermerModalPIN();
                 } else {
-                    document.getElementById('pin-error').textContent = `Code PIN incorrect. Tentatives restantes: ${3 - tentatives}`;
+                    document.getElementById('pin-error').textContent = `Code PIN incorrect. Tentatives restantes: ${3 - tentativas}`;
                     document.getElementById('pin-error').classList.add('show');
-                    document.getElementById('pin-tentatives').textContent = `Tentatives restantes: ${3 - tentatives}`;
+                    document.getElementById('pin-tentatives').textContent = `Tentatives restantes: ${3 - tentativas}`;
                     pinVerifValue = '';
                     mettreAJourAffichagePINVerification();
                 }
@@ -1277,24 +1307,19 @@
                 ...transactionEnAttente
             };
             
-            if(!donnees.demandes) donnees.demandes = [];
-            donnees.demandes.unshift(demande);
+            const demandesArray = getDemandesTableau();
+            demandesArray.unshift(demande);
+            sauvegarderDemandes(demandesArray);
             
-            try {
-                await database.ref('donnees/demandes').set(donnees.demandes);
-                
-                ouvrirModalSucces(demande);
-                
-                transactionEnAttente = null;
-                typeTransactionEnCours = null;
-                
-                setTimeout(() => {
-                    switchPlatformSection('demandes');
-                }, 2000);
-            } catch(error){
-                console.error(error);
-                alert('Erreur lors de la création de la demande');
-            }
+            ouvrirModalSucces(demande);
+            
+            transactionEnAttente = null;
+            typeTransactionEnCours = null;
+            
+            setTimeout(() => {
+                switchPlatformSection('demandes');
+                mettreAJourMesDemandes();
+            }, 2000);
         }
         
         function ouvrirModalSucces(demande){
@@ -1352,8 +1377,8 @@
         function mettreAJourActiviteRecente(){ 
             const l=document.getElementById('recent-activity'); 
             if(!l) return; 
-            const demandesTableau = normaliserDemandes(donnees.demandes);
-            const r = demandesTableau.filter(d => d.statut === 'confirme').sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5); 
+            const demandesArray = getDemandesTableau();
+            const r=demandesArray.filter(d => d.statut === 'confirme').sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5); 
             if(r.length===0){ l.innerHTML='<div class="activity-item">Aucune activité récente</div>'; return; } 
             l.innerHTML=r.map(d=>`<li class="activity-item"><div class="activity-left"><div class="activity-icon ${echapperHTML(d.type)}"><i class="fas ${d.type==='ACHAT'?'fa-arrow-down':'fa-arrow-up'}"></i></div><div class="activity-info"><h4>${echapperHTML(d.type)} ${echapperHTML(d.crypto)}</h4><div class="activity-date">${echapperHTML(new Date(d.date).toLocaleString())}</div></div></div><div><div class="activity-amount">${d.type==='ACHAT'?d.montant.toLocaleString()+' Ar':d.montant+' '+d.crypto}</div><div class="activity-status status-${echapperHTML(d.statut)}">${echapperHTML(d.statut)}</div></div></li>`).join(''); 
         }
@@ -1362,15 +1387,38 @@
             const l=document.getElementById('mes-demandes-liste'); 
             if(!l) return; 
             if(!utilisateurCourant){ l.innerHTML='<div class="activity-item">Connectez-vous</div>'; return; } 
-            const demandesTableau = normaliserDemandes(donnees.demandes);
-            const m = demandesTableau.filter(d=>d.userID===monUid).sort((a,b)=>new Date(b.date)-new Date(a.date)); 
+            const demandesArray = getDemandesTableau();
+            const m=demandesArray.filter(d=>d.userID===monUid).sort((a,b)=>new Date(b.date)-new Date(a.date)); 
             if(m.length===0){ l.innerHTML='<div class="activity-item">Aucune demande</div>'; return; } 
             l.innerHTML=m.map(d=>`<li class="activity-item" onclick="ouvrirRecu('${echapperHTML(d.id)}')"><div class="activity-left"><div class="activity-icon ${echapperHTML(d.type)}"><i class="fas ${d.type==='ACHAT'?'fa-arrow-down':'fa-arrow-up'}"></i></div><div class="activity-info"><h4>${echapperHTML(d.type)} ${echapperHTML(d.crypto)}</h4><div class="activity-date">${echapperHTML(new Date(d.date).toLocaleString())}</div></div></div><div><div class="activity-amount">${d.type==='ACHAT'?d.montant.toLocaleString()+' Ar':d.montant+' '+d.crypto}</div><div class="activity-status status-${echapperHTML(d.statut)}">${echapperHTML(d.statut)}</div></div></li>`).join(''); 
         }
         
+        function rafraichirMesDemandes() {
+            console.log('🔄 Rafraîchissement des demandes utilisateur...');
+            if(monUid) {
+                database.ref('donnees/demandes').once('value').then((snapshot) => {
+                    const demandes = snapshot.val();
+                    if(demandes) {
+                        donnees.demandes = demandes;
+                        mettreAJourMesDemandes();
+                        alert('✅ Demandes actualisées avec succès');
+                    } else {
+                        donnees.demandes = {};
+                        mettreAJourMesDemandes();
+                        alert('Aucune demande trouvée');
+                    }
+                }).catch(err => {
+                    console.error('Erreur rafraîchissement:', err);
+                    alert('Erreur lors du rafraîchissement: ' + err.message);
+                });
+            } else {
+                alert('Veuillez vous connecter');
+            }
+        }
+        
         function ouvrirRecu(id){ 
-            const demandesTableau = normaliserDemandes(donnees.demandes);
-            const d = demandesTableau.find(d=>d.id===id); 
+            const demandesArray = getDemandesTableau();
+            const d=demandesArray.find(d=>d.id===id); 
             if(!d) return; 
             let mp='',desc='',st='',cl=''; 
             if(d.statut==='confirme'){ st='confirmée'; cl='confirme'; }else if(d.statut==='en_attente'){ st='en attente'; cl='en_attente'; }else if(d.statut==='rejete'){ st='rejetée'; cl='rejete'; } 
@@ -1436,7 +1484,7 @@
         }
 
         document.querySelector('.logo').addEventListener('dblclick',()=>window.open('admin.html','_blank'));
-        window.addEventListener('load',function(){ chargerDonnees(); console.log('🚀 Page index chargée - Version optimisée (sync 30min)'); });
+        window.addEventListener('load',function(){ chargerDonnees(); console.log('🚀 Page index chargée - Version optimisée (sync 30min + bouton actualisation)'); });
     </script>
 </body>
 </html>
