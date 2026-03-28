@@ -378,24 +378,37 @@
         
         function rafraichirNumeros() { rafraichirUtilisateurs(); afficherNumeros(); }
         
-        function demarrerEcouteDemandes() {
-            database.ref('donnees/demandes').on('value', (snapshot) => {
-                const demandes = snapshot.val();
-                if(demandes) {
-                    donnees.demandes = demandes;
-                    console.log('🔄 Nouvelles demandes détectées:', Object.keys(demandes).length);
-                    const ongletActif = document.getElementById('demandes-tab').style.display !== 'none';
-                    if(ongletActif) afficherDemandes();
-                    const demandesArray = getDemandesTableau();
-                    const enAttente = demandesArray.filter(d => d.statut === 'en_attente').length;
-                    const badge = document.getElementById('notif-transactions');
-                    if(badge) { if(enAttente > 0) { badge.textContent = enAttente; badge.style.display = 'inline-block'; } else { badge.style.display = 'none'; } }
-                    verifierNouvellesTransactions();
-                }
-            });
-        }
+        // ==================== FONCTIONS DE SAUVEGARDE AUTOMATIQUE ====================
         
-        // ==================== FONCTIONS DE SAUVEGARDE DES TRANSACTIONS ====================
+        async function sauvegarderUneTransaction(transaction) {
+            if (!transaction || !transaction.id) return false;
+            
+            const sauvegarde = {
+                id: transaction.id,
+                type: transaction.type,
+                dateOriginale: transaction.date,
+                dateSauvegarde: new Date().toISOString(),
+                utilisateur: transaction.utilisateur,
+                email: transaction.email,
+                userID: transaction.userID,
+                montant: transaction.montant,
+                montantRecu: transaction.montantRecu,
+                crypto: transaction.crypto,
+                reseau: transaction.reseau,
+                operateur: transaction.operateur,
+                numero: transaction.numero,
+                nomNumero: transaction.nomNumero,
+                adresse: transaction.adresse,
+                txid: transaction.txid,
+                statutOriginal: transaction.statut,
+                traitee: false,
+                historique: transaction.historique || []
+            };
+            
+            await database.ref(`donnees/transactions_sauvegardees/${transaction.id}`).set(sauvegarde);
+            transactionsSauvegardees[transaction.id] = sauvegarde;
+            return true;
+        }
         
         async function sauvegarderToutesAttentes() {
             const demandesArray = getDemandesTableau();
@@ -414,47 +427,85 @@
                 sauvegardeCount++;
             }
             
-            alert(`✅ ${sauvegardeCount} transaction(s) sauvegardée(s) avec succès !\n\nCes sauvegardes sont stockées dans Firebase sous "donnees/transactions_sauvegardees".`);
+            alert(`✅ ${sauvegardeCount} transaction(s) sauvegardée(s) avec succès !`);
         }
         
-        async function sauvegarderUneTransaction(transaction) {
-            const id = transaction.id;
-            const sauvegarde = {
-                id: id,
-                type: transaction.type,
-                dateOriginale: transaction.date,
-                dateSauvegarde: new Date().toISOString(),
-                utilisateur: transaction.utilisateur,
-                email: transaction.email,
-                userID: transaction.userID,
-                montant: transaction.montant,
-                montantRecu: transaction.montantRecu,
-                crypto: transaction.crypto,
-                reseau: transaction.reseau,
-                operateur: transaction.operateur,
-                numero: transaction.numero,
-                nomNumero: transaction.nomNumero,
-                adresse: transaction.adresse,
-                txid: transaction.txid,
-                statutOriginal: transaction.statut,
-                traitee: false,
-                dateSauvegarde: new Date().toISOString()
-            };
+        async function sauvegarderDemandeUnique(id) {
+            const demandesArray = getDemandesTableau();
+            const demande = demandesArray.find(d => d.id === id);
+            if (!demande) {
+                alert('❌ Demande introuvable');
+                return;
+            }
+            await sauvegarderUneTransaction(demande);
+            alert(`✅ Demande ${id} sauvegardée avec succès !`);
+        }
+        
+        // Sauvegarde auto lorsqu'une nouvelle transaction en attente est détectée
+        let dernieresSauvegardes = {};
+        
+        async function sauvegardeAutoSiNouvelleAttente(demandesArray) {
+            const enAttente = demandesArray.filter(d => d.statut === 'en_attente');
             
-            await database.ref(`donnees/transactions_sauvegardees/${id}`).set(sauvegarde);
-            transactionsSauvegardees[id] = sauvegarde;
-            return true;
+            for (const demande of enAttente) {
+                // Vérifier si cette demande n'a pas déjà été sauvegardée récemment
+                const derniereSauvegarde = dernieresSauvegardes[demande.id];
+                const maintenant = Date.now();
+                
+                if (!derniereSauvegarde || (maintenant - derniereSauvegarde) > 60000) { // Max 1 sauvegarde par minute
+                    await sauvegarderUneTransaction(demande);
+                    dernieresSauvegardes[demande.id] = maintenant;
+                    console.log(`✅ Sauvegarde auto: Transaction ${demande.id} sauvegardée`);
+                    
+                    // Afficher une notification toast
+                    const toast = document.getElementById('notification-toast');
+                    if (toast) {
+                        document.getElementById('toast-message').textContent = `💰 Nouvelle transaction en attente sauvegardée automatiquement`;
+                        toast.classList.add('show');
+                        setTimeout(() => toast.classList.remove('show'), 3000);
+                    }
+                }
+            }
+            
+            // Nettoyer les anciennes entrées (plus de 5 minutes)
+            Object.keys(dernieresSauvegardes).forEach(id => {
+                if (maintenant - dernieresSauvegardes[id] > 300000) {
+                    delete dernieresSauvegardes[id];
+                }
+            });
+        }
+        
+        function demarrerEcouteDemandes() {
+            database.ref('donnees/demandes').on('value', async (snapshot) => {
+                const demandes = snapshot.val();
+                if(demandes) {
+                    donnees.demandes = demandes;
+                    console.log('🔄 Nouvelles demandes détectées:', Object.keys(demandes).length);
+                    
+                    // SAUVEGARDE AUTOMATIQUE IMMÉDIATE pour toutes les transactions en attente
+                    const demandesArray = getDemandesTableau();
+                    await sauvegardeAutoSiNouvelleAttente(demandesArray);
+                    
+                    const ongletActif = document.getElementById('demandes-tab').style.display !== 'none';
+                    if(ongletActif) afficherDemandes();
+                    const enAttente = demandesArray.filter(d => d.statut === 'en_attente').length;
+                    const badge = document.getElementById('notif-transactions');
+                    if(badge) { if(enAttente > 0) { badge.textContent = enAttente; badge.style.display = 'inline-block'; } else { badge.style.display = 'none'; } }
+                    verifierNouvellesTransactions();
+                }
+            });
         }
         
         function forcerChargementDemandes() {
             console.log('🔄 Forçage du chargement des demandes...');
-            database.ref('donnees/demandes').once('value').then((snapshot) => {
+            database.ref('donnees/demandes').once('value').then(async (snapshot) => {
                 const demandes = snapshot.val();
                 console.log('📋 Demandes depuis Firebase:', demandes);
                 if(demandes) {
                     donnees.demandes = demandes;
-                    afficherDemandes();
                     const demandesArray = getDemandesTableau();
+                    await sauvegardeAutoSiNouvelleAttente(demandesArray);
+                    afficherDemandes();
                     alert(`✅ ${demandesArray.length} demande(s) chargée(s)`);
                 } else {
                     alert('❌ Aucune demande trouvée dans Firebase');
@@ -602,17 +653,6 @@
                     </div>` : ''}
                 </div>
             `).join(''); 
-        }
-        
-        async function sauvegarderDemandeUnique(id) {
-            const demandesArray = getDemandesTableau();
-            const demande = demandesArray.find(d => d.id === id);
-            if (!demande) {
-                alert('❌ Demande introuvable');
-                return;
-            }
-            await sauvegarderUneTransaction(demande);
-            alert(`✅ Demande ${id} sauvegardée avec succès !`);
         }
         
         function approuverDemande(id) { 
@@ -877,7 +917,7 @@
             dernierCompteTransactions = enAttente; 
         }
 
-        window.addEventListener('load',function(){ console.log('🚀 Page admin chargée - Version avec recherche par ID et sauvegarde des transactions'); });
+        window.addEventListener('load',function(){ console.log('🚀 Page admin chargée - Version avec sauvegarde AUTO dès détection de transaction en attente'); });
     </script>
 </body>
 </html>
