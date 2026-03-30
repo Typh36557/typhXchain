@@ -8,6 +8,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -31,6 +32,7 @@
             --radius-xl: 28px;
             --transition: all 0.2s ease;
             --binance: #F0B90B;
+            --binance-dark: #D9A90A;
             --news-bg: #0F172A;
             --news-border: #3B82F6;
         }
@@ -84,15 +86,15 @@
         .card-title { font-size: 1.3rem; font-weight: 600; color: var(--white); display: flex; align-items: center; gap: 10px; }
         .card-title i { color: var(--accent); }
         .rates-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; }
-        .rate-card { background: linear-gradient(135deg, var(--primary), var(--bg-dark)); border-radius: 24px; padding: 20px; border: 1px solid rgba(59,130,246,0.2); transition: var(--transition); position: relative; overflow: hidden; }
-        .rate-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+        .rate-card { background: linear-gradient(135deg, var(--bg-card), var(--primary)); border-radius: 24px; padding: 20px; border: 1px solid rgba(245,158,11,0.3); transition: var(--transition); position: relative; overflow: hidden; cursor: pointer; }
+        .rate-card:hover { transform: translateY(-3px); border-color: var(--binance); box-shadow: 0 5px 15px rgba(240,185,11,0.2); }
         .rate-pair { font-weight: 500; color: var(--text-secondary); font-size: 0.85rem; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
         .rate-value-main { font-size: 1.6rem; font-weight: 700; color: var(--white); margin: 12px 0; text-align: center; }
-        .rate-footer { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(59,130,246,0.1); }
+        .rate-footer { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(240,185,11,0.2); }
         .rate-change { display: flex; align-items: center; gap: 4px; font-weight: 500; }
         .rate-change.positive { color: var(--success); }
         .rate-change.negative { color: var(--danger); }
-        .rate-source { background: rgba(59,130,246,0.1); padding: 4px 10px; border-radius: 40px; font-size: 0.7rem; font-weight: 500; }
+        .rate-source { background: rgba(240,185,11,0.15); padding: 4px 10px; border-radius: 40px; font-size: 0.7rem; font-weight: 500; color: var(--binance); }
         .binance-badge { background: var(--binance); color: var(--bg-dark); padding: 4px 10px; border-radius: 40px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
         .news-container { margin-top: 20px; }
         .news-item { background: var(--news-bg); border-radius: 20px; padding: 18px; margin-bottom: 15px; border-left: 4px solid var(--news-border); transition: var(--transition); cursor: pointer; }
@@ -199,6 +201,7 @@
         .info-message { background: var(--primary); padding: 12px; border-radius: 16px; margin: 10px 0; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
         .btn-manual-sync { background: var(--binance); color: var(--bg-dark); margin-top: 10px; width: auto; display: inline-flex; padding: 8px 16px; font-size: 0.85rem; }
         .refresh-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+        .modal-taux-content { border: 2px solid var(--binance); }
         @media (max-width: 768px) { .hero-title { font-size: 2rem; } .rates-grid { grid-template-columns: repeat(2, 1fr); } .pin-digit { width: 45px; height: 45px; font-size: 1.3rem; } .modal-content { padding: 20px; } }
     </style>
 </head>
@@ -238,6 +241,38 @@
     <div id="modal-confirmation" class="modal"><div class="modal-content"><div class="modal-title" id="modal-titre"><i class="fas fa-clock"></i> Vérification de la transaction</div><div id="details-demande" class="request-detail-modal"></div><div id="message-paiement-container" style="display:none;"><div class="message-admin" id="message-paiement"><i class="fas fa-info-circle"></i><div class="message-admin-content" id="message-paiement-texte"></div><button class="btn-copy" onclick="copierMessagePaiement()" id="btn-copy-paiement"><i class="fas fa-copy"></i> Copier</button></div></div><div class="timer-large" id="confirmation-timer"><i class="fas fa-hourglass-half"></i><span id="timer-display">15:00</span></div><div class="form-group" style="margin:20px 0;"><label class="form-label"><i class="fas fa-hashtag"></i> TXID ou PREUVE D'ENVOI</label><div class="input-wrapper"><input type="text" id="txid-input" placeholder="Entrez le TXID ou votre adresse d'envoi ou message preuve"></div></div><div class="warning-message"><i class="fas fa-exclamation-triangle"></i><span>Vérifiez bien le numéro ou l'adresse d'envoi ,et aussi les informations avant d'envoyer ! </span></div><div class="modal-buttons"><button class="btn btn-cancel" onclick="fermerModalConfirmation()"><i class="fas fa-times"></i> Annuler</button><button class="btn btn-confirm" onclick="validerConfirmation()" id="btn-confirmer-avec-txid"><i class="fas fa-arrow-right"></i> Confirmer</button></div></div></div>
     <div id="modal-details-demande" class="modal"><div class="modal-content"><div class="modal-title"><i class="fas fa-info-circle"></i> Détails</div><div id="details-demande-complete" class="request-detail-modal"></div><button class="btn btn-cancel" onclick="fermerDetailsDemande()"><i class="fas fa-times"></i> Fermer</button></div></div>
     <div id="modal-recu" class="modal"><div class="modal-content"><div class="receipt-header"><h2>TYPH X-CHAIN</h2><p><i class="fas fa-receipt"></i> Reçu de transaction</p></div><div id="recu-content"></div><div class="receipt-actions"><button class="btn-receipt" onclick="verifierMesActifs()"><i class="fas fa-wallet"></i> Vérifier mes actifs</button><div class="rating-section"><div class="rating-title">RAPIDE - SIMPLE - SÉCURISÉ</div><div class="rating-stars"><i class="fas fa-star" onclick="noter(1)"></i><i class="fas fa-star" onclick="noter(2)"></i><i class="fas fa-star" onclick="noter(3)"></i><i class="fas fa-star" onclick="noter(4)"></i><i class="fas fa-star" onclick="noter(5)"></i></div><div class="rating-buttons"><span class="rating-btn" onclick="noter('positif')">Positive</span><span class="rating-btn" onclick="noter('negatif')">Négative</span></div></div></div><button class="btn btn-cancel" onclick="fermerModalRecu()" style="margin-top:20px;"><i class="fas fa-times"></i> Fermer</button></div></div>
+    
+    <!-- Modal Reçu Taux Crypto -->
+    <div id="modal-recu-taux" class="modal">
+        <div class="modal-content modal-taux-content" style="max-width: 500px; border: 2px solid var(--binance);">
+            <div class="modal-title">
+                <i class="fas fa-chart-line"></i> Détails du taux
+            </div>
+            <div id="recu-taux-content"></div>
+            <div class="receipt-actions" style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-receipt" onclick="fermerRecuTaux()" style="flex: 1; background: var(--gray-300);">
+                    <i class="fas fa-times"></i> Fermer
+                </button>
+                <button class="btn-receipt" onclick="telechargerRecuTaux()" style="flex: 1; background: var(--success);">
+                    <i class="fas fa-camera"></i> Télécharger
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Template pour capture du reçu de taux -->
+    <div id="template-recu-taux" style="position: fixed; left: -9999px; top: 0; width: 500px; background: #131B2F; color: white; padding: 30px; font-family: 'Inter', sans-serif; border-radius: 40px; border: 2px solid #F0B90B;">
+        <div style="text-align: center; margin-bottom: 30px; border-bottom: 1px solid #2D3A4A; padding-bottom: 20px;">
+            <h1 style="color: white; margin: 0; font-size: 28px; background: linear-gradient(135deg, #FFFFFF, #3B82F6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">TYPH X-CHAIN</h1>
+            <p style="color: #94A3B8; margin: 5px 0 0;"><i class="fas fa-chart-line"></i> Détails du taux de change</p>
+        </div>
+        <div id="recu-taux-capture-content"></div>
+        <div style="border-top: 1px solid #2D3A4A; padding-top: 20px; text-align: center; color: #94A3B8; font-size: 12px;">
+            <p>Document généré automatiquement par TYPH X-CHAIN</p>
+            <p>Date de génération: <span id="recu-taux-date-generation"></span></p>
+        </div>
+    </div>
+    
     <div id="modal-news-detail" class="modal"><div class="modal-content"><div class="modal-title" id="modal-news-title"><i class="fas fa-newspaper"></i> Actualité</div><div id="modal-news-content" style="color:var(--text-primary);line-height:1.6;margin-bottom:20px;"></div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--gray-300);"><span id="modal-news-date" style="color:var(--text-secondary);font-size:0.85rem;"></span><span id="modal-news-author" style="color:var(--accent);font-size:0.85rem;"></span></div><button class="btn btn-cancel" onclick="fermerModalNews()" style="margin-top:20px;"><i class="fas fa-times"></i> Fermer</button></div></div>
 
     <script>
@@ -275,6 +310,7 @@
         let binanceInterval = null, tauxUSD_MGA = 4700;
         let typeTransactionEnCours = null;
         let dernierSyncTaux = null;
+        let tauxCourantCrypto = '';
         
         // Convertir les demandes en tableau (gère à la fois tableau et objet)
         function getDemandesTableau() {
@@ -525,6 +561,127 @@
             } catch(e){ console.error(e); } 
         }
         
+        // ==================== FONCTION REÇU TAUX ====================
+        function ouvrirRecuTaux(crypto) {
+            const taux = donnees.taux[crypto];
+            if(!taux) return;
+            
+            tauxCourantCrypto = crypto;
+            const modal = document.getElementById('modal-recu-taux');
+            const recuContent = document.getElementById('recu-taux-content');
+            
+            const symbole = crypto === 'MATIC' ? 'POL' : crypto;
+            const variationClass = taux.couleur === 'positive' ? 'positive' : 'negative';
+            const variationIcon = taux.couleur === 'positive' ? 'arrow-up' : 'arrow-down';
+            const dateMAJ = taux.lastUpdate ? new Date(taux.lastUpdate).toLocaleString('fr-FR') : new Date().toLocaleString('fr-FR');
+            
+            recuContent.innerHTML = `
+                <div class="receipt-header" style="text-align: center; margin-bottom: 20px;">
+                    <h2 style="color: var(--white);">TYPH X-CHAIN</h2>
+                    <p style="color: var(--text-secondary);"><i class="fas fa-chart-line"></i> Taux de change ${symbole}/Ar</p>
+                </div>
+                <div class="receipt-amount-large" style="background: linear-gradient(135deg, var(--primary), var(--bg-dark)); border-radius: 40px; padding: 25px; text-align: center; margin: 20px 0;">
+                    <div class="amount" id="recu-taux-prix" style="font-size: 2.5rem; font-weight: 700; color: var(--white);">${taux.prixMGA.toLocaleString()} Ar</div>
+                    <div class="description" style="color: var(--text-secondary); margin-top: 5px;">1 ${symbole} = ${taux.prixMGA.toLocaleString()} Ariary</div>
+                    <div class="rate-change ${variationClass}" style="justify-content: center; margin-top: 12px; font-size: 1rem;">
+                        <i class="fas fa-${variationIcon}"></i> ${taux.variation}%
+                    </div>
+                </div>
+                <div class="receipt-details" style="background: var(--primary); border-radius: 28px; padding: 20px;">
+                    <div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-300);">
+                        <span class="detail-label" style="color: var(--text-secondary);">Cryptomonnaie</span>
+                        <span class="detail-value" style="color: var(--white); font-weight: 600;" id="recu-taux-crypto">${symbole}</span>
+                    </div>
+                    <div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-300);">
+                        <span class="detail-label" style="color: var(--text-secondary);">Prix USD</span>
+                        <span class="detail-value" style="color: var(--white);">$${taux.prixUSD.toFixed(2)}</span>
+                    </div>
+                    <div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-300);">
+                        <span class="detail-label" style="color: var(--text-secondary);">Prix MGA</span>
+                        <span class="detail-value" style="color: var(--white); font-weight: 600;">${taux.prixMGA.toLocaleString()} Ar</span>
+                    </div>
+                    <div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-300);">
+                        <span class="detail-label" style="color: var(--text-secondary);">Source</span>
+                        <span class="detail-value" style="color: var(--white);">${taux.source === 'binance' ? '<i class="fab fa-binance"></i> Binance' : 'Manuel'}</span>
+                    </div>
+                    <div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0;">
+                        <span class="detail-label" style="color: var(--text-secondary);">Dernière mise à jour</span>
+                        <span class="detail-value" style="color: var(--white);">${dateMAJ}</span>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+        }
+        
+        function fermerRecuTaux() {
+            document.getElementById('modal-recu-taux').classList.remove('active');
+        }
+        
+        function telechargerRecuTaux() {
+            const crypto = document.getElementById('recu-taux-crypto')?.innerText || '';
+            const prix = document.getElementById('recu-taux-prix')?.innerText || '';
+            const taux = donnees.taux[tauxCourantCrypto];
+            if(!taux) return;
+            
+            const symbole = tauxCourantCrypto === 'MATIC' ? 'POL' : tauxCourantCrypto;
+            const variationClass = taux.couleur === 'positive' ? 'positive' : 'negative';
+            const variationIcon = taux.couleur === 'positive' ? 'arrow-up' : 'arrow-down';
+            const dateMAJ = taux.lastUpdate ? new Date(taux.lastUpdate).toLocaleString('fr-FR') : new Date().toLocaleString('fr-FR');
+            
+            const captureContent = document.getElementById('recu-taux-capture-content');
+            captureContent.innerHTML = `
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <div style="font-size: 2.5rem; font-weight: 700; color: white; background: linear-gradient(135deg, #FFFFFF, #3B82F6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${taux.prixMGA.toLocaleString()} Ar</div>
+                    <div style="color: #94A3B8; margin-top: 5px;">1 ${symbole} = ${taux.prixMGA.toLocaleString()} Ariary</div>
+                    <div style="color: ${taux.couleur === 'positive' ? '#10B981' : '#EF4444'}; margin-top: 12px; font-size: 1rem;">
+                        <i class="fas fa-${variationIcon}"></i> ${taux.variation}%
+                    </div>
+                </div>
+                <div style="background: #1A253C; border-radius: 28px; padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2D3A4A;">
+                        <span style="color: #94A3B8;">Cryptomonnaie</span>
+                        <span style="color: white; font-weight: 600;">${symbole}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2D3A4A;">
+                        <span style="color: #94A3B8;">Prix USD</span>
+                        <span style="color: white;">$${taux.prixUSD.toFixed(2)}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2D3A4A;">
+                        <span style="color: #94A3B8;">Prix MGA</span>
+                        <span style="color: white; font-weight: 600;">${taux.prixMGA.toLocaleString()} Ar</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2D3A4A;">
+                        <span style="color: #94A3B8;">Source</span>
+                        <span style="color: ${taux.source === 'binance' ? '#F0B90B' : 'white'};">${taux.source === 'binance' ? 'Binance' : 'Manuel'}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                        <span style="color: #94A3B8;">Dernière mise à jour</span>
+                        <span style="color: white;">${dateMAJ}</span>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('recu-taux-date-generation').textContent = new Date().toLocaleString('fr-FR');
+            
+            html2canvas(document.getElementById('template-recu-taux'), {
+                scale: 2,
+                backgroundColor: '#131B2F',
+                logging: false,
+                useCORS: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `taux-${symbole}-${Date.now()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                alert('✅ Reçu téléchargé avec succès !');
+            }).catch(error => {
+                console.error('Erreur lors de la capture:', error);
+                alert('❌ Erreur lors du téléchargement');
+            });
+        }
+        // ==================== FIN FONCTION REÇU TAUX ====================
+        
         function afficherTauxSimplifies(){ 
             const div=document.getElementById('taux-direct'); 
             if(!div) return; 
@@ -537,7 +694,17 @@
                 let sym=c; 
                 const sp={'MATIC':'POL','POL':'POL','TON':'TON','USDC':'USDC','USDT':'USDT','BTC':'BTC','ETH':'ETH','BNB':'BNB','SOL':'SOL','XRP':'XRP'}; 
                 if(sp[c]) sym=sp[c]; 
-                return `<div class="rate-card"><div class="rate-pair"><span><i class="fas fa-coins"></i> ${sym}/Ar</span>${t.source==='binance'?'<span class="binance-badge"><i class="fab fa-binance"></i></span>':''}</div><div class="rate-value-main">${t.prixMGA.toLocaleString()} Ar</div><div class="rate-footer"><span class="rate-change ${vc}"><i class="fas fa-${vi}"></i> ${t.variation}%</span><span class="rate-source">${t.source==='binance'?'Binance':'Manuel'}</span></div></div>`; 
+                return `<div class="rate-card" onclick="ouvrirRecuTaux('${c}')">
+                    <div class="rate-pair">
+                        <span><i class="fas fa-coins"></i> ${sym}/Ar</span>
+                        ${t.source==='binance'?'<span class="binance-badge"><i class="fab fa-binance"></i></span>':''}
+                    </div>
+                    <div class="rate-value-main">${t.prixMGA.toLocaleString()} Ar</div>
+                    <div class="rate-footer">
+                        <span class="rate-change ${vc}"><i class="fas fa-${vi}"></i> ${t.variation}%</span>
+                        <span class="rate-source">${t.source==='binance'?'Binance':'Manuel'}</span>
+                    </div>
+                </div>`; 
             }).join(''); 
         }
 
@@ -1487,7 +1654,7 @@
         }
 
         document.querySelector('.logo').addEventListener('dblclick',()=>window.open('admin.html','_blank'));
-        window.addEventListener('load',function(){ chargerDonnees(); console.log('🚀 Page index chargée - Version optimisée (sync 30min + bouton actualisation)'); });
+        window.addEventListener('load',function(){ chargerDonnees(); console.log('🚀 Page index chargée - Version avec interface reçu de taux et téléchargement PNG'); });
     </script>
 </body>
 </html>
