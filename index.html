@@ -12,29 +12,13 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --bg-dark: #0A0F1F;
-            --bg-card: #131B2F;
-            --primary: #1A253C;
-            --primary-light: #1F2A44;
-            --accent: #3B82F6;
-            --accent-light: #60A5FA;
-            --accent-dark: #2563EB;
-            --success: #10B981;
-            --warning: #F59E0B;
-            --danger: #EF4444;
-            --text-primary: #FFFFFF;
-            --text-secondary: #94A3B8;
-            --gray-200: #1E2A3A;
-            --gray-300: #2D3A4A;
-            --white: #FFFFFF;
-            --shadow: 0 8px 20px rgba(0,0,0,0.3);
-            --radius-lg: 20px;
-            --radius-xl: 28px;
-            --transition: all 0.2s ease;
-            --binance: #F0B90B;
-            --binance-dark: #D9A90A;
-            --news-bg: #0F172A;
-            --news-border: #3B82F6;
+            --bg-dark: #0A0F1F; --bg-card: #131B2F; --primary: #1A253C; --primary-light: #1F2A44;
+            --accent: #3B82F6; --accent-light: #60A5FA; --accent-dark: #2563EB;
+            --success: #10B981; --warning: #F59E0B; --danger: #EF4444;
+            --text-primary: #FFFFFF; --text-secondary: #94A3B8;
+            --gray-200: #1E2A3A; --gray-300: #2D3A4A; --white: #FFFFFF;
+            --shadow: 0 8px 20px rgba(0,0,0,0.3); --radius-lg: 20px; --radius-xl: 28px;
+            --transition: all 0.2s ease; --binance: #F0B90B; --news-bg: #0F172A; --news-border: #3B82F6;
         }
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-dark); color: var(--text-primary); line-height: 1.5; min-height: 100vh; display: flex; flex-direction: column; }
         .app-header { background: rgba(19, 27, 47, 0.95); backdrop-filter: blur(10px); padding: 16px 20px; border-bottom: 1px solid rgba(59,130,246,0.2); position: sticky; top: 0; z-index: 100; }
@@ -135,6 +119,7 @@
         .activity-icon { width: 44px; height: 44px; border-radius: 44px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
         .activity-icon.ACHAT { background: rgba(16,185,129,0.2); color: var(--success); }
         .activity-icon.VENTE { background: rgba(245,158,11,0.2); color: var(--warning); }
+        .activity-icon.BONUS { background: rgba(139,92,246,0.2); color: #c4b5fd; }
         .activity-info h4 { font-weight: 600; margin-bottom: 4px; color: var(--white); font-size: 0.95rem; }
         .activity-date { font-size: 0.7rem; color: var(--text-secondary); }
         .activity-status { font-size: 0.7rem; padding: 4px 12px; border-radius: 40px; font-weight: 600; }
@@ -202,6 +187,18 @@
         .btn-manual-sync { background: var(--binance); color: var(--bg-dark); margin-top: 10px; width: auto; display: inline-flex; padding: 8px 16px; font-size: 0.85rem; }
         .refresh-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
         .modal-taux-content { border: 2px solid var(--binance); }
+        .adresse-item { background: var(--primary); border-radius: 20px; padding: 15px; margin-bottom: 12px; border: 1px solid var(--gray-300); }
+        .adresse-label { font-weight: 600; color: var(--white); margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
+        .adresse-value { color: var(--text-secondary); font-size: 0.85rem; word-break: break-all; margin-bottom: 5px; }
+        .adresse-details { font-size: 0.75rem; color: var(--accent); display: flex; gap: 15px; margin-top: 8px; }
+        .btn-delete-adresse { background: var(--danger); padding: 6px 12px; font-size: 0.75rem; width: auto; margin-top: 8px; }
+        
+        /* Styles Roue Bonus */
+        .wheel-container { position: relative; width: 280px; height: 280px; margin: 20px auto; border-radius: 50%; border: 4px solid var(--accent); overflow: hidden; box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); }
+        .wheel { width: 100%; height: 100%; border-radius: 50%; transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99); position: relative; }
+        .wheel-pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid white; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+        .wheel-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; background: var(--bg-dark); border-radius: 50%; z-index: 5; border: 3px solid var(--accent); }
+
         @media (max-width: 768px) { .hero-title { font-size: 2rem; } .rates-grid { grid-template-columns: repeat(2, 1fr); } .pin-digit { width: 45px; height: 45px; font-size: 1.3rem; } .modal-content { padding: 20px; } }
     </style>
 </head>
@@ -218,7 +215,13 @@
         </div>
         <div id="accueil-section" class="platform-section"><div class="card"><div class="card-header"><h2 class="card-title"><i class="fas fa-chart-line"></i> Taux en direct <span class="binance-badge"><i class="fab fa-binance"></i> Binance</span></h2></div><div class="info-message"><i class="fas fa-info-circle"></i><span>Les taux sont actualisés toutes les 30 minutes. <a href="#" onclick="syncBinanceManuel()" style="color: var(--accent);">Actualiser maintenant</a></span></div><div class="last-update" id="taux-last-update">Mise à jour: ...</div><div class="rates-grid" id="taux-direct"></div></div><div class="card"><h2 class="card-title" style="margin-bottom:16px;"><i class="fas fa-history"></i> Transactions par nos clients</h2><ul class="activity-list" id="recent-activity"></ul></div><div class="card"><h2 class="card-title" style="margin-bottom:16px;"><i class="fas fa-newspaper"></i> Actualités & Annonces</h2><div class="news-container" id="news-container"></div></div></div>
         <div id="achat-section" class="platform-section"><div class="card"><h2 class="card-title"><i class="fas fa-arrow-down"></i> Achat crypto</h2><div id="pause-message-achat" class="pause-message" style="display:none;"><i class="fas fa-pause-circle"></i><span>Service temporairement suspendu</span></div><div id="achat-content"><div class="form-group"><label class="form-label"><i class="fas fa-sim-card"></i> Opérateur</label><div class="input-wrapper"><select id="operateur-achat"></select></div></div><div class="form-group"><label class="form-label"><i class="fas fa-coins"></i> Montant <span id="montant-limite-achat" style="color:var(--warning);font-size:0.7rem;"></span></label><div class="input-wrapper"><input type="number" id="montant-achat" value="2000" oninput="estimerAchat(); verifierLimitesAchat()"></div><div class="limite-error" id="limite-error-achat">Le montant doit être entre <span id="min-affichage-achat">2 000</span> Ar et <span id="max-affichage-achat">100 000</span> Ar</div></div><div class="form-group"><label class="form-label"><i class="fas fa-coins"></i> Crypto</label><div class="input-wrapper"><select id="crypto-achat" onchange="estimerAchat(); mettreAJourReseaux('achat'); mettreAJourLimiteAchat()"></select></div></div><div class="form-group"><label class="form-label"><i class="fas fa-network-wired"></i> Réseau <span class="frais-valeur" id="frais-reseau-achat-affichage" style="font-size:0.7rem;"></span></label><div class="input-wrapper"><select id="reseau-achat" onchange="estimerAchat(); afficherFraisReseauAchat()"></select></div></div><div id="message-trx-special" class="frais-special" style="display:none;"><i class="fas fa-info-circle"></i> Frais réseau TRC20 : 3% ou -1 TRX si activation</div><div class="form-group"><label class="form-label"><i class="fas fa-briefcase"></i> Portefeuille</label><div class="input-wrapper"><select id="portefeuille-achat"></select></div></div><div class="form-group"><label class="form-label"><i class="fas fa-qrcode"></i> Adresse</label><div class="input-wrapper"><input type="text" placeholder="ID ou Email ou Adresse..." id="adresse-achat"></div></div><div class="form-group" id="groupe-numero-achat" style="display:none;"><label class="form-label"><i class="fas fa-phone-alt"></i> Numéro à débiter</label><div class="input-wrapper"><select id="numero-achat-select" onchange="afficherInfosNumeroAchat()"><option value="">Sélectionnez un numéro</option></select></div><div id="info-numero-achat-selectionne" style="margin-top:8px;font-size:0.8rem;color:var(--text-secondary);"></div></div><div class="limite-info"><span class="limite-label"><i class="fas fa-info-circle"></i> Limites d'échange</span><span class="limite-valeur" id="limite-affichee-achat">2 000 Ar - 100 000 Ar</span></div><div class="estimated-value" id="estimation-achat-container"></div><button class="btn btn-success" onclick="preparerConfirmation('ACHAT')" id="btn-confirmer-achat"><i class="fas fa-lock"></i> Suivant</button></div></div></div>
-        <div id="vente-section" class="platform-section"><div class="card"><h2 class="card-title"><i class="fas fa-arrow-up"></i> Vente crypto</h2><div id="pause-message-vente" class="pause-message" style="display:none;"><i class="fas fa-pause-circle"></i><span>Service temporairement suspendu</span></div><div id="vente-content"><div class="form-group"><label class="form-label"><i class="fas fa-coins"></i> Crypto</label><div class="input-wrapper"><select id="crypto-vente" onchange="estimerVente(); mettreAJourReseaux('vente')"></select></div></div><div class="form-group"><label class="form-label"><i class="fas fa-coins"></i> Montant</label><div class="input-wrapper"><input type="number" id="montant-vente" value="0.01" oninput="estimerVente()"></div></div><div class="form-group"><label class="form-label"><i class="fas fa-network-wired"></i> Réseau <span class="frais-valeur" id="frais-reseau-vente-affichage" style="font-size:0.7rem;"></span></label><div class="input-wrapper"><select id="reseau-vente" onchange="estimerVente(); afficherFraisReseauVente()"></select></div></div><div class="form-group"><label class="form-label"><i class="fas fa-sim-card"></i> Opérateur</label><div class="input-wrapper"><select id="operateur-vente"></select></div></div><div class="form-group"><label class="form-label"><i class="fas fa-briefcase"></i> Portefeuille</label><div class="input-wrapper"><select id="portefeuille-vente" onchange="afficherReponseVente()"></select></div></div><div class="form-group"><label class="form-label"><i class="fas fa-phone-alt"></i> Numéro à créditer</label><div class="input-wrapper"><select id="numero-vente-select" onchange="afficherInfosNumeroVente()"><option value="">Sélectionnez un numéro</option></select></div><div id="info-numero-selectionne" style="margin-top:8px;font-size:0.8rem;color:var(--text-secondary);"></div></div><div class="limite-info"><span class="limite-label"><i class="fas fa-info-circle"></i> Limites d'échange</span><span class="limite-valeur" id="limite-affichee-vente">2 000 Ar - 100 000 Ar</span></div><div class="limite-error" id="limite-error-vente">La valeur doit être entre 2 000 Ar et 100 000 Ar</div><div class="estimated-value" id="estimation-vente-container"></div><div class="portfolio-response" id="reponse-portefeuille-vente-container"><strong><i class="fas fa-info-circle"></i> Détails du portefeuille</strong><div id="reponse-portefeuille-vente" class="response-text"></div></div><button class="btn btn-warning" onclick="preparerConfirmation('VENTE')" id="btn-confirmer-vente"><i class="fas fa-lock"></i> Suivant</button></div></div></div>
+        <div id="vente-section" class="platform-section"><div class="card"><h2 class="card-title"><i class="fas fa-arrow-up"></i> Vente crypto</h2><div id="pause-message-vente" class="pause-message" style="display:none;"><i class="fas fa-pause-circle"></i><span>Service temporairement suspendu</span></div><div id="vente-content"><div class="form-group"><label class="form-label"><i class="fas fa-coins"></i> Crypto</label><div class="input-wrapper"><select id="crypto-vente" onchange="estimerVente(); mettreAJourReseaux('vente'); mettreAJourChampAdresseVente()"></select></div></div><div class="form-group"><label class="form-label"><i class="fas fa-coins"></i> Montant</label><div class="input-wrapper"><input type="number" id="montant-vente" value="0.01" oninput="estimerVente()"></div></div><div class="form-group"><label class="form-label"><i class="fas fa-network-wired"></i> Réseau <span class="frais-valeur" id="frais-reseau-vente-affichage" style="font-size:0.7rem;"></span></label><div class="input-wrapper"><select id="reseau-vente" onchange="estimerVente(); afficherFraisReseauVente(); mettreAJourChampAdresseVente()"></select></div></div><div class="form-group"><label class="form-label"><i class="fas fa-sim-card"></i> Opérateur</label><div class="input-wrapper"><select id="operateur-vente"></select></div></div><div class="form-group"><label class="form-label"><i class="fas fa-briefcase"></i> Portefeuille</label><div class="input-wrapper"><select id="portefeuille-vente" onchange="afficherReponseVente(); mettreAJourChampAdresseVente()"></select></div></div>
+            <div id="groupe-adresse-liee" style="display:none; margin-bottom: 20px;">
+                <label class="form-label"><i class="fas fa-link"></i> 📍 Mon adresse de réception</label>
+                <div class="input-wrapper"><select id="adresse-liee-select" onchange="selectionnerAdresseLiee()"><option value="">Sélectionnez une adresse</option></select></div>
+                <div id="info-adresse-liee" style="margin-top:8px;font-size:0.8rem;color:var(--text-secondary);"></div>
+            </div>
+            <div class="form-group"><label class="form-label"><i class="fas fa-phone-alt"></i> Numéro à créditer</label><div class="input-wrapper"><select id="numero-vente-select" onchange="afficherInfosNumeroVente()"><option value="">Sélectionnez un numéro</option></select></div><div id="info-numero-selectionne" style="margin-top:8px;font-size:0.8rem;color:var(--text-secondary);"></div></div><div class="limite-info"><span class="limite-label"><i class="fas fa-info-circle"></i> Limites d'échange</span><span class="limite-valeur" id="limite-affichee-vente">2 000 Ar - 100 000 Ar</span></div><div class="limite-error" id="limite-error-vente">La valeur doit être entre 2 000 Ar et 100 000 Ar</div><div class="estimated-value" id="estimation-vente-container"></div><div class="portfolio-response" id="reponse-portefeuille-vente-container"><strong><i class="fas fa-info-circle"></i> Détails du portefeuille</strong><div id="reponse-portefeuille-vente" class="response-text"></div></div><button class="btn btn-warning" onclick="preparerConfirmation('VENTE')" id="btn-confirmer-vente"><i class="fas fa-lock"></i> Suivant</button></div></div></div>
         <div id="demandes-section" class="platform-section">
             <div class="card">
                 <div class="refresh-header">
@@ -231,49 +234,68 @@
                 </div>
             </div>
         </div>
-        <div id="profil-section" class="platform-section"><div class="card"><h2 class="card-title"><i class="fas fa-user-circle"></i> Profil</h2><div class="profile-info" id="profil-infos"></div></div><div class="card"><h2 class="card-title"><i class="fas fa-key"></i> Code PIN de sécurité</h2><div id="pin-management"></div><button class="btn btn-success" onclick="gererPIN()" id="btn-gerer-pin"><i class="fas fa-key"></i> Configurer mon code PIN</button></div><div class="card"><h2 class="card-title"><i class="fas fa-phone-alt"></i> Mes numéros (max 3)</h2><div id="liste-numeros-utilisateur" class="activity-list"></div><div id="form-ajout-numero" style="margin-top:20px;"><div class="form-group"><label class="form-label">Nom complet</label><div class="input-wrapper"><input type="text" id="nouveau-nom" placeholder="Rakoto Jean"></div></div><div class="form-group"><label class="form-label">Numéro</label><div class="input-wrapper"><input type="tel" id="nouveau-numero" placeholder="034 00 000 00"></div></div><button class="btn btn-success" onclick="ajouterNumero()" id="btn-ajouter-numero"><i class="fas fa-plus"></i> Ajouter un numéro</button></div><div style="margin-top:20px;text-align:center;"><a href="https://www.facebook.com/Typh.Exchange.Ofisialy" target="_blank" class="btn-support"><i class="fab fa-facebook-f"></i> Support Facebook</a></div></div><div class="card" id="carte-deconnexion"><h2 class="card-title" style="margin-bottom:16px;"><i class="fas fa-sign-out-alt"></i> Session</h2><button class="btn btn-warning" onclick="deconnexion()" style="background:var(--danger);"><i class="fas fa-power-off"></i> Se déconnecter</button></div></div>
+        <div id="profil-section" class="platform-section">
+            <div class="card"><h2 class="card-title"><i class="fas fa-user-circle"></i> Profil</h2><div class="profile-info" id="profil-infos"></div></div>
+            
+            <div class="card" id="card-bonus" style="display:none; text-align:center; background: linear-gradient(135deg, var(--bg-card), #1e1b4b); border-color: #8b5cf6;">
+                <h2 class="card-title" style="justify-content:center;"><i class="fas fa-gift" style="color:#c4b5fd;"></i> Bonus Journalier</h2>
+                <p style="color:var(--text-secondary); margin:10px 0; font-size:0.9rem;">Félicitations ! Vous avez une transaction confirmée aujourd'hui. Tournez la roue pour gagner un prix.</p>
+                <button class="btn btn-success" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); margin-top:10px;" onclick="ouvrirModalRoue()"><i class="fas fa-dharmachakra"></i> Tourner la Roue</button>
+            </div>
+
+            <div class="card"><h2 class="card-title"><i class="fas fa-key"></i> Code PIN de sécurité</h2><div id="pin-management"></div><button class="btn btn-success" onclick="gererPIN()" id="btn-gerer-pin"><i class="fas fa-key"></i> Configurer mon code PIN</button></div>
+            <div class="card"><h2 class="card-title"><i class="fas fa-link"></i> 🔗 Mes adresses de portefeuille</h2><div id="liste-adresses-utilisateur" class="activity-list"></div><button class="btn btn-success" onclick="ouvrirModalAjoutAdresse()" style="margin-bottom: 10px;"><i class="fas fa-plus"></i> Ajouter une adresse</button><div class="info-message"><i class="fas fa-info-circle"></i> Les adresses enregistrées seront utilisées lors de vos retraits si le portefeuille le nécessite.</div></div><div class="card"><h2 class="card-title"><i class="fas fa-phone-alt"></i> Mes numéros (max 3)</h2><div id="liste-numeros-utilisateur" class="activity-list"></div><div id="form-ajout-numero" style="margin-top:20px;"><div class="form-group"><label class="form-label">Nom complet</label><div class="input-wrapper"><input type="text" id="nouveau-nom" placeholder="Rakoto Jean"></div></div><div class="form-group"><label class="form-label">Numéro</label><div class="input-wrapper"><input type="tel" id="nouveau-numero" placeholder="034 00 000 00"></div></div><button class="btn btn-success" onclick="ajouterNumero()" id="btn-ajouter-numero"><i class="fas fa-plus"></i> Ajouter un numéro</button></div><div style="margin-top:20px;text-align:center;"><a href="https://www.facebook.com/Typh.Exchange.Ofisialy" target="_blank" class="btn-support"><i class="fab fa-facebook-f"></i> Support Facebook</a></div></div><div class="card" id="carte-deconnexion"><h2 class="card-title" style="margin-bottom:16px;"><i class="fas fa-sign-out-alt"></i> Session</h2><button class="btn btn-warning" onclick="deconnexion()" style="background:var(--danger);"><i class="fas fa-power-off"></i> Se déconnecter</button></div></div>
     </div>
     <div class="bottom-nav" id="bottom-nav"><div class="nav-menu"><div class="nav-item" onclick="switchPlatformSection('accueil')" id="nav-accueil"><i class="fas fa-home"></i><span>Accueil</span></div><div class="nav-item" onclick="verifierAvantAcces('achat')" id="nav-achat"><i class="fas fa-arrow-down"></i><span>Dépôt</span></div><div class="nav-item" onclick="verifierAvantAcces('vente')" id="nav-vente"><i class="fas fa-arrow-up"></i><span>Retrait</span></div><div class="nav-item" onclick="verifierAvantAcces('demandes')" id="nav-demandes"><i class="fas fa-clipboard-list"></i><span>Demandes</span></div><div class="nav-item" onclick="switchPlatformSection('profil')" id="nav-profil"><i class="fas fa-user-circle"></i><span>Profil</span></div></div></div>
 
     <div id="modal-auth" class="modal"><div class="modal-content"><div class="modal-title"><i class="fas fa-sign-in-alt"></i> Bienvenue</div><div style="display:flex;gap:10px;margin-bottom:20px;"><button class="btn btn-success" style="flex:1;" onclick="switchAuthMode('connexion')" id="btn-connexion-mode">Connexion</button><button class="btn" style="flex:1;background:var(--gray-300);" onclick="switchAuthMode('inscription')" id="btn-inscription-mode">Inscription</button></div><div id="connexion-form"><input type="email" id="email-connexion" class="modal-input" placeholder="Email"><input type="password" id="password-connexion" class="modal-input" placeholder="Mot de passe"><div style="display:flex;align-items:center;gap:8px;margin:15px 0;"><input type="checkbox" id="check-rester-connecte" style="width:18px;height:18px;accent-color:var(--accent);" checked><label style="color:var(--text-secondary);font-size:0.85rem;"><i class="fas fa-lock"></i> Rester connecté</label></div><div style="text-align:right;margin:10px 0 20px;"><span onclick="ouvrirModalMotDePasseOublie()" style="color:var(--accent);cursor:pointer;font-size:0.85rem;"><i class="fas fa-question-circle"></i> Mot de passe oublié ?</span></div></div><div id="inscription-form" style="display:none;"><input type="text" id="nom-inscription" class="modal-input" placeholder="Nom complet"><input type="email" id="email-inscription" class="modal-input" placeholder="Email"><input type="password" id="password-inscription" class="modal-input" placeholder="Mot de passe"></div><div class="error-message" id="erreur-auth"><i class="fas fa-exclamation-triangle"></i> <span id="erreur-texte"></span></div><button class="btn btn-success" onclick="authentifier()" id="btn-auth"><i class="fas fa-check"></i> Se connecter</button></div></div>
     <div id="modal-motdepasse-oublie" class="modal"><div class="modal-content"><div class="modal-title"><i class="fas fa-shield-alt"></i> Récupération sécurisée</div><div id="etape-1-mdp" style="display:block;"><p style="color:var(--text-secondary);margin-bottom:20px;"><i class="fas fa-info-circle"></i> Vérification en 2 étapes</p><input type="email" id="email-recuperation" class="modal-input" placeholder="Votre email"><input type="tel" id="numero-recuperation" class="modal-input" placeholder="Votre numéro enregistré" style="margin-top:10px;"><div class="error-message" id="erreur-recuperation"></div><div class="modal-buttons" style="margin-top:20px;"><button class="btn btn-cancel" onclick="fermerModalMotDePasseOublie()">Annuler</button><button class="btn btn-confirm" onclick="verifierEmailEtNumero()">Vérifier</button></div></div><div id="etape-2-mdp" style="display:none;"><p style="color:var(--success);margin-bottom:10px;"><i class="fas fa-check-circle"></i> Identité vérifiée pour <span id="email-affiche"></span></p><input type="password" id="nouveau-motdepasse" class="modal-input" placeholder="Nouveau mot de passe (6+ caractères)"><input type="password" id="confirmer-motdepasse" class="modal-input" placeholder="Confirmer mot de passe"><div class="error-message" id="erreur-nouveau-mdp"></div><div class="modal-buttons" style="margin-top:20px;"><button class="btn btn-cancel" onclick="retourEtape1()">Retour</button><button class="btn btn-confirm" onclick="reinitialiserMotDePasse()">Réinitialiser</button></div></div></div></div>
-    <div id="modal-pin" class="modal"><div class="modal-content"><div class="modal-title"><i class="fas fa-lock"></i> Code PIN</div><div id="pin-setup" style="display:block;"><p style="color:var(--text-secondary);margin-bottom:20px;">Entrez un code PIN à 6 chiffres</p><div class="pin-digits" id="pin-setup-digits"><div class="pin-digit" id="setup-digit1"></div><div class="pin-digit" id="setup-digit2"></div><div class="pin-digit" id="setup-digit3"></div><div class="pin-digit" id="setup-digit4"></div><div class="pin-digit" id="setup-digit5"></div><div class="pin-digit" id="setup-digit6"></div></div><div class="pin-keypad" id="pin-setup-keypad"><div class="pin-key" onclick="ajouterChiffrePIN('setup','1')">1</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','2')">2</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','3')">3</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','4')">4</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','5')">5</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','6')">6</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','7')">7</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','8')">8</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','9')">9</div><div class="pin-key special" onclick="effacerDernierPIN('setup')">⌫</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','0')">0</div><div class="pin-key special" onclick="effacerPIN('setup')">C</div></div><p style="color:var(--text-secondary);margin:10px 0;">Confirmer</p><div class="pin-digits" id="pin-setup-confirm-digits"><div class="pin-digit" id="setup-confirm-digit1"></div><div class="pin-digit" id="setup-confirm-digit2"></div><div class="pin-digit" id="setup-confirm-digit3"></div><div class="pin-digit" id="setup-confirm-digit4"></div><div class="pin-digit" id="setup-confirm-digit5"></div><div class="pin-digit" id="setup-confirm-digit6"></div></div><div class="pin-keypad" id="pin-setup-confirm-keypad"><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','1')">1</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','2')">2</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','3')">3</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','4')">4</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','5')">5</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','6')">6</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','7')">7</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','8')">8</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','9')">9</div><div class="pin-key special" onclick="effacerDernierPIN('setup-confirm')">⌫</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','0')">0</div><div class="pin-key special" onclick="effacerPIN('setup-confirm')">C</div></div><div class="error-message" id="pin-setup-error"></div><button class="btn btn-success" onclick="sauvegarderPIN()" style="margin-top:20px;"><i class="fas fa-check"></i> Enregistrer</button></div><div id="pin-verification" style="display:none;"><p style="color:var(--text-secondary);margin-bottom:20px;">Entrez votre code PIN</p><div class="pin-digits" id="pin-verif-digits"><div class="pin-digit" id="verif-digit1" onclick="selectionnerCasePIN(1)"></div><div class="pin-digit" id="verif-digit2" onclick="selectionnerCasePIN(2)"></div><div class="pin-digit" id="verif-digit3" onclick="selectionnerCasePIN(3)"></div><div class="pin-digit" id="verif-digit4" onclick="selectionnerCasePIN(4)"></div><div class="pin-digit" id="verif-digit5" onclick="selectionnerCasePIN(5)"></div><div class="pin-digit" id="verif-digit6" onclick="selectionnerCasePIN(6)"></div></div><div class="pin-keypad" id="pin-verif-keypad"><div class="pin-key" onclick="ajouterChiffrePINVerification('1')">1</div><div class="pin-key" onclick="ajouterChiffrePINVerification('2')">2</div><div class="pin-key" onclick="ajouterChiffrePINVerification('3')">3</div><div class="pin-key" onclick="ajouterChiffrePINVerification('4')">4</div><div class="pin-key" onclick="ajouterChiffrePINVerification('5')">5</div><div class="pin-key" onclick="ajouterChiffrePINVerification('6')">6</div><div class="pin-key" onclick="ajouterChiffrePINVerification('7')">7</div><div class="pin-key" onclick="ajouterChiffrePINVerification('8')">8</div><div class="pin-key" onclick="ajouterChiffrePINVerification('9')">9</div><div class="pin-key special" onclick="effacerDernierPINVerification()">⌫</div><div class="pin-key" onclick="ajouterChiffrePINVerification('0')">0</div><div class="pin-key special" onclick="effacerPINVerification()">C</div></div><div class="error-message" id="pin-error"></div><p id="pin-tentatives" style="color:var(--warning);margin-top:10px;text-align:center;"></p><div class="modal-buttons" style="margin-top:20px;"><button class="btn btn-cancel" onclick="fermerModalPIN()">Annuler</button><button class="btn btn-confirm" onclick="verifierPIN()">Valider</button></div></div></div></div>
+    
+    <div id="modal-pin" class="modal"><div class="modal-content"><div class="modal-title"><i class="fas fa-lock"></i> Code PIN</div><div id="pin-setup" style="display:block;"><p style="color:var(--text-secondary);margin-bottom:20px;">Entrez un code PIN à 6 chiffres</p><div class="pin-digits" id="pin-setup-digits"><div class="pin-digit" id="setup-digit1"></div><div class="pin-digit" id="setup-digit2"></div><div class="pin-digit" id="setup-digit3"></div><div class="pin-digit" id="setup-digit4"></div><div class="pin-digit" id="setup-digit5"></div><div class="pin-digit" id="setup-digit6"></div></div><div class="pin-keypad" id="pin-setup-keypad"><div class="pin-key" onclick="ajouterChiffrePIN('setup','1')">1</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','2')">2</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','3')">3</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','4')">4</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','5')">5</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','6')">6</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','7')">7</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','8')">8</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','9')">9</div><div class="pin-key special" onclick="effacerDernierPIN('setup')">⌫</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','0')">0</div><div class="pin-key special" onclick="effacerPIN('setup')">C</div></div><p style="color:var(--text-secondary);margin:10px 0;">Confirmer</p><div class="pin-digits" id="pin-setup-confirm-digits"><div class="pin-digit" id="setup-confirm-digit1"></div><div class="pin-digit" id="setup-confirm-digit2"></div><div class="pin-digit" id="setup-confirm-digit3"></div><div class="pin-digit" id="setup-confirm-digit4"></div><div class="pin-digit" id="setup-confirm-digit5"></div><div class="pin-digit" id="setup-confirm-digit6"></div></div><div class="pin-keypad" id="pin-setup-confirm-keypad"><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','1')">1</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','2')">2</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','3')">3</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','4')">4</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','5')">5</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','6')">6</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','7')">7</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','8')">8</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','9')">9</div><div class="pin-key special" onclick="effacerDernierPIN('setup-confirm')">⌫</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','0')">0</div><div class="pin-key special" onclick="effacerPIN('setup-confirm')">C</div></div><div class="error-message" id="pin-setup-error"></div><button class="btn btn-success" onclick="sauvegarderPIN()" style="margin-top:20px;"><i class="fas fa-check"></i> Enregistrer</button></div>
+    
+    <div id="pin-verification" style="display:none;"><p style="color:var(--text-secondary);margin-bottom:20px;">Entrez votre code PIN</p><div class="pin-digits" id="pin-verif-digits"><div class="pin-digit" id="verif-digit1" onclick="selectionnerCasePIN(1)"></div><div class="pin-digit" id="verif-digit2" onclick="selectionnerCasePIN(2)"></div><div class="pin-digit" id="verif-digit3" onclick="selectionnerCasePIN(3)"></div><div class="pin-digit" id="verif-digit4" onclick="selectionnerCasePIN(4)"></div><div class="pin-digit" id="verif-digit5" onclick="selectionnerCasePIN(5)"></div><div class="pin-digit" id="verif-digit6" onclick="selectionnerCasePIN(6)"></div></div><div class="pin-keypad" id="pin-verif-keypad"><div class="pin-key" onclick="ajouterChiffrePINVerification('1')">1</div><div class="pin-key" onclick="ajouterChiffrePINVerification('2')">2</div><div class="pin-key" onclick="ajouterChiffrePINVerification('3')">3</div><div class="pin-key" onclick="ajouterChiffrePINVerification('4')">4</div><div class="pin-key" onclick="ajouterChiffrePINVerification('5')">5</div><div class="pin-key" onclick="ajouterChiffrePINVerification('6')">6</div><div class="pin-key" onclick="ajouterChiffrePINVerification('7')">7</div><div class="pin-key" onclick="ajouterChiffrePINVerification('8')">8</div><div class="pin-key" onclick="ajouterChiffrePINVerification('9')">9</div><div class="pin-key special" onclick="effacerDernierPINVerification()">⌫</div><div class="pin-key" onclick="ajouterChiffrePINVerification('0')">0</div><div class="pin-key special" onclick="effacerPINVerification()">C</div></div><div class="error-message" id="pin-error"></div><p id="pin-tentatives" style="color:var(--warning);margin-top:10px;text-align:center;"></p><p style="text-align:center; margin-top:15px;"><span onclick="afficherResetPIN()" style="color:var(--accent);cursor:pointer;font-size:0.85rem;"><i class="fas fa-unlock-alt"></i> Code PIN oublié ?</span></p><div class="modal-buttons" style="margin-top:20px;"><button class="btn btn-cancel" onclick="fermerModalPIN()">Annuler</button><button class="btn btn-confirm" onclick="verifierPIN()">Valider</button></div></div>
+    
+    <div id="pin-reset" style="display:none;"><p style="color:var(--text-secondary);margin-bottom:20px;">Réinitialisation du code PIN</p><input type="text" id="reset-pin-id" class="modal-input" placeholder="Entrez votre ID Utilisateur exact"><div class="info-message" style="font-size:0.8rem; margin-top:5px;"><i class="fas fa-info-circle"></i> Votre ID se trouve dans votre Profil.</div><div class="error-message" id="reset-pin-error"></div><div class="modal-buttons" style="margin-top:20px;"><button class="btn btn-cancel" onclick="annulerResetPIN()">Annuler</button><button class="btn btn-confirm" onclick="validerResetPIN()">Réinitialiser</button></div></div>
+    </div></div>
+    
     <div id="modal-confirmation" class="modal"><div class="modal-content"><div class="modal-title" id="modal-titre"><i class="fas fa-clock"></i> Vérification de la transaction</div><div id="details-demande" class="request-detail-modal"></div><div id="message-paiement-container" style="display:none;"><div class="message-admin" id="message-paiement"><i class="fas fa-info-circle"></i><div class="message-admin-content" id="message-paiement-texte"></div><button class="btn-copy" onclick="copierMessagePaiement()" id="btn-copy-paiement"><i class="fas fa-copy"></i> Copier</button></div></div><div class="timer-large" id="confirmation-timer"><i class="fas fa-hourglass-half"></i><span id="timer-display">15:00</span></div><div class="form-group" style="margin:20px 0;"><label class="form-label"><i class="fas fa-hashtag"></i> TXID ou PREUVE D'ENVOI</label><div class="input-wrapper"><input type="text" id="txid-input" placeholder="Entrez le TXID ou votre adresse d'envoi ou message preuve"></div></div><div class="warning-message"><i class="fas fa-exclamation-triangle"></i><span>Vérifiez bien le numéro ou l'adresse d'envoi ,et aussi les informations avant d'envoyer ! </span></div><div class="modal-buttons"><button class="btn btn-cancel" onclick="fermerModalConfirmation()"><i class="fas fa-times"></i> Annuler</button><button class="btn btn-confirm" onclick="validerConfirmation()" id="btn-confirmer-avec-txid"><i class="fas fa-arrow-right"></i> Confirmer</button></div></div></div>
     <div id="modal-details-demande" class="modal"><div class="modal-content"><div class="modal-title"><i class="fas fa-info-circle"></i> Détails</div><div id="details-demande-complete" class="request-detail-modal"></div><button class="btn btn-cancel" onclick="fermerDetailsDemande()"><i class="fas fa-times"></i> Fermer</button></div></div>
     <div id="modal-recu" class="modal"><div class="modal-content"><div class="receipt-header"><h2>TYPH X-CHAIN</h2><p><i class="fas fa-receipt"></i> Reçu de transaction</p></div><div id="recu-content"></div><div class="receipt-actions"><button class="btn-receipt" onclick="verifierMesActifs()"><i class="fas fa-wallet"></i> Vérifier mes actifs</button><div class="rating-section"><div class="rating-title">RAPIDE - SIMPLE - SÉCURISÉ</div><div class="rating-stars"><i class="fas fa-star" onclick="noter(1)"></i><i class="fas fa-star" onclick="noter(2)"></i><i class="fas fa-star" onclick="noter(3)"></i><i class="fas fa-star" onclick="noter(4)"></i><i class="fas fa-star" onclick="noter(5)"></i></div><div class="rating-buttons"><span class="rating-btn" onclick="noter('positif')">Positive</span><span class="rating-btn" onclick="noter('negatif')">Négative</span></div></div></div><button class="btn btn-cancel" onclick="fermerModalRecu()" style="margin-top:20px;"><i class="fas fa-times"></i> Fermer</button></div></div>
     
-    <!-- Modal Reçu Taux Crypto -->
-    <div id="modal-recu-taux" class="modal">
-        <div class="modal-content modal-taux-content" style="max-width: 500px; border: 2px solid var(--binance);">
-            <div class="modal-title">
-                <i class="fas fa-chart-line"></i> Détails du taux
-            </div>
-            <div id="recu-taux-content"></div>
-            <div class="receipt-actions" style="display: flex; gap: 10px; margin-top: 20px;">
-                <button class="btn-receipt" onclick="fermerRecuTaux()" style="flex: 1; background: var(--gray-300);">
-                    <i class="fas fa-times"></i> Fermer
-                </button>
-                <button class="btn-receipt" onclick="telechargerRecuTaux()" style="flex: 1; background: var(--success);">
-                    <i class="fas fa-camera"></i> Télécharger
-                </button>
-            </div>
-        </div>
-    </div>
+    <div id="modal-recu-taux" class="modal"><div class="modal-content modal-taux-content" style="max-width: 500px; border: 2px solid var(--binance);"><div class="modal-title"><i class="fas fa-chart-line"></i> Détails du taux</div><div id="recu-taux-content"></div><div class="receipt-actions" style="display: flex; gap: 10px; margin-top: 20px;"><button class="btn-receipt" onclick="fermerRecuTaux()" style="flex: 1; background: var(--gray-300);"><i class="fas fa-times"></i> Fermer</button><button class="btn-receipt" onclick="telechargerRecuTaux()" style="flex: 1; background: var(--success);"><i class="fas fa-camera"></i> Télécharger</button></div></div></div>
     
-    <!-- Template pour capture du reçu de taux -->
-    <div id="template-recu-taux" style="position: fixed; left: -9999px; top: 0; width: 500px; background: #131B2F; color: white; padding: 30px; font-family: 'Inter', sans-serif; border-radius: 40px; border: 2px solid #F0B90B;">
-        <div style="text-align: center; margin-bottom: 30px; border-bottom: 1px solid #2D3A4A; padding-bottom: 20px;">
-            <h1 style="color: white; margin: 0; font-size: 28px; background: linear-gradient(135deg, #FFFFFF, #3B82F6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">TYPH X-CHAIN</h1>
-            <p style="color: #94A3B8; margin: 5px 0 0;"><i class="fas fa-chart-line"></i> Détails du taux de change</p>
-        </div>
-        <div id="recu-taux-capture-content"></div>
-        <div style="border-top: 1px solid #2D3A4A; padding-top: 20px; text-align: center; color: #94A3B8; font-size: 12px;">
-            <p>Document généré automatiquement par TYPH X-CHAIN</p>
-            <p>Date de génération: <span id="recu-taux-date-generation"></span></p>
-        </div>
-    </div>
+    <div id="template-recu-taux" style="position: fixed; left: -9999px; top: 0; width: 500px; background: #131B2F; color: white; padding: 30px; font-family: 'Inter', sans-serif; border-radius: 40px; border: 2px solid #F0B90B;"><div style="text-align: center; margin-bottom: 30px; border-bottom: 1px solid #2D3A4A; padding-bottom: 20px;"><h1 style="color: white; margin: 0; font-size: 28px; background: linear-gradient(135deg, #FFFFFF, #3B82F6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">TYPH X-CHAIN</h1><p style="color: #94A3B8; margin: 5px 0 0;"><i class="fas fa-chart-line"></i> Détails du taux de change</p></div><div id="recu-taux-capture-content"></div><div style="border-top: 1px solid #2D3A4A; padding-top: 20px; text-align: center; color: #94A3B8; font-size: 12px;"><p>Document généré automatiquement par TYPH X-CHAIN</p><p>Date de génération: <span id="recu-taux-date-generation"></span></p></div></div>
     
     <div id="modal-news-detail" class="modal"><div class="modal-content"><div class="modal-title" id="modal-news-title"><i class="fas fa-newspaper"></i> Actualité</div><div id="modal-news-content" style="color:var(--text-primary);line-height:1.6;margin-bottom:20px;"></div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--gray-300);"><span id="modal-news-date" style="color:var(--text-secondary);font-size:0.85rem;"></span><span id="modal-news-author" style="color:var(--accent);font-size:0.85rem;"></span></div><button class="btn btn-cancel" onclick="fermerModalNews()" style="margin-top:20px;"><i class="fas fa-times"></i> Fermer</button></div></div>
+    
+    <div id="modal-ajout-adresse" class="modal"><div class="modal-content"><div class="modal-title"><i class="fas fa-link"></i> Ajouter une adresse de portefeuille</div><div class="form-group"><label class="form-label">Label (nom de l'adresse)</label><div class="input-wrapper"><input type="text" id="nouvelle-adresse-label" placeholder="Ex: Mon wallet Binance"></div></div><div class="form-group"><label class="form-label">Adresse</label><div class="input-wrapper"><input type="text" id="nouvelle-adresse-valeur" placeholder="0x... ou T9y... ou 1A..."></div></div><div class="form-group"><label class="form-label">Cryptomonnaie</label><div class="input-wrapper"><select id="nouvelle-adresse-crypto" onchange="mettreAJourReseauxParCrypto()"></select></div></div><div class="form-group"><label class="form-label">Réseau</label><div class="input-wrapper"><select id="nouvelle-adresse-reseau"></select></div></div><div class="error-message" id="erreur-adresse"></div><div class="modal-buttons"><button class="btn btn-cancel" onclick="fermerModalAjoutAdresse()"><i class="fas fa-times"></i> Annuler</button><button class="btn btn-confirm" onclick="enregistrerAdresse()"><i class="fas fa-save"></i> Enregistrer</button></div></div></div>
+
+    <div id="modal-roue" class="modal">
+        <div class="modal-content" style="text-align:center; background: linear-gradient(135deg, var(--bg-card), #1e1b4b); border-color: #8b5cf6;">
+            <div class="modal-title" style="justify-content:center;"><i class="fas fa-dharmachakra"></i> Roue de la Fortune</div>
+            
+            <div id="roue-jeu">
+                <div class="wheel-container">
+                    <div class="wheel-pointer"></div>
+                    <div class="wheel" id="roue-element">
+                        <canvas id="roue-canvas" width="280" height="280"></canvas>
+                    </div>
+                    <div class="wheel-center"></div>
+                </div>
+                <button class="btn btn-success" id="btn-tourner-roue" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); font-size:1.2rem; margin-top:20px;" onclick="tournerRoue()"><i class="fas fa-gift"></i> TOURNER !</button>
+            </div>
+
+            <div id="roue-resultat" style="display:none; margin-top:20px;">
+                <h3 id="texte-resultat" style="font-size:1.5rem; color:var(--success); margin-bottom:15px;">Félicitations !</h3>
+                <p style="color:var(--text-secondary); margin-bottom:15px;" id="texte-instruction-bonus"></p>
+                <input type="text" id="input-bonus-contact" class="modal-input" placeholder="Votre Adresse ou Numéro (selon le lot)">
+                <div class="error-message" id="erreur-bonus"></div>
+                <button class="btn btn-confirm" onclick="reclamerBonus()" style="width:100%; margin-top:10px;"><i class="fas fa-paper-plane"></i> Réclamer mon gain</button>
+            </div>
+            
+            <button class="btn btn-cancel" onclick="fermerModalRoue()" id="btn-fermer-roue" style="margin-top:20px; width:100%;"><i class="fas fa-times"></i> Fermer</button>
+        </div>
+    </div>
 
     <script>
         const firebaseConfig = {
@@ -295,7 +317,8 @@
             taux: {}, reseaux: [], frais: { achat: 1.5, vente: 2.0 }, pause: { achat: false, vente: false }, demandes: {}, news: [],
             tauxMode: 'auto', usdMGA: 4700,
             limites: { minAchat: 2000, minAchatTRX: 5000, maxAchat: 100000, minVente: 2000, maxVente: 100000 },
-            messagesSpeciaux: { trx: "Frais réseau TRC20 : 3% ou -1 TRX si activation" }
+            messagesSpeciaux: { trx: "Frais réseau TRC20 : 3% ou -1 TRX si activation" },
+            roue: [], roueActive: false
         };
         
         let utilisateurCourant = null;
@@ -311,15 +334,20 @@
         let typeTransactionEnCours = null;
         let dernierSyncTaux = null;
         let tauxCourantCrypto = '';
+        let adresseLieeSelectionnee = null;
+        let adressesUtilisateur = {};
         
-        // Convertir les demandes en tableau (gère à la fois tableau et objet)
+        const pairesBinance = { 'USDT':'USDTUSDT','BTC':'BTCUSDT','ETH':'ETHUSDT','BNB':'BNBUSDT','LTC':'LTCUSDT','SOL':'SOLUSDT','TRX':'TRXUSDT','DOGE':'DOGEUSDT','MATIC':'POLUSDT','SUI':'SUIUSDT','XRP':'XRPUSDT','TON':'TONUSDT','POL':'POLUSDT','USDC':'USDCUSDT' };
+        
+        let lotsRoue = [];
+        let lotGagneInfo = null;
+
         function getDemandesTableau() {
             if(!donnees.demandes) return [];
             if(Array.isArray(donnees.demandes)) return donnees.demandes;
             return Object.values(donnees.demandes);
         }
         
-        // Sauvegarder les demandes en tant qu'objet (pas tableau)
         function sauvegarderDemandes(demandesArray) {
             const demandesObj = {};
             demandesArray.forEach(d => { if(d && d.id) demandesObj[d.id] = d; });
@@ -331,35 +359,14 @@
             donnees: null,
             timestamp: 0,
             duree: 30 * 60 * 1000,
-            get() {
-                if(this.donnees && (Date.now() - this.timestamp) < this.duree) return this.donnees;
-                return null;
-            },
-            set(donnees) {
-                this.donnees = donnees;
-                this.timestamp = Date.now();
-                try { localStorage.setItem('tauxCache', JSON.stringify({ data: donnees, timestamp: this.timestamp })); } catch(e) {}
-            },
-            chargerLocal() {
-                try {
-                    const cache = localStorage.getItem('tauxCache');
-                    if(cache) {
-                        const { data, timestamp } = JSON.parse(cache);
-                        if((Date.now() - timestamp) < 3600000) {
-                            this.donnees = data;
-                            this.timestamp = timestamp;
-                            return true;
-                        }
-                    }
-                } catch(e) {}
-                return false;
-            }
+            get() { if(this.donnees && (Date.now() - this.timestamp) < this.duree) return this.donnees; return null; },
+            set(donnees) { this.donnees = donnees; this.timestamp = Date.now(); try { localStorage.setItem('tauxCache', JSON.stringify({ data: donnees, timestamp: this.timestamp })); } catch(e) {} },
+            chargerLocal() { try { const cache = localStorage.getItem('tauxCache'); if(cache) { const { data, timestamp } = JSON.parse(cache); if((Date.now() - timestamp) < 3600000) { this.donnees = data; this.timestamp = timestamp; return true; } } } catch(e) {} return false; }
         };
         
         class RateLimiter { constructor(limite = 15, fenetre = 60000) { this.limite = limite; this.fenetre = fenetre; this.requetes = []; } peutExecuter() { const maintenant = Date.now(); this.requetes = this.requetes.filter(t => t > maintenant - this.fenetre); if(this.requetes.length >= this.limite) return false; this.requetes.push(maintenant); return true; } }
         const rateLimiter = new RateLimiter(15, 60000);
         let timeoutSauvegarde = null;
-        const pairesBinance = { 'USDT':'USDTUSDT','BTC':'BTCUSDT','ETH':'ETHUSDT','BNB':'BNBUSDT','LTC':'LTCUSDT','SOL':'SOLUSDT','TRX':'TRXUSDT','DOGE':'DOGEUSDT','MATIC':'MATICUSDT','SUI':'SUIUSDT','XRP':'XRPUSDT','TON':'TONUSDT','POL':'POLUSDT','USDC':'USDCUSDT' };
 
         function echapperHTML(t) { if(!t) return ''; return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
         function genererIDStable(e,n) { const h=btoa(e+n).replace(/[^a-zA-Z0-9]/g,'').substring(0,8); return `TX-${h}-${Date.now().toString(36)}`; }
@@ -368,59 +375,16 @@
 
         function obtenirDonneesParDefaut() {
             return {
-                portefeuilles: [
-                    { nom: "Principal", reponse: "Portefeuille principal - USDT/BEP20", messageConfirmation: "Envoyez vos USDT sur l'adresse: 0x742d35Cc6634C0532925a3b844Bc454e4438f44e", reseau: "BEP20" },
-                    { nom: "Épargne", reponse: "Portefeuille épargne - ETH/ERC20", messageConfirmation: "Adresse ERC20: 0x1234567890123456789012345678901234567890", reseau: "ERC20" },
-                    { nom: "Trading", reponse: "Portefeuille TRX/TRC20", messageConfirmation: "Adresse TRC20: T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb", reseau: "TRC20" }
-                ],
-                operateurs: [
-                    { nom: "MVola", messageConfirmation: "034 51 547 81 (RAKOTO Jean)" },
-                    { nom: "Orange Money", messageConfirmation: "034 99 999 99 (RABE Pierre)" },
-                    { nom: "Airtel Money", messageConfirmation: "033 88 888 88 (RANDRIAMANANA)" }
-                ],
-                cryptos: ["USDT","BTC","ETH","BNB","LTC","SOL","TRX","DOGE","MATIC","SUI","XRP","TON","USDC"],
-                reseaux: [
-                    { nom: "BEP20", crypto: "USDT", fraisReseau: 0.5 }, { nom: "BEP20", crypto: "BNB", fraisReseau: 0.3 },
-                    { nom: "ERC20", crypto: "USDT", fraisReseau: 1.2 }, { nom: "ERC20", crypto: "ETH", fraisReseau: 1.5 },
-                    { nom: "TRC20", crypto: "USDT", fraisReseau: 0.8 }, { nom: "TRC20", crypto: "TRX", fraisReseau: 3.0 },
-                    { nom: "SOL", crypto: "SOL", fraisReseau: 0.1 }
-                ],
-                frais: { achat: 1.5, vente: 2.0 }, pause: { achat: false, vente: false }, taux: {}, demandes: {},
-                news: [{ id: 'NEWS-'+Date.now(), titre: '🎉 Bienvenue sur TYPH X-CHAIN', contenu: 'Bienvenue sur notre plateforme d\'échange crypto.', date: new Date().toISOString(), auteur: 'Administrateur', important: true, statut: true }],
-                tauxMode: 'auto', usdMGA: 4700,
-                limites: { minAchat: 2000, minAchatTRX: 5000, maxAchat: 100000, minVente: 2000, maxVente: 100000 },
-                messagesSpeciaux: { trx: "Frais réseau TRC20 : 3% ou -1 TRX si activation" }
+                portefeuilles: [], operateurs: [], cryptos: ["USDT","BTC","ETH","BNB","LTC","SOL","TRX","DOGE","MATIC","SUI","XRP","TON","USDC"],
+                reseaux: [], frais: { achat: 1.5, vente: 2.0 }, pause: { achat: false, vente: false }, taux: {}, demandes: {}, news: [],
+                tauxMode: 'auto', usdMGA: 4700, limites: { minAchat: 2000, minAchatTRX: 5000, maxAchat: 100000, minVente: 2000, maxVente: 100000 },
+                messagesSpeciaux: { trx: "Frais réseau TRC20 : 3% ou -1 TRX si activation" }, roue: [], roueActive: false
             };
-        }
-
-        function sauvegarderDonnees() {
-            if(enCoursDeMiseAJour) return;
-            if(timeoutSauvegarde) clearTimeout(timeoutSauvegarde);
-            timeoutSauvegarde = setTimeout(() => {
-                enCoursDeMiseAJour = true;
-                const dataToSave = {
-                    portefeuilles: donnees.portefeuilles,
-                    operateurs: donnees.operateurs,
-                    cryptos: donnees.cryptos,
-                    taux: donnees.taux,
-                    reseaux: donnees.reseaux,
-                    frais: donnees.frais,
-                    pause: donnees.pause,
-                    demandes: donnees.demandes,
-                    news: donnees.news,
-                    tauxMode: donnees.tauxMode,
-                    usdMGA: donnees.usdMGA,
-                    limites: donnees.limites,
-                    messagesSpeciaux: donnees.messagesSpeciaux
-                };
-                database.ref('donnees').update(dataToSave)
-                    .then(() => { enCoursDeMiseAJour = false; })
-                    .catch(e => { console.error(e); enCoursDeMiseAJour = false; });
-            }, 2000);
         }
 
         let monUid = null;
         let ecouteNumerosActive = false;
+        let ecouteAdressesActive = false;
         
         function demarrerEcouteNumeros() {
             if(!monUid || ecouteNumerosActive) return;
@@ -432,6 +396,19 @@
                     mettreAJourNumerosUtilisateur();
                     mettreAJourListeNumerosVente();
                     mettreAJourListeNumerosAchat();
+                }
+            });
+        }
+        
+        function demarrerEcouteAdresses() {
+            if(!monUid || ecouteAdressesActive) return;
+            ecouteAdressesActive = true;
+            database.ref(`donnees/utilisateurs/${monUid}/adressesLiees`).on('value', (snapshot) => {
+                adressesUtilisateur = snapshot.val() || {};
+                if(utilisateurCourant) {
+                    utilisateurCourant.adressesLiees = adressesUtilisateur;
+                    mettreAJourListeAdresses();
+                    mettreAJourChampAdresseVente();
                 }
             });
         }
@@ -455,12 +432,35 @@
                     if(!donnees.operateurs) donnees.operateurs = obtenirDonneesParDefaut().operateurs;
                     if(!donnees.cryptos) donnees.cryptos = obtenirDonneesParDefaut().cryptos;
                     if(!donnees.demandes) donnees.demandes = {};
+                    if(!donnees.roue) donnees.roue = obtenirDonneesParDefaut().roue;
+                    if(donnees.roueActive === undefined) donnees.roueActive = false;
+                    donnees.portefeuilles = donnees.portefeuilles.map(p => ({ ...p, liaisonRequise: p.liaisonRequise || false }));
                     tauxUSD_MGA = donnees.usdMGA || 4700;
                 } else {
                     donnees = obtenirDonneesParDefaut();
                 }
                 
                 cacheTaux.set(donnees.taux);
+                
+                // === AJOUTS DES LISTENERS TEMPS RÉEL (ROUE ET DEMANDES) ===
+                database.ref('donnees/roueActive').on('value', snap => {
+                    donnees.roueActive = snap.val() || false;
+                    verifierAccesBonus();
+                });
+                
+                database.ref('donnees/roue').on('value', snap => {
+                    donnees.roue = snap.val() || [];
+                });
+
+                database.ref('donnees/demandes').on('value', snap => {
+                    if(snap.exists()) {
+                        donnees.demandes = snap.val();
+                        mettreAJourMesDemandes();
+                        verifierAccesBonus();
+                        mettreAJourActiviteRecente();
+                    }
+                });
+                // =========================================================
                 
                 if(monUid) {
                     database.ref(`donnees/utilisateurs/${monUid}`).once('value').then(snap => {
@@ -469,8 +469,10 @@
                             utilisateurCourant = userData;
                             utilisateurCourant.uid = monUid;
                             sessionValide = true;
+                            adressesUtilisateur = utilisateurCourant.adressesLiees || {};
                             mettreAJourAffichage();
                             demarrerEcouteNumeros();
+                            demarrerEcouteAdresses();
                             if(document.getElementById('landing-page').style.display !== 'none') showPlatform();
                         }
                     });
@@ -496,10 +498,7 @@
         }
         
         async function syncBinanceManuel() {
-            if(!rateLimiter.peutExecuter()) {
-                alert('Veuillez attendre un moment avant de rafraîchir à nouveau');
-                return;
-            }
+            if(!rateLimiter.peutExecuter()) { alert('Veuillez attendre un moment avant de rafraîchir à nouveau'); return; }
             alert('🔄 Synchronisation manuelle des taux en cours...');
             await syncBinance();
             alert('✅ Taux mis à jour !');
@@ -561,126 +560,36 @@
             } catch(e){ console.error(e); } 
         }
         
-        // ==================== FONCTION REÇU TAUX ====================
         function ouvrirRecuTaux(crypto) {
             const taux = donnees.taux[crypto];
             if(!taux) return;
-            
             tauxCourantCrypto = crypto;
             const modal = document.getElementById('modal-recu-taux');
             const recuContent = document.getElementById('recu-taux-content');
-            
             const symbole = crypto === 'MATIC' ? 'POL' : crypto;
             const variationClass = taux.couleur === 'positive' ? 'positive' : 'negative';
             const variationIcon = taux.couleur === 'positive' ? 'arrow-up' : 'arrow-down';
             const dateMAJ = taux.lastUpdate ? new Date(taux.lastUpdate).toLocaleString('fr-FR') : new Date().toLocaleString('fr-FR');
-            
-            recuContent.innerHTML = `
-                <div class="receipt-header" style="text-align: center; margin-bottom: 20px;">
-                    <h2 style="color: var(--white);">TYPH X-CHAIN</h2>
-                    <p style="color: var(--text-secondary);"><i class="fas fa-chart-line"></i> Taux de change ${symbole}/Ar</p>
-                </div>
-                <div class="receipt-amount-large" style="background: linear-gradient(135deg, var(--primary), var(--bg-dark)); border-radius: 40px; padding: 25px; text-align: center; margin: 20px 0;">
-                    <div class="amount" id="recu-taux-prix" style="font-size: 2.5rem; font-weight: 700; color: var(--white);">${taux.prixMGA.toLocaleString()} Ar</div>
-                    <div class="description" style="color: var(--text-secondary); margin-top: 5px;">1 ${symbole} = ${taux.prixMGA.toLocaleString()} Ariary</div>
-                    <div class="rate-change ${variationClass}" style="justify-content: center; margin-top: 12px; font-size: 1rem;">
-                        <i class="fas fa-${variationIcon}"></i> ${taux.variation}%
-                    </div>
-                </div>
-                <div class="receipt-details" style="background: var(--primary); border-radius: 28px; padding: 20px;">
-                    <div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-300);">
-                        <span class="detail-label" style="color: var(--text-secondary);">Cryptomonnaie</span>
-                        <span class="detail-value" style="color: var(--white); font-weight: 600;" id="recu-taux-crypto">${symbole}</span>
-                    </div>
-                    <div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-300);">
-                        <span class="detail-label" style="color: var(--text-secondary);">Prix USD</span>
-                        <span class="detail-value" style="color: var(--white);">$${taux.prixUSD.toFixed(2)}</span>
-                    </div>
-                    <div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-300);">
-                        <span class="detail-label" style="color: var(--text-secondary);">Prix MGA</span>
-                        <span class="detail-value" style="color: var(--white); font-weight: 600;">${taux.prixMGA.toLocaleString()} Ar</span>
-                    </div>
-                    <div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-300);">
-                        <span class="detail-label" style="color: var(--text-secondary);">Source</span>
-                        <span class="detail-value" style="color: var(--white);">${taux.source === 'binance' ? '<i class="fab fa-binance"></i> Binance' : 'Manuel'}</span>
-                    </div>
-                    <div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0;">
-                        <span class="detail-label" style="color: var(--text-secondary);">Dernière mise à jour</span>
-                        <span class="detail-value" style="color: var(--white);">${dateMAJ}</span>
-                    </div>
-                </div>
-            `;
-            
+            recuContent.innerHTML = `<div class="receipt-header" style="text-align: center; margin-bottom: 20px;"><h2 style="color: var(--white);">TYPH X-CHAIN</h2><p style="color: var(--text-secondary);"><i class="fas fa-chart-line"></i> Taux de change ${symbole}/Ar</p></div><div class="receipt-amount-large" style="background: linear-gradient(135deg, var(--primary), var(--bg-dark)); border-radius: 40px; padding: 25px; text-align: center; margin: 20px 0;"><div class="amount" id="recu-taux-prix" style="font-size: 2.5rem; font-weight: 700; color: var(--white);">${taux.prixMGA.toLocaleString()} Ar</div><div class="description" style="color: var(--text-secondary); margin-top: 5px;">1 ${symbole} = ${taux.prixMGA.toLocaleString()} Ariary</div><div class="rate-change ${variationClass}" style="justify-content: center; margin-top: 12px; font-size: 1rem;"><i class="fas fa-${variationIcon}"></i> ${taux.variation}%</div></div><div class="receipt-details" style="background: var(--primary); border-radius: 28px; padding: 20px;"><div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-300);"><span class="detail-label" style="color: var(--text-secondary);">Cryptomonnaie</span><span class="detail-value" style="color: var(--white); font-weight: 600;" id="recu-taux-crypto">${symbole}</span></div><div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-300);"><span class="detail-label" style="color: var(--text-secondary);">Prix USD</span><span class="detail-value" style="color: var(--white);">$${taux.prixUSD.toFixed(2)}</span></div><div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-300);"><span class="detail-label" style="color: var(--text-secondary);">Prix MGA</span><span class="detail-value" style="color: var(--white); font-weight: 600;">${taux.prixMGA.toLocaleString()} Ar</span></div><div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-300);"><span class="detail-label" style="color: var(--text-secondary);">Source</span><span class="detail-value" style="color: var(--white);">${taux.source === 'binance' ? '<i class="fab fa-binance"></i> Binance' : 'Manuel'}</span></div><div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0;"><span class="detail-label" style="color: var(--text-secondary);">Dernière mise à jour</span><span class="detail-value" style="color: var(--white);">${dateMAJ}</span></div></div>`;
             modal.classList.add('active');
         }
         
-        function fermerRecuTaux() {
-            document.getElementById('modal-recu-taux').classList.remove('active');
-        }
+        function fermerRecuTaux() { document.getElementById('modal-recu-taux').classList.remove('active'); }
         
         function telechargerRecuTaux() {
             const crypto = document.getElementById('recu-taux-crypto')?.innerText || '';
             const prix = document.getElementById('recu-taux-prix')?.innerText || '';
             const taux = donnees.taux[tauxCourantCrypto];
             if(!taux) return;
-            
             const symbole = tauxCourantCrypto === 'MATIC' ? 'POL' : tauxCourantCrypto;
             const variationClass = taux.couleur === 'positive' ? 'positive' : 'negative';
             const variationIcon = taux.couleur === 'positive' ? 'arrow-up' : 'arrow-down';
             const dateMAJ = taux.lastUpdate ? new Date(taux.lastUpdate).toLocaleString('fr-FR') : new Date().toLocaleString('fr-FR');
-            
             const captureContent = document.getElementById('recu-taux-capture-content');
-            captureContent.innerHTML = `
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <div style="font-size: 2.5rem; font-weight: 700; color: white; background: linear-gradient(135deg, #FFFFFF, #3B82F6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${taux.prixMGA.toLocaleString()} Ar</div>
-                    <div style="color: #94A3B8; margin-top: 5px;">1 ${symbole} = ${taux.prixMGA.toLocaleString()} Ariary</div>
-                    <div style="color: ${taux.couleur === 'positive' ? '#10B981' : '#EF4444'}; margin-top: 12px; font-size: 1rem;">
-                        <i class="fas fa-${variationIcon}"></i> ${taux.variation}%
-                    </div>
-                </div>
-                <div style="background: #1A253C; border-radius: 28px; padding: 20px;">
-                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2D3A4A;">
-                        <span style="color: #94A3B8;">Cryptomonnaie</span>
-                        <span style="color: white; font-weight: 600;">${symbole}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2D3A4A;">
-                        <span style="color: #94A3B8;">Prix USD</span>
-                        <span style="color: white;">$${taux.prixUSD.toFixed(2)}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2D3A4A;">
-                        <span style="color: #94A3B8;">Prix MGA</span>
-                        <span style="color: white; font-weight: 600;">${taux.prixMGA.toLocaleString()} Ar</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2D3A4A;">
-                        <span style="color: #94A3B8;">Source</span>
-                        <span style="color: ${taux.source === 'binance' ? '#F0B90B' : 'white'};">${taux.source === 'binance' ? 'Binance' : 'Manuel'}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                        <span style="color: #94A3B8;">Dernière mise à jour</span>
-                        <span style="color: white;">${dateMAJ}</span>
-                    </div>
-                </div>
-            `;
-            
+            captureContent.innerHTML = `<div style="text-align: center; margin-bottom: 30px;"><div style="font-size: 2.5rem; font-weight: 700; color: white; background: linear-gradient(135deg, #FFFFFF, #3B82F6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${taux.prixMGA.toLocaleString()} Ar</div><div style="color: #94A3B8; margin-top: 5px;">1 ${symbole} = ${taux.prixMGA.toLocaleString()} Ariary</div><div style="color: ${taux.couleur === 'positive' ? '#10B981' : '#EF4444'}; margin-top: 12px; font-size: 1rem;"><i class="fas fa-${variationIcon}"></i> ${taux.variation}%</div></div><div style="background: #1A253C; border-radius: 28px; padding: 20px;"><div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2D3A4A;"><span style="color: #94A3B8;">Cryptomonnaie</span><span style="color: white; font-weight: 600;">${symbole}</span></div><div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2D3A4A;"><span style="color: #94A3B8;">Prix USD</span><span style="color: white;">$${taux.prixUSD.toFixed(2)}</span></div><div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2D3A4A;"><span style="color: #94A3B8;">Prix MGA</span><span style="color: white; font-weight: 600;">${taux.prixMGA.toLocaleString()} Ar</span></div><div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #2D3A4A;"><span style="color: #94A3B8;">Source</span><span style="color: ${taux.source === 'binance' ? '#F0B90B' : 'white'};">${taux.source === 'binance' ? 'Binance' : 'Manuel'}</span></div><div style="display: flex; justify-content: space-between; padding: 10px 0;"><span style="color: #94A3B8;">Dernière mise à jour</span><span style="color: white;">${dateMAJ}</span></div></div>`;
             document.getElementById('recu-taux-date-generation').textContent = new Date().toLocaleString('fr-FR');
-            
-            html2canvas(document.getElementById('template-recu-taux'), {
-                scale: 2,
-                backgroundColor: '#131B2F',
-                logging: false,
-                useCORS: true
-            }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `taux-${symbole}-${Date.now()}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-                alert('✅ Reçu téléchargé avec succès !');
-            }).catch(error => {
-                console.error('Erreur lors de la capture:', error);
-                alert('❌ Erreur lors du téléchargement');
-            });
+            html2canvas(document.getElementById('template-recu-taux'), { scale: 2, backgroundColor: '#131B2F', logging: false, useCORS: true }).then(canvas => { const link = document.createElement('a'); link.download = `taux-${symbole}-${Date.now()}.png`; link.href = canvas.toDataURL('image/png'); link.click(); alert('✅ Reçu téléchargé avec succès !'); }).catch(error => { console.error('Erreur lors de la capture:', error); alert('❌ Erreur lors du téléchargement'); });
         }
-        // ==================== FIN FONCTION REÇU TAUX ====================
         
         function afficherTauxSimplifies(){ 
             const div=document.getElementById('taux-direct'); 
@@ -694,17 +603,7 @@
                 let sym=c; 
                 const sp={'MATIC':'POL','POL':'POL','TON':'TON','USDC':'USDC','USDT':'USDT','BTC':'BTC','ETH':'ETH','BNB':'BNB','SOL':'SOL','XRP':'XRP'}; 
                 if(sp[c]) sym=sp[c]; 
-                return `<div class="rate-card" onclick="ouvrirRecuTaux('${c}')">
-                    <div class="rate-pair">
-                        <span><i class="fas fa-coins"></i> ${sym}/Ar</span>
-                        ${t.source==='binance'?'<span class="binance-badge"><i class="fab fa-binance"></i></span>':''}
-                    </div>
-                    <div class="rate-value-main">${t.prixMGA.toLocaleString()} Ar</div>
-                    <div class="rate-footer">
-                        <span class="rate-change ${vc}"><i class="fas fa-${vi}"></i> ${t.variation}%</span>
-                        <span class="rate-source">${t.source==='binance'?'Binance':'Manuel'}</span>
-                    </div>
-                </div>`; 
+                return `<div class="rate-card" onclick="ouvrirRecuTaux('${c}')"><div class="rate-pair"><span><i class="fas fa-coins"></i> ${sym}/Ar</span>${t.source==='binance'?'<span class="binance-badge"><i class="fab fa-binance"></i></span>':''}</div><div class="rate-value-main">${t.prixMGA.toLocaleString()} Ar</div><div class="rate-footer"><span class="rate-change ${vc}"><i class="fas fa-${vi}"></i> ${t.variation}%</span><span class="rate-source">${t.source==='binance'?'Binance':'Manuel'}</span></div></div>`; 
             }).join(''); 
         }
 
@@ -735,7 +634,7 @@
         function mettreAJourProfil(){ 
             const p=document.getElementById('profil-infos'); 
             if(!p) return; 
-            if(utilisateurCourant) p.innerHTML=`<div class="profile-row"><span class="profile-label">ID</span><span class="profile-value" style="color:var(--accent);font-weight:700;">${echapperHTML(utilisateurCourant.id||'Non attribué')}</span></div><div class="profile-row"><span class="profile-label">Nom</span><span class="profile-value">${echapperHTML(utilisateurCourant.nom)}</span></div><div class="profile-row"><span class="profile-label">Email</span><span class="profile-value">${echapperHTML(utilisateurCourant.email||'Non renseigné')}</span></div><div class="profile-row"><span class="profile-label">Membre depuis</span><span class="profile-value">${echapperHTML(new Date(utilisateurCourant.dateInscription).toLocaleDateString())}</span></div><div class="profile-row"><span class="profile-label">Numéros</span><span class="profile-value">${Object.keys(utilisateurCourant.numeros||{}).length} enregistré(s)</span></div><div class="profile-row"><span class="profile-label">Code PIN</span><span class="profile-value">${utilisateurCourant.codePIN?.actif ? '✅ Configuré' : '❌ Non configuré'}</span></div>`; 
+            if(utilisateurCourant) p.innerHTML=`<div class="profile-row"><span class="profile-label">ID</span><span class="profile-value" style="color:var(--accent);font-weight:700;">${echapperHTML(utilisateurCourant.id||'Non attribué')}</span></div><div class="profile-row"><span class="profile-label">Nom</span><span class="profile-value">${echapperHTML(utilisateurCourant.nom)}</span></div><div class="profile-row"><span class="profile-label">Email</span><span class="profile-value">${echapperHTML(utilisateurCourant.email||'Non renseigné')}</span></div><div class="profile-row"><span class="profile-label">Membre depuis</span><span class="profile-value">${echapperHTML(new Date(utilisateurCourant.dateInscription).toLocaleDateString())}</span></div><div class="profile-row"><span class="profile-label">Numéros</span><span class="profile-value">${Object.keys(utilisateurCourant.numeros||{}).length} enregistré(s)</span></div><div class="profile-row"><span class="profile-label">Adresses liées</span><span class="profile-value">${Object.keys(adressesUtilisateur).length} enregistrée(s)</span></div><div class="profile-row"><span class="profile-label">Code PIN</span><span class="profile-value">${utilisateurCourant.codePIN?.actif ? '✅ Configuré' : '❌ Non configuré'}</span></div>`; 
             else p.innerHTML='<div class="profile-row">Connectez-vous</div>'; 
         }
 
@@ -745,11 +644,14 @@
             mettreAJourActiviteRecente();
             mettreAJourMesDemandes();
             mettreAJourNumerosUtilisateur();
+            mettreAJourListeAdresses();
             afficherTauxSimplifies();
             verifierPause();
             mettreAJourListeNumerosVente();
             mettreAJourListeNumerosAchat();
             mettreAJourLimiteAchat();
+            mettreAJourChampAdresseVente();
+            verifierAccesBonus();
             if(utilisateurCourant){
                 document.getElementById('userBadge').innerHTML=`<i class="fas fa-user-check"></i> ${echapperHTML(utilisateurCourant.nom)}`;
                 document.getElementById('carte-deconnexion').style.display='block';
@@ -758,6 +660,198 @@
                 document.getElementById('carte-deconnexion').style.display='none';
             }
         }
+
+        // ====== GESTION BONUS ROUE ======
+        function verifierAccesBonus() {
+            const cardBonus = document.getElementById('card-bonus');
+            if(!cardBonus) return;
+            if(!utilisateurCourant || !donnees.roueActive) { 
+                cardBonus.style.display = 'none'; 
+                return; 
+            }
+            
+            const aujourdhui = new Date().toLocaleDateString('fr-FR');
+            const demandesArray = getDemandesTableau();
+            
+            const aTransactionAujourdhui = demandesArray.some(d => 
+                d.userID === monUid && 
+                d.statut === 'confirme' && 
+                (d.type === 'ACHAT' || d.type === 'VENTE') &&
+                new Date(d.date).toLocaleDateString('fr-FR') === aujourdhui
+            );
+            
+            const aJoueAujourdhui = demandesArray.some(d => 
+                d.userID === monUid && 
+                d.type === 'BONUS' && 
+                new Date(d.date).toLocaleDateString('fr-FR') === aujourdhui
+            );
+
+            if(aTransactionAujourdhui && !aJoueAujourdhui) {
+                cardBonus.style.display = 'block';
+            } else {
+                cardBonus.style.display = 'none';
+            }
+        }
+
+        function dessinerRoue() {
+            const canvas = document.getElementById('roue-canvas');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = centerX;
+            
+            lotsRoue = (donnees.roue && donnees.roue.length > 0) ? donnees.roue : [
+                { nom: '1 USDT', type: 'crypto', probabilite: 5 },
+                { nom: '5000 Ar', type: 'fiat', probabilite: 10 },
+                { nom: 'Rien', type: 'rien', probabilite: 85 }
+            ];
+
+            const totalLots = lotsRoue.length;
+            const arcSize = (2 * Math.PI) / totalLots;
+            const couleurs = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < totalLots; i++) {
+                const angleStart = i * arcSize - Math.PI / 2;
+                const angleEnd = angleStart + arcSize;
+
+                // Dessin du segment
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, angleStart, angleEnd);
+                ctx.fillStyle = couleurs[i % couleurs.length];
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#1e1b4b';
+                ctx.stroke();
+
+                // Dessin du texte bien centré
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(angleStart + arcSize / 2);
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 16px Inter';
+                // Le texte est écrit à une distance de (radius - 20) du centre
+                ctx.fillText(lotsRoue[i].nom, radius - 20, 0);
+                ctx.restore();
+            }
+        }
+
+        function ouvrirModalRoue() {
+            if(!donnees.roue || donnees.roue.length === 0) {
+                alert('La roue n\'est pas encore configurée.');
+                return;
+            }
+            document.getElementById('roue-jeu').style.display = 'block';
+            document.getElementById('roue-resultat').style.display = 'none';
+            document.getElementById('btn-tourner-roue').disabled = false;
+            document.getElementById('btn-fermer-roue').style.display = 'block';
+            document.getElementById('roue-element').style.transition = 'none';
+            document.getElementById('roue-element').style.transform = 'rotate(0deg)';
+            
+            dessinerRoue();
+            document.getElementById('modal-roue').classList.add('active');
+        }
+
+        function fermerModalRoue() { document.getElementById('modal-roue').classList.remove('active'); }
+
+        function tournerRoue() {
+            document.getElementById('btn-tourner-roue').disabled = true;
+            document.getElementById('btn-fermer-roue').style.display = 'none';
+            
+            const rand = Math.random() * 100;
+            let sommeProb = 0;
+            let indexGagnant = lotsRoue.length - 1;
+
+            for (let i = 0; i < lotsRoue.length; i++) {
+                sommeProb += parseFloat(lotsRoue[i].probabilite) || 0;
+                if (rand <= sommeProb) { indexGagnant = i; break; }
+            }
+
+            lotGagneInfo = lotsRoue[indexGagnant];
+
+            const totalLots = lotsRoue.length;
+            const arcSizeDeg = 360 / totalLots;
+            const angleCibleSection = 360 - (indexGagnant * arcSizeDeg + arcSizeDeg / 2);
+            const toursSupplementaires = 360 * 5;
+            const angleFinal = toursSupplementaires + angleCibleSection;
+
+            const wheel = document.getElementById('roue-element');
+            wheel.style.transition = 'transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99)';
+            wheel.style.transform = `rotate(${angleFinal}deg)`;
+
+            setTimeout(() => { afficherResultatRoue(); }, 4500);
+        }
+
+        function afficherResultatRoue() {
+            document.getElementById('roue-jeu').style.display = 'none';
+            document.getElementById('roue-resultat').style.display = 'block';
+            
+            if (lotGagneInfo.type === 'rien' || lotGagneInfo.nom.toLowerCase().includes('retentez') || lotGagneInfo.nom.toLowerCase().includes('perdu')) {
+                document.getElementById('texte-resultat').innerHTML = `😢 Pas de chance !`;
+                document.getElementById('texte-resultat').style.color = 'var(--danger)';
+                document.getElementById('texte-instruction-bonus').textContent = `Vous êtes tombé sur : ${lotGagneInfo.nom}. Retentez votre chance demain !`;
+                document.getElementById('input-bonus-contact').style.display = 'none';
+                enregistrerTentativeBonusPerdue();
+                document.getElementById('btn-fermer-roue').style.display = 'block';
+                document.querySelector('#roue-resultat .btn-confirm').style.display = 'none';
+            } else {
+                document.getElementById('texte-resultat').innerHTML = `🎉 Vous avez gagné !`;
+                document.getElementById('texte-resultat').style.color = 'var(--success)';
+                document.getElementById('texte-instruction-bonus').textContent = `Lot : ${lotGagneInfo.nom}. Entrez vos informations de réception.`;
+                const input = document.getElementById('input-bonus-contact');
+                input.style.display = 'block';
+                input.value = '';
+                input.placeholder = lotGagneInfo.type === 'crypto' ? "Votre adresse Crypto (selon le lot)" : "Votre Numéro (MVola, Orange, etc.)";
+                document.querySelector('#roue-resultat .btn-confirm').style.display = 'block';
+            }
+        }
+        
+        async function enregistrerTentativeBonusPerdue() {
+            const demande = { id: genererIDStable(utilisateurCourant.email, 'LOSE-'+Date.now()), type: 'BONUS', date: new Date().toISOString(), utilisateur: utilisateurCourant.nom, email: utilisateurCourant.email, userID: monUid, statut: 'rejete', lotGagne: lotGagneInfo.nom, notes: 'Gain non applicable / Tentative enregistrée' };
+            const demandesArray = getDemandesTableau();
+            demandesArray.unshift(demande);
+            sauvegarderDemandes(demandesArray);
+            verifierAccesBonus();
+        }
+
+        async function reclamerBonus() {
+            const contact = document.getElementById('input-bonus-contact').value.trim();
+            const errDiv = document.getElementById('erreur-bonus');
+            if (!contact) { errDiv.textContent = "Veuillez fournir votre information de réception."; errDiv.classList.add('show'); return; }
+            
+            const demande = { 
+                id: genererIDStable(utilisateurCourant.email, 'BONUS-'+Date.now()), 
+                type: 'BONUS', 
+                date: new Date().toISOString(), 
+                utilisateur: utilisateurCourant.nom, 
+                email: utilisateurCourant.email, 
+                userID: monUid, 
+                statut: 'en_attente', 
+                lotGagne: lotGagneInfo.nom, 
+                montant: lotGagneInfo.nom, 
+                adresse: contact, 
+                txid: 'RECU-ROUE-'+Date.now().toString().substring(0,6) 
+            };
+            const demandesArray = getDemandesTableau();
+            demandesArray.unshift(demande);
+            sauvegarderDemandes(demandesArray);
+            
+            document.getElementById('roue-resultat').innerHTML = `<h3 style="color:var(--success);"><i class="fas fa-check-circle"></i> Demande envoyée !</h3><p style="color:var(--text-secondary); margin-top:10px;">L'administrateur va vérifier et valider votre gain.</p>`;
+            
+            setTimeout(() => { 
+                fermerModalRoue();
+                verifierAccesBonus();
+                switchPlatformSection('demandes'); 
+                mettreAJourMesDemandes(); 
+            }, 2000);
+        }
+
+        // ============================================
 
         function verifierPause(){ 
             const pa=donnees.pause?.achat; 
@@ -790,6 +884,7 @@
             if(ov) document.getElementById('operateur-vente').value=ov; 
             if(pv) document.getElementById('portefeuille-vente').value=pv; 
             afficherFraisReseauAchat(); afficherFraisReseauVente(); 
+            mettreAJourChampAdresseVente();
         }
         
         function mettreAJourReseaux(t){ 
@@ -800,7 +895,7 @@
             const rf=donnees.reseaux.filter(r=>r.crypto===c); 
             s.innerHTML=rf.map(r=>`<option value="${echapperHTML(r.nom)}" data-frais="${r.fraisReseau||0}">${echapperHTML(r.nom)}</option>`).join(''); 
             if(av&&Array.from(s.options).some(o=>o.value===av)) s.value=av; 
-            if(t==='achat'){ estimerAchat(); afficherFraisReseauAchat(); }else{ estimerVente(); afficherFraisReseauVente(); } 
+            if(t==='achat'){ estimerAchat(); afficherFraisReseauAchat(); }else{ estimerVente(); afficherFraisReseauVente(); mettreAJourChampAdresseVente(); } 
         }
         
         function afficherFraisReseauAchat(){ 
@@ -924,6 +1019,7 @@
                     utilisateurCourant = null;
                     sessionValide = false;
                     monUid = null;
+                    adressesUtilisateur = {};
                     localStorage.removeItem('typhSession');
                     sessionStorage.removeItem('typhSession');
                     showLandingPage();
@@ -941,60 +1037,29 @@
         function showPlatform(){ document.getElementById('landing-page').style.display='none'; document.getElementById('bottom-nav').classList.add('visible'); switchPlatformSection('accueil'); }
 
         async function ajouterNumero() {
-            if(!utilisateurCourant || !monUid){
-                showAuthModal();
-                return;
-            }
+            if(!utilisateurCourant || !monUid){ showAuthModal(); return; }
             const nom = document.getElementById('nouveau-nom').value.trim();
             const numero = document.getElementById('nouveau-numero').value.trim();
-            if(!nom || !numero){
-                alert('Veuillez remplir tous les champs');
-                return;
-            }
-            
+            if(!nom || !numero){ alert('Veuillez remplir tous les champs'); return; }
             const numerosActuels = utilisateurCourant.numeros || {};
-            if(Object.keys(numerosActuels).length >= 3){
-                alert('Limite de 3 numéros atteinte');
-                return;
-            }
-            
+            if(Object.keys(numerosActuels).length >= 3){ alert('Limite de 3 numéros atteinte'); return; }
             const idNumero = Date.now().toString();
-            const nouveauNumero = {
-                nom: nom,
-                numero: numero,
-                statut: 'en_attente',
-                dateAjout: new Date().toISOString()
-            };
-            
+            const nouveauNumero = { nom: nom, numero: numero, statut: 'en_attente', dateAjout: new Date().toISOString() };
             const chemin = `donnees/utilisateurs/${monUid}/numeros/${idNumero}`;
             try {
                 await database.ref(chemin).set(nouveauNumero);
                 document.getElementById('nouveau-nom').value = '';
                 document.getElementById('nouveau-numero').value = '';
                 alert('Numéro ajouté ! En attente d\'approbation par l\'administrateur.');
-            } catch(error) {
-                console.error(error);
-                alert('Erreur lors de l\'ajout du numéro');
-            }
+            } catch(error) { console.error(error); alert('Erreur lors de l\'ajout du numéro'); }
         }
 
         function mettreAJourNumerosUtilisateur() {
             const liste = document.getElementById('liste-numeros-utilisateur');
             if(!liste) return;
             const numeros = utilisateurCourant?.numeros || {};
-            if(Object.keys(numeros).length === 0){
-                liste.innerHTML = '<div class="activity-item">Aucun numéro</div>';
-                return;
-            }
-            liste.innerHTML = Object.entries(numeros).map(([id, num]) => `
-                <div class="numero-item">
-                    <div class="numero-info">
-                        <div class="numero-nom">${echapperHTML(num.nom)}</div>
-                        <div class="numero-value">${echapperHTML(num.numero)}</div>
-                    </div>
-                    <div class="numero-status status-${echapperHTML(num.statut)}">${num.statut === 'en_attente' ? 'En attente' : (num.statut === 'approuve' ? 'Approuvé' : 'Rejeté')}</div>
-                </div>
-            `).join('');
+            if(Object.keys(numeros).length === 0){ liste.innerHTML = '<div class="activity-item">Aucun numéro</div>'; return; }
+            liste.innerHTML = Object.entries(numeros).map(([id, num]) => `<div class="numero-item"><div class="numero-info"><div class="numero-nom">${echapperHTML(num.nom)}</div><div class="numero-value">${echapperHTML(num.numero)}</div></div><div class="numero-status status-${echapperHTML(num.statut)}">${num.statut === 'en_attente' ? 'En attente' : (num.statut === 'approuve' ? 'Approuvé' : 'Rejeté')}</div></div>`).join('');
         }
 
         function mettreAJourListeNumerosVente() {
@@ -1003,40 +1068,179 @@
             const numeros = utilisateurCourant.numeros || {};
             const numerosApprouves = Object.entries(numeros).filter(([id, num]) => num.statut === 'approuve');
             const ancienneValeur = select.value;
-            if(numerosApprouves.length === 0){
-                select.innerHTML = '<option value="">Aucun numéro approuvé</option>';
-                select.disabled = true;
-            } else {
-                select.disabled = false;
-                select.innerHTML = numerosApprouves.map(([id, num]) => 
-                    `<option value="${echapperHTML(num.numero)}" data-nom="${echapperHTML(num.nom)}" data-id="${id}">${echapperHTML(num.nom)} - ${echapperHTML(num.numero)}</option>`
-                ).join('');
-                if(ancienneValeur && Array.from(select.options).some(o => o.value === ancienneValeur)) select.value = ancienneValeur;
-            }
+            if(numerosApprouves.length === 0){ select.innerHTML = '<option value="">Aucun numéro approuvé</option>'; select.disabled = true; }
+            else { select.disabled = false; select.innerHTML = numerosApprouves.map(([id, num]) => `<option value="${echapperHTML(num.numero)}" data-nom="${echapperHTML(num.nom)}" data-id="${id}">${echapperHTML(num.nom)} - ${echapperHTML(num.numero)}</option>`).join(''); if(ancienneValeur && Array.from(select.options).some(o => o.value === ancienneValeur)) select.value = ancienneValeur; }
         }
 
         function mettreAJourListeNumerosAchat() {
             const select = document.getElementById('numero-achat-select');
             const groupe = document.getElementById('groupe-numero-achat');
             if(!select || !groupe) return;
-            if(!utilisateurCourant){
-                groupe.style.display = 'none';
-                return;
-            }
+            if(!utilisateurCourant){ groupe.style.display = 'none'; return; }
             const numeros = utilisateurCourant.numeros || {};
             const numerosApprouves = Object.entries(numeros).filter(([id, num]) => num.statut === 'approuve');
             if(numerosApprouves.length > 0){
                 groupe.style.display = 'block';
                 const ancienneValeur = select.value;
-                select.innerHTML = numerosApprouves.map(([id, num]) => 
-                    `<option value="${echapperHTML(num.numero)}" data-nom="${echapperHTML(num.nom)}" data-id="${id}">${echapperHTML(num.nom)} - ${echapperHTML(num.numero)}</option>`
-                ).join('');
+                select.innerHTML = numerosApprouves.map(([id, num]) => `<option value="${echapperHTML(num.numero)}" data-nom="${echapperHTML(num.nom)}" data-id="${id}">${echapperHTML(num.nom)} - ${echapperHTML(num.numero)}</option>`).join('');
                 if(ancienneValeur && Array.from(select.options).some(o => o.value === ancienneValeur)) select.value = ancienneValeur;
                 select.disabled = false;
+            } else { groupe.style.display = 'none'; select.innerHTML = '<option value="">Aucun numéro approuvé</option>'; select.disabled = true; }
+        }
+
+        function ouvrirModalAjoutAdresse() {
+            if(!utilisateurCourant || !monUid){ showAuthModal(); return; }
+            const cryptoSelect = document.getElementById('nouvelle-adresse-crypto');
+            if(cryptoSelect && donnees.cryptos) {
+                cryptoSelect.innerHTML = donnees.cryptos.map(c => `<option value="${echapperHTML(c)}">${echapperHTML(c)}</option>`).join('');
+            }
+            mettreAJourReseauxParCrypto();
+            document.getElementById('nouvelle-adresse-label').value = '';
+            document.getElementById('nouvelle-adresse-valeur').value = '';
+            document.getElementById('erreur-adresse').classList.remove('show');
+            document.getElementById('modal-ajout-adresse').classList.add('active');
+        }
+        
+        function fermerModalAjoutAdresse() { document.getElementById('modal-ajout-adresse').classList.remove('active'); }
+        
+        function mettreAJourReseauxParCrypto() {
+            const crypto = document.getElementById('nouvelle-adresse-crypto')?.value;
+            const reseauSelect = document.getElementById('nouvelle-adresse-reseau');
+            if(!reseauSelect || !donnees.reseaux || !crypto) return;
+            const reseauxFiltres = donnees.reseaux.filter(r => r.crypto === crypto);
+            const ancienneValeur = reseauSelect.value;
+            reseauSelect.innerHTML = reseauxFiltres.map(r => `<option value="${echapperHTML(r.nom)}">${echapperHTML(r.nom)}</option>`).join('');
+            if(ancienneValeur && Array.from(reseauSelect.options).some(o => o.value === ancienneValeur)) reseauSelect.value = ancienneValeur;
+        }
+        
+        async function enregistrerAdresse() {
+            const label = document.getElementById('nouvelle-adresse-label').value.trim();
+            const adresse = document.getElementById('nouvelle-adresse-valeur').value.trim();
+            const crypto = document.getElementById('nouvelle-adresse-crypto')?.value;
+            const reseau = document.getElementById('nouvelle-adresse-reseau')?.value;
+            
+            if(!label || !adresse || !crypto || !reseau) {
+                document.getElementById('erreur-adresse').textContent = 'Tous les champs sont requis';
+                document.getElementById('erreur-adresse').classList.add('show');
+                return;
+            }
+            
+            const tousUtilisateurs = await database.ref('donnees/utilisateurs').once('value');
+            const users = tousUtilisateurs.val() || {};
+            let adresseExistante = false;
+            
+            for(const [uid, userData] of Object.entries(users)) {
+                if(userData.adressesLiees) {
+                    for(const [addrId, addr] of Object.entries(userData.adressesLiees)) {
+                        if(addr.adresse === adresse && addr.crypto === crypto && addr.reseau === reseau) {
+                            if(uid !== monUid) { adresseExistante = true; break; }
+                        }
+                    }
+                }
+                if(adresseExistante) break;
+            }
+            
+            if(adresseExistante) {
+                document.getElementById('erreur-adresse').textContent = `Cette adresse est déjà utilisée par un autre utilisateur pour ${crypto}/${reseau}`;
+                document.getElementById('erreur-adresse').classList.add('show');
+                return;
+            }
+            
+            if(adressesUtilisateur) {
+                for(const [id, addr] of Object.entries(adressesUtilisateur)) {
+                    if(addr.adresse === adresse && addr.crypto === crypto && addr.reseau === reseau) {
+                        document.getElementById('erreur-adresse').textContent = 'Vous avez déjà enregistré cette adresse pour ce couple crypto/réseau';
+                        document.getElementById('erreur-adresse').classList.add('show');
+                        return;
+                    }
+                }
+            }
+            
+            const nouvelleAdresse = { label: label, adresse: adresse, crypto: crypto, reseau: reseau, dateAjout: new Date().toISOString() };
+            const idAdresse = Date.now().toString();
+            try {
+                await database.ref(`donnees/utilisateurs/${monUid}/adressesLiees/${idAdresse}`).set(nouvelleAdresse);
+                fermerModalAjoutAdresse();
+                alert('✅ Adresse enregistrée avec succès !');
+            } catch(error) { console.error(error); alert('Erreur lors de l\'enregistrement'); }
+        }
+        
+        async function supprimerAdresse(id) {
+            if(!confirm('Supprimer cette adresse ?')) return;
+            try { await database.ref(`donnees/utilisateurs/${monUid}/adressesLiees/${id}`).remove(); alert('✅ Adresse supprimée'); } 
+            catch(error) { console.error(error); alert('Erreur lors de la suppression'); }
+        }
+        
+        function mettreAJourListeAdresses() {
+            const liste = document.getElementById('liste-adresses-utilisateur');
+            if(!liste) return;
+            if(!adressesUtilisateur || Object.keys(adressesUtilisateur).length === 0) {
+                liste.innerHTML = '<div class="activity-item">Aucune adresse enregistrée</div>';
+                return;
+            }
+            liste.innerHTML = Object.entries(adressesUtilisateur).map(([id, addr]) => `
+                <div class="adresse-item">
+                    <div class="adresse-label"><i class="fas fa-tag"></i> ${echapperHTML(addr.label)}</div>
+                    <div class="adresse-value"><i class="fas fa-link"></i> ${echapperHTML(addr.adresse)}</div>
+                    <div class="adresse-details"><span><i class="fas fa-coins"></i> ${echapperHTML(addr.crypto)}</span><span><i class="fas fa-network-wired"></i> ${echapperHTML(addr.reseau)}</span></div>
+                    <button class="btn btn-delete-adresse" onclick="supprimerAdresse('${echapperHTML(id)}')"><i class="fas fa-trash"></i> Supprimer</button>
+                </div>
+            `).join('');
+        }
+        
+        function mettreAJourChampAdresseVente() {
+            const portefeuilleSelect = document.getElementById('portefeuille-vente');
+            const groupeAdresse = document.getElementById('groupe-adresse-liee');
+            const adresseSelect = document.getElementById('adresse-liee-select');
+            
+            if(!portefeuilleSelect || !groupeAdresse || !adresseSelect) return;
+            
+            const portefeuilleNom = portefeuilleSelect.value;
+            const portefeuille = donnees.portefeuilles?.find(p => p.nom === portefeuilleNom);
+            const liaisonRequise = portefeuille?.liaisonRequise || false;
+            
+            if(liaisonRequise && utilisateurCourant) {
+                const crypto = document.getElementById('crypto-vente')?.value;
+                const reseau = document.getElementById('reseau-vente')?.value;
+                const adressesFiltrees = Object.entries(adressesUtilisateur).filter(([id, addr]) => addr.crypto === crypto && addr.reseau === reseau);
+                
+                if(adressesFiltrees.length > 0) {
+                    groupeAdresse.style.display = 'block';
+                    const ancienneValeur = adresseSelect.value;
+                    adresseSelect.innerHTML = `<option value="">Sélectionnez une adresse</option>` + adressesFiltrees.map(([id, addr]) => `<option value="${echapperHTML(addr.adresse)}" data-label="${echapperHTML(addr.label)}" data-id="${id}">${echapperHTML(addr.label)} - ${echapperHTML(addr.adresse.substring(0,20))}...</option>`).join('');
+                    if(ancienneValeur && Array.from(adresseSelect.options).some(o => o.value === ancienneValeur)) adresseSelect.value = ancienneValeur;
+                    adresseSelect.disabled = false;
+                    const btnSuivant = document.getElementById('btn-confirmer-vente');
+                    if(btnSuivant) btnSuivant.disabled = !adresseSelect.value;
+                } else {
+                    groupeAdresse.style.display = 'block';
+                    adresseSelect.innerHTML = '<option value="">Aucune adresse enregistrée pour ce couple crypto/réseau</option>';
+                    adresseSelect.disabled = true;
+                    const btnSuivant = document.getElementById('btn-confirmer-vente');
+                    if(btnSuivant) btnSuivant.disabled = true;
+                }
             } else {
-                groupe.style.display = 'none';
-                select.innerHTML = '<option value="">Aucun numéro approuvé</option>';
-                select.disabled = true;
+                groupeAdresse.style.display = 'none';
+                adresseLieeSelectionnee = null;
+                const btnSuivant = document.getElementById('btn-confirmer-vente');
+                if(btnSuivant) btnSuivant.disabled = false;
+            }
+        }
+        
+        function selectionnerAdresseLiee() {
+            const select = document.getElementById('adresse-liee-select');
+            const infoDiv = document.getElementById('info-adresse-liee');
+            if(select && select.value) {
+                const label = select.selectedOptions[0]?.dataset?.label || '';
+                adresseLieeSelectionnee = select.value;
+                infoDiv.innerHTML = `<i class="fas fa-check-circle" style="color:var(--success);"></i> Adresse sélectionnée: ${echapperHTML(label)}<br><small style="word-break:break-all;">${echapperHTML(select.value)}</small>`;
+                const btnSuivant = document.getElementById('btn-confirmer-vente');
+                if(btnSuivant) btnSuivant.disabled = false;
+            } else {
+                adresseLieeSelectionnee = null;
+                infoDiv.innerHTML = '';
+                const btnSuivant = document.getElementById('btn-confirmer-vente');
+                if(btnSuivant) btnSuivant.disabled = true;
             }
         }
 
@@ -1056,6 +1260,7 @@
                 if(snapshot.exists()){
                     utilisateurCourant = snapshot.val();
                     utilisateurCourant.uid = monUid;
+                    adressesUtilisateur = utilisateurCourant.adressesLiees || {};
                 } else {
                     const nouvelUtilisateur = {
                         id: genererIDStable(fbUser.email, fbUser.displayName || 'Utilisateur'),
@@ -1063,11 +1268,13 @@
                         email: fbUser.email,
                         dateInscription: new Date().toISOString(),
                         numeros: {},
+                        adressesLiees: {},
                         codePIN: { hash: null, salt: null, actif: false, tentativeEchouees: 0, bloque: false }
                     };
                     await userRef.set(nouvelUtilisateur);
                     utilisateurCourant = nouvelUtilisateur;
                     utilisateurCourant.uid = monUid;
+                    adressesUtilisateur = {};
                 }
                 sessionValide = true;
                 const sessionData = { email: fbUser.email, nom: utilisateurCourant.nom, uid: monUid };
@@ -1075,51 +1282,38 @@
                 else sessionStorage.setItem('typhSession', JSON.stringify(sessionData));
                 mettreAJourAffichage();
                 demarrerEcouteNumeros();
+                demarrerEcouteAdresses();
                 if(document.getElementById('landing-page').style.display !== 'none') showPlatform();
             } else {
                 utilisateurCourant = null;
                 sessionValide = false;
                 monUid = null;
+                adressesUtilisateur = {};
                 ecouteNumerosActive = false;
+                ecouteAdressesActive = false;
             }
         });
 
         function preparerConfirmation(type) {
-            if(!sessionValide || !utilisateurCourant){
-                alert('Veuillez vous connecter');
-                showAuthModal();
-                return;
-            }
+            if(!sessionValide || !utilisateurCourant){ alert('Veuillez vous connecter'); showAuthModal(); return; }
             
             if(type === 'ACHAT'){
                 const selectNumero = document.getElementById('numero-achat-select');
-                if(!selectNumero || !selectNumero.value){
-                    alert('Veuillez sélectionner un numéro à débiter');
-                    return;
-                }
-                if(!verifierLimitesAchat()){
-                    alert('Montant hors limites');
-                    return;
-                }
+                if(!selectNumero || !selectNumero.value){ alert('Veuillez sélectionner un numéro à débiter'); return; }
+                if(!verifierLimitesAchat()){ alert('Montant hors limites'); return; }
                 const montant = parseFloat(document.getElementById('montant-achat').value);
-                if(isNaN(montant) || montant <= 0){
-                    alert('Montant invalide');
-                    return;
-                }
+                if(isNaN(montant) || montant <= 0){ alert('Montant invalide'); return; }
             } else if(type === 'VENTE'){
                 const selectNumero = document.getElementById('numero-vente-select');
-                if(!selectNumero || !selectNumero.value){
-                    alert('Veuillez sélectionner un numéro à créditer');
-                    return;
-                }
-                if(!verifierLimitesVente()){
-                    alert('Montant hors limites');
-                    return;
-                }
+                if(!selectNumero || !selectNumero.value){ alert('Veuillez sélectionner un numéro à créditer'); return; }
+                if(!verifierLimitesVente()){ alert('Montant hors limites'); return; }
                 const montant = parseFloat(document.getElementById('montant-vente').value);
-                if(isNaN(montant) || montant <= 0){
-                    alert('Montant invalide');
-                    return;
+                if(isNaN(montant) || montant <= 0){ alert('Montant invalide'); return; }
+                
+                const portefeuilleNom = document.getElementById('portefeuille-vente')?.value;
+                const portefeuille = donnees.portefeuilles?.find(p => p.nom === portefeuilleNom);
+                if(portefeuille?.liaisonRequise) {
+                    if(!adresseLieeSelectionnee) { alert('Veuillez sélectionner votre adresse de réception'); return; }
                 }
             }
             
@@ -1139,16 +1333,22 @@
                     montantRecu: montantRecuAchat
                 };
             } else {
+                const portefeuilleNom = document.getElementById('portefeuille-vente')?.value;
+                const portefeuille = donnees.portefeuilles?.find(p => p.nom === portefeuilleNom);
+                const adresseUtilisee = (portefeuille?.liaisonRequise && adresseLieeSelectionnee) ? adresseLieeSelectionnee : null;
+                
+                // === CORRECTION ICI : Remplacement de adressePersonnelle par adresseLiee ===
                 transactionEnAttente = {
                     type: 'VENTE',
                     montant: parseFloat(document.getElementById('montant-vente').value),
                     crypto: document.getElementById('crypto-vente').value,
                     reseau: document.getElementById('reseau-vente').value,
                     operateur: document.getElementById('operateur-vente').value,
-                    portefeuille: document.getElementById('portefeuille-vente').value,
+                    portefeuille: portefeuilleNom,
                     numero: document.getElementById('numero-vente-select').value,
                     nomNumero: document.getElementById('numero-vente-select').selectedOptions[0]?.dataset?.nom || '',
-                    montantRecu: montantRecuVente
+                    montantRecu: montantRecuVente,
+                    adresseLiee: adresseUtilisee 
                 };
             }
             
@@ -1157,53 +1357,35 @@
         
         function ouvrirModalConfirmation(){
             if(!transactionEnAttente) return;
-            
             const modal = document.getElementById('modal-confirmation');
             const detailsDiv = document.getElementById('details-demande');
             const messageContainer = document.getElementById('message-paiement-container');
             const messageTexte = document.getElementById('message-paiement-texte');
-            
             let detailsHtml = '';
             let messagePaiement = '';
             
             if(transactionEnAttente.type === 'ACHAT'){
                 const operateur = donnees.operateurs.find(o => o.nom === transactionEnAttente.operateur);
                 messagePaiement = operateur ? operateur.messageConfirmation : 'Effectuez le paiement au numéro indiqué';
-                
-                detailsHtml = `
-                    <p><strong>Type:</strong> <span>ACHAT de crypto</span></p>
-                    <p><strong>Montant à payer:</strong> <span>${transactionEnAttente.montant.toLocaleString()} Ar</span></p>
-                    <p><strong>Crypto reçue:</strong> <span>${transactionEnAttente.montantRecu.toFixed(4)} ${transactionEnAttente.crypto}</span></p>
-                    <p><strong>Opérateur:</strong> <span>${echapperHTML(transactionEnAttente.operateur)}</span></p>
-                    <p><strong>Réseau:</strong> <span>${echapperHTML(transactionEnAttente.reseau)}</span></p>
-                    <p><strong>Portefeuille destination:</strong> <span>${echapperHTML(transactionEnAttente.portefeuille)}</span></p>
-                    <p><strong>Adresse destination:</strong> <span style="word-break:break-all;">${echapperHTML(transactionEnAttente.adresse || 'Non spécifiée')}</span></p>
-                    <p><strong>Numéro à débiter:</strong> <span>${echapperHTML(transactionEnAttente.nomNumero)} (${echapperHTML(transactionEnAttente.numero)})</span></p>
-                `;
+                detailsHtml = `<p><strong>Type:</strong> <span>ACHAT de crypto</span></p><p><strong>Montant à payer:</strong> <span>${transactionEnAttente.montant.toLocaleString()} Ar</span></p><p><strong>Crypto reçue:</strong> <span>${transactionEnAttente.montantRecu.toFixed(4)} ${transactionEnAttente.crypto}</span></p><p><strong>Opérateur:</strong> <span>${echapperHTML(transactionEnAttente.operateur)}</span></p><p><strong>Réseau:</strong> <span>${echapperHTML(transactionEnAttente.reseau)}</span></p><p><strong>Portefeuille destination:</strong> <span>${echapperHTML(transactionEnAttente.portefeuille)}</span></p><p><strong>Adresse destination:</strong> <span style="word-break:break-all;">${echapperHTML(transactionEnAttente.adresse || 'Non spécifiée')}</span></p><p><strong>Numéro à débiter:</strong> <span>${echapperHTML(transactionEnAttente.nomNumero)} (${echapperHTML(transactionEnAttente.numero)})</span></p>`;
             } else {
                 const portefeuille = donnees.portefeuilles.find(p => p.nom === transactionEnAttente.portefeuille);
                 messagePaiement = portefeuille ? portefeuille.messageConfirmation : 'Envoyez les cryptos à l\'adresse indiquée';
-                
-                detailsHtml = `
-                    <p><strong>Type:</strong> <span>VENTE de crypto</span></p>
-                    <p><strong>Crypto à envoyer:</strong> <span>${transactionEnAttente.montant} ${transactionEnAttente.crypto}</span></p>
-                    <p><strong>Montant reçu:</strong> <span>${transactionEnAttente.montantRecu.toLocaleString()} Ar</span></p>
-                    <p><strong>Réseau:</strong> <span>${echapperHTML(transactionEnAttente.reseau)}</span></p>
-                    <p><strong>Portefeuille source:</strong> <span>${echapperHTML(transactionEnAttente.portefeuille)}</span></p>
-                    <p><strong>Opérateur:</strong> <span>${echapperHTML(transactionEnAttente.operateur)}</span></p>
-                    <p><strong>Numéro à créditer:</strong> <span>${echapperHTML(transactionEnAttente.nomNumero)} (${echapperHTML(transactionEnAttente.numero)})</span></p>
-                `;
+                let adresseDestinataire = '';
+                if(transactionEnAttente.adresseLiee) {
+                    adresseDestinataire = `<p><strong>📍 Mon adresse de réception:</strong> <span style="word-break:break-all;">${echapperHTML(transactionEnAttente.adresseLiee)}</span></p>`;
+                } else {
+                    adresseDestinataire = `<p><strong>Adresse du portefeuille:</strong> <span style="word-break:break-all;">${portefeuille ? echapperHTML(portefeuille.reponse) : 'Non spécifiée'}</span></p>`;
+                }
+                detailsHtml = `<p><strong>Type:</strong> <span>VENTE de crypto</span></p><p><strong>Crypto à envoyer:</strong> <span>${transactionEnAttente.montant} ${transactionEnAttente.crypto}</span></p><p><strong>Montant reçu:</strong> <span>${transactionEnAttente.montantRecu.toLocaleString()} Ar</span></p><p><strong>Réseau:</strong> <span>${echapperHTML(transactionEnAttente.reseau)}</span></p><p><strong>Portefeuille source:</strong> <span>${echapperHTML(transactionEnAttente.portefeuille)}</span></p>${adresseDestinataire}<p><strong>Opérateur:</strong> <span>${echapperHTML(transactionEnAttente.operateur)}</span></p><p><strong>Numéro à créditer:</strong> <span>${echapperHTML(transactionEnAttente.nomNumero)} (${echapperHTML(transactionEnAttente.numero)})</span></p>`;
             }
             
             detailsDiv.innerHTML = detailsHtml;
             messageTexte.textContent = messagePaiement;
             messageContainer.style.display = 'block';
-            
             document.getElementById('txid-input').value = '';
-            
             tempsRestant = 900;
             demarrerTimer();
-            
             modal.classList.add('active');
         }
         
@@ -1211,56 +1393,22 @@
             if(timerInterval) clearInterval(timerInterval);
             const timerDisplay = document.getElementById('timer-display');
             timerInterval = setInterval(() => {
-                if(tempsRestant <= 0){
-                    clearInterval(timerInterval);
-                    timerDisplay.textContent = '00:00';
-                    alert('Délai expiré. Veuillez refaire une demande.');
-                    fermerModalConfirmation();
-                } else {
-                    tempsRestant--;
-                    const minutes = Math.floor(tempsRestant / 60);
-                    const secondes = tempsRestant % 60;
-                    timerDisplay.textContent = `${minutes.toString().padStart(2,'0')}:${secondes.toString().padStart(2,'0')}`;
-                }
+                if(tempsRestant <= 0){ clearInterval(timerInterval); timerDisplay.textContent = '00:00'; alert('Délai expiré. Veuillez refaire une demande.'); fermerModalConfirmation(); }
+                else { tempsRestant--; const minutes = Math.floor(tempsRestant / 60); const secondes = tempsRestant % 60; timerDisplay.textContent = `${minutes.toString().padStart(2,'0')}:${secondes.toString().padStart(2,'0')}`; }
             }, 1000);
         }
         
-        function fermerModalConfirmation(){
-            if(timerInterval) clearInterval(timerInterval);
-            document.getElementById('modal-confirmation').classList.remove('active');
-        }
+        function fermerModalConfirmation(){ if(timerInterval) clearInterval(timerInterval); document.getElementById('modal-confirmation').classList.remove('active'); }
         
-        function copierMessagePaiement(){
-            const message = document.getElementById('message-paiement-texte').textContent;
-            navigator.clipboard.writeText(message).then(() => {
-                alert('Message copié !');
-            });
-        }
+        function copierMessagePaiement(){ const message = document.getElementById('message-paiement-texte').textContent; navigator.clipboard.writeText(message).then(() => { alert('Message copié !'); }); }
         
         function validerConfirmation(){
             const txid = document.getElementById('txid-input').value.trim();
-            if(!txid){
-                alert('Veuillez fournir le TXID ou la preuve d\'envoi');
-                return;
-            }
-            
-            if(!utilisateurCourant.codePIN || !utilisateurCourant.codePIN.actif){
-                alert('Veuillez d\'abord configurer votre code PIN dans le profil');
-                fermerModalConfirmation();
-                switchPlatformSection('profil');
-                return;
-            }
-            
-            if(utilisateurCourant.codePIN.bloque){
-                alert('Code PIN bloqué après trop de tentatives. Contactez l\'administrateur pour le débloquer.');
-                fermerModalConfirmation();
-                return;
-            }
-            
+            if(!txid){ alert('Veuillez fournir le TXID ou la preuve d\'envoi'); return; }
+            if(!utilisateurCourant.codePIN || !utilisateurCourant.codePIN.actif){ alert('Veuillez d\'abord configurer votre code PIN dans le profil'); fermerModalConfirmation(); switchPlatformSection('profil'); return; }
+            if(utilisateurCourant.codePIN.bloque){ alert('Code PIN bloqué après trop de tentatives. Contactez l\'administrateur pour le débloquer.'); fermerModalConfirmation(); return; }
             transactionEnAttente.txid = txid;
-            
             fermerModalConfirmation();
-            
             ouvrirModalPIN();
         }
         
@@ -1268,6 +1416,9 @@
             const modal = document.getElementById('modal-pin');
             const setupDiv = document.getElementById('pin-setup');
             const verificationDiv = document.getElementById('pin-verification');
+            const resetDiv = document.getElementById('pin-reset');
+            
+            resetDiv.style.display = 'none';
             
             if(utilisateurCourant && utilisateurCourant.codePIN && utilisateurCourant.codePIN.actif){
                 setupDiv.style.display = 'none';
@@ -1286,156 +1437,92 @@
                 mettreAJourAffichagePIN('setup-confirm');
                 document.getElementById('pin-setup-error').classList.remove('show');
             }
-            
             modal.classList.add('active');
         }
         
-        function fermerModalPIN(){
-            document.getElementById('modal-pin').classList.remove('active');
-            pinSetupValue = '';
-            pinSetupConfirmValue = '';
-            pinVerifValue = '';
-        }
+        function fermerModalPIN(){ document.getElementById('modal-pin').classList.remove('active'); pinSetupValue = ''; pinSetupConfirmValue = ''; pinVerifValue = ''; }
         
         function ajouterChiffrePIN(mode, chiffre){
-            if(mode === 'setup'){
-                if(pinSetupValue.length < 6){
-                    pinSetupValue += chiffre;
-                    mettreAJourAffichagePIN('setup');
-                }
-            } else if(mode === 'setup-confirm'){
-                if(pinSetupConfirmValue.length < 6){
-                    pinSetupConfirmValue += chiffre;
-                    mettreAJourAffichagePIN('setup-confirm');
-                }
-            }
+            if(mode === 'setup'){ if(pinSetupValue.length < 6){ pinSetupValue += chiffre; mettreAJourAffichagePIN('setup'); } }
+            else if(mode === 'setup-confirm'){ if(pinSetupConfirmValue.length < 6){ pinSetupConfirmValue += chiffre; mettreAJourAffichagePIN('setup-confirm'); } }
         }
         
-        function ajouterChiffrePINVerification(chiffre){
-            if(pinVerifValue.length < 6){
-                pinVerifValue += chiffre;
-                mettreAJourAffichagePINVerification();
-            }
-        }
-        
+        function ajouterChiffrePINVerification(chiffre){ if(pinVerifValue.length < 6){ pinVerifValue += chiffre; mettreAJourAffichagePINVerification(); } }
         function effacerDernierPIN(mode){
-            if(mode === 'setup'){
-                pinSetupValue = pinSetupValue.slice(0, -1);
-                mettreAJourAffichagePIN('setup');
-            } else if(mode === 'setup-confirm'){
-                pinSetupConfirmValue = pinSetupConfirmValue.slice(0, -1);
-                mettreAJourAffichagePIN('setup-confirm');
-            }
+            if(mode === 'setup'){ pinSetupValue = pinSetupValue.slice(0, -1); mettreAJourAffichagePIN('setup'); }
+            else if(mode === 'setup-confirm'){ pinSetupConfirmValue = pinSetupConfirmValue.slice(0, -1); mettreAJourAffichagePIN('setup-confirm'); }
         }
-        
         function effacerPIN(mode){
-            if(mode === 'setup'){
-                pinSetupValue = '';
-                mettreAJourAffichagePIN('setup');
-            } else if(mode === 'setup-confirm'){
-                pinSetupConfirmValue = '';
-                mettreAJourAffichagePIN('setup-confirm');
-            }
+            if(mode === 'setup'){ pinSetupValue = ''; mettreAJourAffichagePIN('setup'); }
+            else if(mode === 'setup-confirm'){ pinSetupConfirmValue = ''; mettreAJourAffichagePIN('setup-confirm'); }
         }
-        
-        function effacerDernierPINVerification(){
-            pinVerifValue = pinVerifValue.slice(0, -1);
-            mettreAJourAffichagePINVerification();
-        }
-        
-        function effacerPINVerification(){
-            pinVerifValue = '';
-            mettreAJourAffichagePINVerification();
-        }
+        function effacerDernierPINVerification(){ pinVerifValue = pinVerifValue.slice(0, -1); mettreAJourAffichagePINVerification(); }
+        function effacerPINVerification(){ pinVerifValue = ''; mettreAJourAffichagePINVerification(); }
         
         function mettreAJourAffichagePIN(mode){
             const valeur = mode === 'setup' ? pinSetupValue : pinSetupConfirmValue;
             for(let i = 1; i <= 6; i++){
                 const digit = document.getElementById(`${mode}-digit${i}`);
-                if(digit){
-                    if(i <= valeur.length){
-                        digit.textContent = '●';
-                        digit.classList.add('filled');
-                    } else {
-                        digit.textContent = '';
-                        digit.classList.remove('filled');
-                    }
-                }
+                if(digit){ if(i <= valeur.length){ digit.textContent = '●'; digit.classList.add('filled'); } else { digit.textContent = ''; digit.classList.remove('filled'); } }
             }
         }
         
         function mettreAJourAffichagePINVerification(){
             for(let i = 1; i <= 6; i++){
                 const digit = document.getElementById(`verif-digit${i}`);
-                if(digit){
-                    if(i <= pinVerifValue.length){
-                        digit.textContent = '●';
-                        digit.classList.add('filled');
-                    } else {
-                        digit.textContent = '';
-                        digit.classList.remove('filled');
-                    }
-                }
+                if(digit){ if(i <= pinVerifValue.length){ digit.textContent = '●'; digit.classList.add('filled'); } else { digit.textContent = ''; digit.classList.remove('filled'); } }
             }
         }
         
         function selectionnerCasePIN(idx){}
         
-        async function sauvegarderPIN(){
-            if(pinSetupValue.length !== 6){
-                document.getElementById('pin-setup-error').textContent = 'Le code PIN doit contenir 6 chiffres';
-                document.getElementById('pin-setup-error').classList.add('show');
-                return;
-            }
-            
-            if(pinSetupValue !== pinSetupConfirmValue){
-                document.getElementById('pin-setup-error').textContent = 'Les codes PIN ne correspondent pas';
-                document.getElementById('pin-setup-error').classList.add('show');
-                return;
-            }
+        // ====== RESET PIN ======
+        function afficherResetPIN() {
+            document.getElementById('pin-verification').style.display = 'none';
+            document.getElementById('pin-reset').style.display = 'block';
+            document.getElementById('reset-pin-error').classList.remove('show');
+            document.getElementById('reset-pin-id').value = '';
+        }
+        function annulerResetPIN() {
+            document.getElementById('pin-reset').style.display = 'none';
+            document.getElementById('pin-verification').style.display = 'block';
+        }
+        async function validerResetPIN() {
+            const inputId = document.getElementById('reset-pin-id').value.trim();
+            if(!inputId) { document.getElementById('reset-pin-error').textContent = 'Veuillez entrer votre ID'; document.getElementById('reset-pin-error').classList.add('show'); return; }
+            if(inputId !== utilisateurCourant.id) { document.getElementById('reset-pin-error').textContent = 'ID incorrect'; document.getElementById('reset-pin-error').classList.add('show'); return; }
             
             try {
+                await database.ref(`donnees/utilisateurs/${monUid}/codePIN`).set({ actif: false, bloque: false, tentativeEchouees: 0, hash: null, salt: null });
+                if(utilisateurCourant.codePIN) { utilisateurCourant.codePIN.actif = false; utilisateurCourant.codePIN.bloque = false; }
+                alert('✅ Code PIN réinitialisé ! Veuillez configurer un nouveau code.');
+                document.getElementById('pin-reset').style.display = 'none';
+                ouvrirModalPIN();
+            } catch(e) { console.error(e); document.getElementById('reset-pin-error').textContent = 'Erreur serveur'; document.getElementById('reset-pin-error').classList.add('show'); }
+        }
+        
+        async function sauvegarderPIN(){
+            if(pinSetupValue.length !== 6){ document.getElementById('pin-setup-error').textContent = 'Le code PIN doit contenir 6 chiffres'; document.getElementById('pin-setup-error').classList.add('show'); return; }
+            if(pinSetupValue !== pinSetupConfirmValue){ document.getElementById('pin-setup-error').textContent = 'Les codes PIN ne correspondent pas'; document.getElementById('pin-setup-error').classList.add('show'); return; }
+            try {
                 const {hash, salt} = await hasherPIN(pinSetupValue);
-                const updates = {
-                    [`donnees/utilisateurs/${monUid}/codePIN/hash`]: hash,
-                    [`donnees/utilisateurs/${monUid}/codePIN/salt`]: salt,
-                    [`donnees/utilisateurs/${monUid}/codePIN/actif`]: true,
-                    [`donnees/utilisateurs/${monUid}/codePIN/tentativeEchouees`]: 0,
-                    [`donnees/utilisateurs/${monUid}/codePIN/bloque`]: false
-                };
+                const updates = { [`donnees/utilisateurs/${monUid}/codePIN/hash`]: hash, [`donnees/utilisateurs/${monUid}/codePIN/salt`]: salt, [`donnees/utilisateurs/${monUid}/codePIN/actif`]: true, [`donnees/utilisateurs/${monUid}/codePIN/tentativeEchouees`]: 0, [`donnees/utilisateurs/${monUid}/codePIN/bloque`]: false };
                 await database.ref().update(updates);
-                if(utilisateurCourant) {
-                    utilisateurCourant.codePIN = { hash, salt, actif: true, tentativeEchouees: 0, bloque: false };
-                }
+                if(utilisateurCourant) { utilisateurCourant.codePIN = { hash, salt, actif: true, tentativeEchouees: 0, bloque: false }; }
                 alert('✅ Code PIN enregistré avec succès !');
                 fermerModalPIN();
                 mettreAJourProfil();
-            } catch(error){
-                console.error(error);
-                alert('Erreur lors de l\'enregistrement du PIN');
-            }
+            } catch(error){ console.error(error); alert('Erreur lors de l\'enregistrement du PIN'); }
         }
         
         async function verifierPIN(){
-            if(pinVerifValue.length !== 6){
-                document.getElementById('pin-error').textContent = 'Code PIN invalide (6 chiffres requis)';
-                document.getElementById('pin-error').classList.add('show');
-                return;
-            }
-            
-            if(!utilisateurCourant || !utilisateurCourant.codePIN || !utilisateurCourant.codePIN.actif){
-                alert('Code PIN non configuré');
-                fermerModalPIN();
-                return;
-            }
-            
+            if(pinVerifValue.length !== 6){ document.getElementById('pin-error').textContent = 'Code PIN invalide (6 chiffres requis)'; document.getElementById('pin-error').classList.add('show'); return; }
+            if(!utilisateurCourant || !utilisateurCourant.codePIN || !utilisateurCourant.codePIN.actif){ alert('Code PIN non configuré'); fermerModalPIN(); return; }
             const storedHash = utilisateurCourant.codePIN.hash;
             const salt = utilisateurCourant.codePIN.salt;
-            
             const data = new TextEncoder().encode(pinVerifValue + salt);
             const hash = await crypto.subtle.digest('SHA-256', data);
             const hashHex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
-            
             if(hashHex === storedHash){
                 document.getElementById('pin-error').classList.remove('show');
                 await database.ref(`donnees/utilisateurs/${monUid}/codePIN/tentativeEchouees`).set(0);
@@ -1446,7 +1533,6 @@
                 let tentativas = (utilisateurCourant.codePIN.tentativeEchouees || 0) + 1;
                 await database.ref(`donnees/utilisateurs/${monUid}/codePIN/tentativeEchouees`).set(tentativas);
                 if(utilisateurCourant.codePIN) utilisateurCourant.codePIN.tentativeEchouees = tentativas;
-                
                 if(tentativas >= 3){
                     await database.ref(`donnees/utilisateurs/${monUid}/codePIN/bloque`).set(true);
                     if(utilisateurCourant.codePIN) utilisateurCourant.codePIN.bloque = true;
@@ -1464,85 +1550,29 @@
         
         async function creerDemande(){
             if(!transactionEnAttente || !utilisateurCourant) return;
-            
-            const demande = {
-                id: genererIDStable(utilisateurCourant.email, Date.now().toString()),
-                type: transactionEnAttente.type,
-                date: new Date().toISOString(),
-                utilisateur: utilisateurCourant.nom,
-                email: utilisateurCourant.email,
-                userID: monUid,
-                statut: 'en_attente',
-                txid: transactionEnAttente.txid,
-                ...transactionEnAttente
-            };
-            
+            const demande = { id: genererIDStable(utilisateurCourant.email, Date.now().toString()), type: transactionEnAttente.type, date: new Date().toISOString(), utilisateur: utilisateurCourant.nom, email: utilisateurCourant.email, userID: monUid, statut: 'en_attente', txid: transactionEnAttente.txid, ...transactionEnAttente };
             const demandesArray = getDemandesTableau();
             demandesArray.unshift(demande);
             sauvegarderDemandes(demandesArray);
-            
             ouvrirModalSucces(demande);
-            
             transactionEnAttente = null;
             typeTransactionEnCours = null;
-            
-            setTimeout(() => {
-                switchPlatformSection('demandes');
-                mettreAJourMesDemandes();
-            }, 2000);
+            adresseLieeSelectionnee = null;
+            setTimeout(() => { switchPlatformSection('demandes'); mettreAJourMesDemandes(); }, 2000);
         }
         
         function ouvrirModalSucces(demande){
             const modal = document.getElementById('modal-recu');
             const recuContent = document.getElementById('recu-content');
-            
-            const montantRecu = demande.type === 'ACHAT' ? 
-                `${demande.montantRecu.toFixed(4)} ${demande.crypto}` : 
-                `${demande.montantRecu.toLocaleString()} Ar`;
-            
-            recuContent.innerHTML = `
-                <div class="receipt-amount-large">
-                    <div class="amount">${echapperHTML(montantRecu)}</div>
-                    <div class="description">${demande.type === 'ACHAT' ? 'Achat effectué' : 'Vente effectuée'}</div>
-                    <div class="badge-statut en_attente">EN ATTENTE</div>
-                </div>
-                <div class="receipt-details">
-                    <div class="detail-row"><span class="detail-label">ID Transaction</span><span class="detail-value">${echapperHTML(demande.id)}</span></div>
-                    <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${echapperHTML(demande.type)}</span></div>
-                    <div class="detail-row"><span class="detail-label">Montant</span><span class="detail-value">${demande.type === 'ACHAT' ? demande.montant.toLocaleString() + ' Ar' : demande.montant + ' ' + demande.crypto}</span></div>
-                    <div class="detail-row"><span class="detail-label">Vous recevez</span><span class="detail-value">${echapperHTML(montantRecu)}</span></div>
-                    <div class="detail-row"><span class="detail-label">TXID</span><span class="detail-value small">${echapperHTML(demande.txid)}</span></div>
-                    <div class="detail-row"><span class="detail-label">Statut</span><span class="detail-value">En attente de validation</span></div>
-                </div>
-                <p style="text-align:center; color:var(--warning); margin-top:15px;">
-                    <i class="fas fa-clock"></i> Votre demande est en cours de traitement par l'administrateur
-                </p>
-            `;
-            
+            const montantRecu = demande.type === 'ACHAT' ? `${demande.montantRecu.toFixed(4)} ${demande.crypto}` : `${demande.montantRecu.toLocaleString()} Ar`;
+            recuContent.innerHTML = `<div class="receipt-amount-large"><div class="amount">${echapperHTML(montantRecu)}</div><div class="description">${demande.type === 'ACHAT' ? 'Achat effectué' : 'Vente effectuée'}</div><div class="badge-statut en_attente">EN ATTENTE</div></div><div class="receipt-details"><div class="detail-row"><span class="detail-label">ID Transaction</span><span class="detail-value">${echapperHTML(demande.id)}</span></div><div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${echapperHTML(demande.type)}</span></div><div class="detail-row"><span class="detail-label">Montant</span><span class="detail-value">${demande.type === 'ACHAT' ? demande.montant.toLocaleString() + ' Ar' : demande.montant + ' ' + demande.crypto}</span></div><div class="detail-row"><span class="detail-label">Vous recevez</span><span class="detail-value">${echapperHTML(montantRecu)}</span></div><div class="detail-row"><span class="detail-label">TXID</span><span class="detail-value small">${echapperHTML(demande.txid)}</span></div><div class="detail-row"><span class="detail-label">Statut</span><span class="detail-value">En attente de validation</span></div></div><p style="text-align:center; color:var(--warning); margin-top:15px;"><i class="fas fa-clock"></i> Votre demande est en cours de traitement par l'administrateur</p>`;
             modal.classList.add('active');
         }
         
-        function fermerModalRecu(){
-            document.getElementById('modal-recu').classList.remove('active');
-        }
-        
-        function verifierMesActifs(){
-            fermerModalRecu();
-            switchPlatformSection('accueil');
-        }
-        
-        function noter(v){
-            alert(`Merci pour votre ${v==='positif'||v==='negatif'?`retour ${v}`:`note de ${v} étoile(s)`} !`);
-            window.open('https://www.facebook.com/Typh.Exchange.Ofisialy','_blank');
-        }
-        
-        function gererPIN(){
-            if(!sessionValide || !utilisateurCourant){
-                showAuthModal();
-                return;
-            }
-            ouvrirModalPIN();
-        }
+        function fermerModalRecu(){ document.getElementById('modal-recu').classList.remove('active'); }
+        function verifierMesActifs(){ fermerModalRecu(); switchPlatformSection('accueil'); }
+        function noter(v){ alert(`Merci pour votre ${v==='positif'||v==='negatif'?`retour ${v}`:`note de ${v} étoile(s)`} !`); window.open('https://www.facebook.com/Typh.Exchange.Ofisialy','_blank'); }
+        function gererPIN(){ if(!sessionValide || !utilisateurCourant){ showAuthModal(); return; } ouvrirModalPIN(); }
 
         function mettreAJourActiviteRecente(){ 
             const l=document.getElementById('recent-activity'); 
@@ -1550,7 +1580,7 @@
             const demandesArray = getDemandesTableau();
             const r=demandesArray.filter(d => d.statut === 'confirme').sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5); 
             if(r.length===0){ l.innerHTML='<div class="activity-item">Aucune activité récente</div>'; return; } 
-            l.innerHTML=r.map(d=>`<li class="activity-item"><div class="activity-left"><div class="activity-icon ${echapperHTML(d.type)}"><i class="fas ${d.type==='ACHAT'?'fa-arrow-down':'fa-arrow-up'}"></i></div><div class="activity-info"><h4>${echapperHTML(d.type)} ${echapperHTML(d.crypto)}</h4><div class="activity-date">${echapperHTML(new Date(d.date).toLocaleString())}</div></div></div><div><div class="activity-amount">${d.type==='ACHAT'?d.montant.toLocaleString()+' Ar':d.montant+' '+d.crypto}</div><div class="activity-status status-${echapperHTML(d.statut)}">${echapperHTML(d.statut)}</div></div></li>`).join(''); 
+            l.innerHTML=r.map(d=>`<li class="activity-item"><div class="activity-left"><div class="activity-icon ${echapperHTML(d.type)}"><i class="fas ${d.type==='ACHAT'?'fa-arrow-down':(d.type==='VENTE'?'fa-arrow-up':'fa-gift')}"></i></div><div class="activity-info"><h4>${echapperHTML(d.type)} ${d.crypto ? echapperHTML(d.crypto) : ''}</h4><div class="activity-date">${echapperHTML(new Date(d.date).toLocaleString())}</div></div></div><div><div class="activity-amount">${d.type==='ACHAT'?d.montant.toLocaleString()+' Ar':(d.type==='VENTE'?d.montant+' '+d.crypto:'Lot Gagné')}</div><div class="activity-status status-${echapperHTML(d.statut)}">${echapperHTML(d.statut)}</div></div></li>`).join(''); 
         }
         
         function mettreAJourMesDemandes(){ 
@@ -1560,7 +1590,8 @@
             const demandesArray = getDemandesTableau();
             const m=demandesArray.filter(d=>d.userID===monUid).sort((a,b)=>new Date(b.date)-new Date(a.date)); 
             if(m.length===0){ l.innerHTML='<div class="activity-item">Aucune demande</div>'; return; } 
-            l.innerHTML=m.map(d=>`<li class="activity-item" onclick="ouvrirRecu('${echapperHTML(d.id)}')"><div class="activity-left"><div class="activity-icon ${echapperHTML(d.type)}"><i class="fas ${d.type==='ACHAT'?'fa-arrow-down':'fa-arrow-up'}"></i></div><div class="activity-info"><h4>${echapperHTML(d.type)} ${echapperHTML(d.crypto)}</h4><div class="activity-date">${echapperHTML(new Date(d.date).toLocaleString())}</div></div></div><div><div class="activity-amount">${d.type==='ACHAT'?d.montant.toLocaleString()+' Ar':d.montant+' '+d.crypto}</div><div class="activity-status status-${echapperHTML(d.statut)}">${echapperHTML(d.statut)}</div></div></li>`).join(''); 
+            l.innerHTML=m.map(d=>`<li class="activity-item" onclick="ouvrirRecu('${echapperHTML(d.id)}')"><div class="activity-left"><div class="activity-icon ${echapperHTML(d.type)}"><i class="fas ${d.type==='ACHAT'?'fa-arrow-down':(d.type==='VENTE'?'fa-arrow-up':'fa-gift')}"></i></div><div class="activity-info"><h4>${echapperHTML(d.type)} ${d.crypto ? echapperHTML(d.crypto) : ''}</h4><div class="activity-date">${echapperHTML(new Date(d.date).toLocaleString())}</div></div></div><div><div class="activity-amount">${d.type==='ACHAT'?d.montant.toLocaleString()+' Ar':(d.type==='VENTE'?d.montant+' '+d.crypto:'Gain')}</div><div class="activity-status status-${echapperHTML(d.statut)}">${echapperHTML(d.statut)}</div></div></li>`).join(''); 
+            verifierAccesBonus();
         }
         
         function rafraichirMesDemandes() {
@@ -1568,22 +1599,10 @@
             if(monUid) {
                 database.ref('donnees/demandes').once('value').then((snapshot) => {
                     const demandes = snapshot.val();
-                    if(demandes) {
-                        donnees.demandes = demandes;
-                        mettreAJourMesDemandes();
-                        alert('✅ Demandes actualisées avec succès');
-                    } else {
-                        donnees.demandes = {};
-                        mettreAJourMesDemandes();
-                        alert('Aucune demande trouvée');
-                    }
-                }).catch(err => {
-                    console.error('Erreur rafraîchissement:', err);
-                    alert('Erreur lors du rafraîchissement: ' + err.message);
-                });
-            } else {
-                alert('Veuillez vous connecter');
-            }
+                    if(demandes) { donnees.demandes = demandes; mettreAJourMesDemandes(); alert('✅ Demandes actualisées avec succès'); }
+                    else { donnees.demandes = {}; mettreAJourMesDemandes(); alert('Aucune demande trouvée'); }
+                }).catch(err => { console.error('Erreur rafraîchissement:', err); alert('Erreur lors du rafraîchissement: ' + err.message); });
+            } else { alert('Veuillez vous connecter'); }
         }
         
         function ouvrirRecu(id){ 
@@ -1592,9 +1611,22 @@
             if(!d) return; 
             let mp='',desc='',st='',cl=''; 
             if(d.statut==='confirme'){ st='confirmée'; cl='confirme'; }else if(d.statut==='en_attente'){ st='en attente'; cl='en_attente'; }else if(d.statut==='rejete'){ st='rejetée'; cl='rejete'; } 
-            if(d.type==='ACHAT'){ mp=(d.montantRecu||0).toFixed(4)+' '+d.crypto; desc=`Achat ${st} de ${parseFloat(d.montant).toLocaleString()} Ar`; }else{ mp=(d.montantRecu||0).toLocaleString()+' Ar'; desc=`Vente ${st} de ${d.montant} ${d.crypto}`; } 
-            let b=d.type==='ACHAT'?(d.nomNumero?`${d.nomNumero} (${d.numero})`:d.adresse||'Non spécifié'):(d.nomNumero?`${d.nomNumero} (${d.numero})`:d.numero||'Non spécifié'); 
-            document.getElementById('recu-content').innerHTML=`<div class="receipt-amount-large"><div class="amount">${echapperHTML(mp)}</div><div class="description">${echapperHTML(desc)}</div><div class="badge-statut ${echapperHTML(cl)}">${echapperHTML(d.statut.toUpperCase())}</div></div><div class="receipt-details"><div class="detail-row"><span class="detail-label">ID Transaction</span><span class="detail-value small">${echapperHTML(d.id)}</span></div><div class="detail-row"><span class="detail-label">ID Client</span><span class="detail-value small">${echapperHTML(d.userID||'Non attribué')}</span></div><div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${echapperHTML(new Date(d.date).toLocaleString('fr-FR'))}</span></div><div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${echapperHTML(d.type)}</span></div><div class="detail-row"><span class="detail-label">Crypto</span><span class="detail-value">${echapperHTML(d.crypto)}</span></div><div class="detail-row"><span class="detail-label">Réseau</span><span class="detail-value">${echapperHTML(d.reseau||'N/A')}</span></div><div class="detail-row"><span class="detail-label">Montant envoyé</span><span class="detail-value">${d.type==='ACHAT'?parseFloat(d.montant).toLocaleString()+' Ar':d.montant+' '+d.crypto}</span></div><div class="detail-row"><span class="detail-label">Bénéficiaire / Débiteur</span><span class="detail-value small">${echapperHTML(b)}</span></div><div class="detail-row"><span class="detail-label">TXID</span><span class="detail-value small" style="cursor:pointer;" onclick="copierTexte('${echapperHTML(d.txid)}')">${d.txid?echapperHTML(d.txid.substring(0,20))+'...':'Non fourni'} ${d.txid?'<i class="fas fa-copy" style="margin-left:5px;"></i>':''}</span></div></div>`; 
+            
+            if(d.type==='ACHAT'){ mp=(d.montantRecu||0).toFixed(4)+' '+d.crypto; desc=`Achat ${st} de ${parseFloat(d.montant).toLocaleString()} Ar`; }
+            else if(d.type==='VENTE'){ mp=(d.montantRecu||0).toLocaleString()+' Ar'; desc=`Vente ${st} de ${d.montant} ${d.crypto}`; } 
+            else if(d.type==='BONUS'){ mp=echapperHTML(d.lotGagne || d.montant || 'N/A'); desc=`Bonus de fidélité ${st}`; }
+            
+            let b='';
+            if(d.type==='ACHAT') b=d.nomNumero?`${d.nomNumero} (${d.numero})`:d.adresse||'Non spécifié';
+            else if(d.type==='VENTE') b=d.nomNumero?`${d.nomNumero} (${d.numero})`:d.numero||'Non spécifié';
+            else if(d.type==='BONUS') b=d.adresse || d.numero || 'Non spécifié';
+
+            let typeInfoHtml = '';
+            if(d.type !== 'BONUS') {
+                typeInfoHtml = `<div class="detail-row"><span class="detail-label">Crypto</span><span class="detail-value">${echapperHTML(d.crypto)}</span></div><div class="detail-row"><span class="detail-label">Réseau</span><span class="detail-value">${echapperHTML(d.reseau||'N/A')}</span></div><div class="detail-row"><span class="detail-label">Montant envoyé</span><span class="detail-value">${d.type==='ACHAT'?parseFloat(d.montant).toLocaleString()+' Ar':d.montant+' '+d.crypto}</span></div>`;
+            }
+
+            document.getElementById('recu-content').innerHTML=`<div class="receipt-amount-large"><div class="amount">${echapperHTML(mp)}</div><div class="description">${echapperHTML(desc)}</div><div class="badge-statut ${echapperHTML(cl)}">${echapperHTML(d.statut.toUpperCase())}</div></div><div class="receipt-details"><div class="detail-row"><span class="detail-label">ID Transaction</span><span class="detail-value small">${echapperHTML(d.id)}</span></div><div class="detail-row"><span class="detail-label">ID Client</span><span class="detail-value small">${echapperHTML(d.userID||'Non attribué')}</span></div><div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${echapperHTML(new Date(d.date).toLocaleString('fr-FR'))}</span></div><div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${echapperHTML(d.type)}</span></div>${typeInfoHtml}<div class="detail-row"><span class="detail-label">${d.type==='BONUS'?'Info Réception':'Bénéficiaire / Débiteur'}</span><span class="detail-value small">${echapperHTML(b)}</span></div><div class="detail-row"><span class="detail-label">TXID/Preuve</span><span class="detail-value small" style="cursor:pointer;" onclick="copierTexte('${echapperHTML(d.txid)}')">${d.txid?echapperHTML(d.txid.substring(0,20))+'...':'Non fourni'} ${d.txid?'<i class="fas fa-copy" style="margin-left:5px;"></i>':''}</span></div></div>`; 
             document.getElementById('modal-recu').classList.add('active'); 
         }
         
@@ -1603,23 +1635,15 @@
         function afficherInfosNumeroAchat(){ 
             const select = document.getElementById('numero-achat-select');
             const infoDiv = document.getElementById('info-numero-achat-selectionne');
-            if(select && select.value && infoDiv){
-                const nom = select.selectedOptions[0]?.dataset?.nom || '';
-                infoDiv.innerHTML = `<i class="fas fa-check-circle" style="color:var(--success);"></i> Numéro sélectionné: ${echapperHTML(nom)} (${echapperHTML(select.value)})`;
-            } else if(infoDiv){
-                infoDiv.innerHTML = '';
-            }
+            if(select && select.value && infoDiv){ const nom = select.selectedOptions[0]?.dataset?.nom || ''; infoDiv.innerHTML = `<i class="fas fa-check-circle" style="color:var(--success);"></i> Numéro sélectionné: ${echapperHTML(nom)} (${echapperHTML(select.value)})`; }
+            else if(infoDiv){ infoDiv.innerHTML = ''; }
         }
         
         function afficherInfosNumeroVente(){ 
             const select = document.getElementById('numero-vente-select');
             const infoDiv = document.getElementById('info-numero-selectionne');
-            if(select && select.value && infoDiv){
-                const nom = select.selectedOptions[0]?.dataset?.nom || '';
-                infoDiv.innerHTML = `<i class="fas fa-check-circle" style="color:var(--success);"></i> Numéro sélectionné: ${echapperHTML(nom)} (${echapperHTML(select.value)})`;
-            } else if(infoDiv){
-                infoDiv.innerHTML = '';
-            }
+            if(select && select.value && infoDiv){ const nom = select.selectedOptions[0]?.dataset?.nom || ''; infoDiv.innerHTML = `<i class="fas fa-check-circle" style="color:var(--success);"></i> Numéro sélectionné: ${echapperHTML(nom)} (${echapperHTML(select.value)})`; }
+            else if(infoDiv){ infoDiv.innerHTML = ''; }
         }
         
         function fermerDetailsDemande(){ document.getElementById('modal-details-demande').classList.remove('active'); }
@@ -1638,7 +1662,7 @@
             if(s==='vente') afficherReponseVente(); 
             if(s==='demandes') mettreAJourMesDemandes(); 
             if(s==='achat'){ mettreAJourReseaux('achat'); estimerAchat(); afficherFraisReseauAchat(); verifierLimitesAchat(); mettreAJourListeNumerosAchat(); mettreAJourLimiteAchat(); } 
-            if(s==='vente'){ mettreAJourReseaux('vente'); estimerVente(); afficherFraisReseauVente(); verifierLimitesVente(); mettreAJourListeNumerosVente(); } 
+            if(s==='vente'){ mettreAJourReseaux('vente'); estimerVente(); afficherFraisReseauVente(); verifierLimitesVente(); mettreAJourListeNumerosVente(); mettreAJourChampAdresseVente(); } 
         }
         
         function switchPlatformSection(s){ 
@@ -1646,15 +1670,15 @@
             document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); 
             document.getElementById(`${s}-section`).classList.add('active'); 
             document.getElementById(`nav-${s}`).classList.add('active'); 
-            if(s==='vente'){ afficherReponseVente(); estimerVente(); afficherFraisReseauVente(); verifierLimitesVente(); mettreAJourListeNumerosVente(); } 
+            if(s==='vente'){ afficherReponseVente(); estimerVente(); afficherFraisReseauVente(); verifierLimitesVente(); mettreAJourListeNumerosVente(); mettreAJourChampAdresseVente(); } 
             if(s==='achat'){ estimerAchat(); afficherFraisReseauAchat(); verifierLimitesAchat(); mettreAJourListeNumerosAchat(); mettreAJourLimiteAchat(); } 
             if(s==='demandes'&&utilisateurCourant) mettreAJourMesDemandes(); 
-            if(s==='profil') mettreAJourNumerosUtilisateur(); 
+            if(s==='profil') { mettreAJourNumerosUtilisateur(); verifierAccesBonus(); }
             if(s==='accueil') afficherNews(); 
         }
 
         document.querySelector('.logo').addEventListener('dblclick',()=>window.open('admin.html','_blank'));
-        window.addEventListener('load',function(){ chargerDonnees(); console.log('🚀 Page index chargée - Version avec interface reçu de taux et téléchargement PNG'); });
+        window.addEventListener('load',function(){ chargerDonnees(); console.log('🚀 Page index chargée - Version Roue de la Fortune & POL Fix'); });
     </script>
 </body>
 </html>
