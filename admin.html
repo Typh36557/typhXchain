@@ -18,6 +18,7 @@
             --gray-200: #2D4B73; --gray-300: #3D5C86; --white: #FFFFFF;
             --shadow: 0 4px 6px -1px rgba(0,0,0,0.3); --radius-lg: 20px; --radius-xl: 24px;
             --binance: #F0B90B; --news-bg: #1a3650; --news-border: #3B82F6;
+            --bonus: #8B5CF6;
         }
         body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary); margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
         .app-header { background: var(--bg-card); padding: 18px 20px; border-bottom: 1px solid var(--gray-300); }
@@ -114,6 +115,7 @@
         .filter-bar { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
         .filter-bar select, .filter-bar input { padding: 14px; background: var(--primary); border: 1px solid var(--gray-300); border-radius: 40px; color: var(--white); font-size: 0.95rem; width: 100%; }
         .request-item { background: var(--primary); border-radius: 28px; padding: 20px; margin-bottom: 15px; border: 1px solid var(--gray-300); border-left: 4px solid transparent; }
+        .request-item.bonus { border-left-color: var(--bonus); }
         .numero-item { background: var(--primary); border-radius: 20px; padding: 15px; margin-bottom: 10px; border: 1px solid var(--gray-300); }
         .numero-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
         .numero-user { font-weight: 600; color: var(--white); font-size: 1rem; }
@@ -143,6 +145,7 @@
         .transaction-item.en_attente { border-left: 4px solid var(--warning); }
         .transaction-item.confirme { border-left: 4px solid var(--success); }
         .transaction-item.rejete { border-left: 4px solid var(--danger); }
+        .transaction-item.bonus-en_attente { border-left: 4px solid var(--bonus); }
         .transaction-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .badge-type { padding: 6px 16px; border-radius: 40px; font-size: 0.85rem; font-weight: 600; }
         .badge-type.ACHAT { background: #065f46; color: var(--success); }
@@ -180,6 +183,11 @@
         .info-message { background: var(--primary); padding: 12px; border-radius: 16px; margin: 10px 0; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
         .btn-manual-sync { background: var(--binance); color: var(--bg-dark); margin-top: 10px; }
         .btn-save-attentes { background: var(--warning); color: var(--bg-dark); }
+        .roue-lot-item { background: var(--gray-200); border-radius: 16px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .roue-lot-info { flex: 1; }
+        .roue-lot-nom { font-weight: 600; color: var(--white); }
+        .roue-lot-type { font-size: 0.7rem; color: var(--text-secondary); }
+        .roue-lot-prob { background: var(--accent); padding: 4px 12px; border-radius: 40px; font-size: 0.8rem; font-weight: 600; }
         @media (min-width: 768px) { .container { max-width: 600px; margin: 0 auto; } .nav-menu { max-width: 600px; } }
     </style>
 </head>
@@ -217,7 +225,7 @@
                 <div class="tab" onclick="switchTab('news')"><i class="fas fa-newspaper"></i> Actualités</div>
                 <div class="tab" onclick="switchTab('transactions')" id="tab-transactions"><i class="fas fa-exchange-alt"></i> Transactions<span id="notif-transactions" class="notification-badge" style="display: none;">0</span></div>
                 <div class="tab" onclick="switchTab('config')"><i class="fas fa-sliders-h"></i> Configuration</div>
-                <div class="tab" onclick="switchTab('roue')"><i class="fas fa-gift"></i> Bonus Roue</div>
+                <div class="tab" onclick="switchTab('roue')"><i class="fas fa-gift"></i> 🎰 Bonus Roue</div>
             </div>
             <div id="gestion-tab" style="display: block;">
                 <div class="admin-grid">
@@ -278,26 +286,23 @@
             </div>
             <div id="roue-tab" style="display: none;">
                 <div class="admin-card">
-                    <h2><i class="fas fa-power-off"></i> État de la Roue</h2>
-                    <div class="pause-controls" style="margin-bottom: 30px;">
-                        <div class="pause-info">
-                            <div class="pause-title">Statut actuel du jeu pour les clients</div>
-                            <div class="pause-status" id="roue-status-text">Actuellement: Désactivée</div>
-                        </div>
-                        <button class="btn" id="btn-toggle-roue" onclick="toggleRoueActive()"><i class="fas fa-play"></i> ACTIVER</button>
+                    <h2><i class="fas fa-dharmachakra"></i> 🎰 Configuration des Lots (Roue de la Fortune)</h2>
+                    <div class="info-message" style="background: rgba(139,92,246,0.1); border: 1px solid var(--bonus); color: #c4b5fd; margin-bottom: 20px;">
+                        <i class="fas fa-info-circle"></i> <strong>Fonctionnement :</strong> Les clients peuvent jouer une fois par jour après une transaction confirmée. Les gains sont envoyés ici pour approbation.
                     </div>
-                    
-                    <h2><i class="fas fa-dharmachakra"></i> Configuration des Lots</h2>
-                    <div id="roue-total-prob" style="margin-bottom: 15px; font-weight: bold; background: var(--bg-dark); padding: 10px; border-radius: 10px;">Total Probabilité: 100%</div>
+                    <div id="roue-total-prob" style="margin-bottom: 15px; font-weight: bold; background: var(--bg-dark); padding: 10px; border-radius: 10px;">Total Probabilité: <span id="roue-prob-total">0</span>%</div>
                     <div id="roue-liste" class="item-list"></div>
                     <button class="btn btn-add" onclick="ouvrirModal('roue')"><i class="fas fa-plus"></i> Ajouter un lot</button>
+                    <div class="info-message" style="margin-top: 20px; background: rgba(16,185,129,0.1); border-color: var(--success);">
+                        <i class="fas fa-check-circle"></i> <strong>Lots par défaut actifs :</strong> 1 USDT (5%), 2 USDT (3%), 5000 Ar (10%), 10000 Ar (5%), Merci (77%)
+                    </div>
                 </div>
             </div>
         </div>
         <div class="bottom-nav"><div class="nav-menu"><div class="nav-item" onclick="window.location.href='index.html'"><i class="fas fa-home"></i><span>Accueil</span></div><div class="nav-item active"><i class="fas fa-user-shield"></i><span>Admin</span></div><div class="nav-item" onclick="window.location.reload()"><i class="fas fa-sync-alt"></i><span>Refresh</span></div><div class="nav-item" onclick="exporterDonnees()"><i class="fas fa-download"></i><span>Export</span></div><div class="nav-item" onclick="logoutAdmin()"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></div></div></div>
     </div>
 
-    <div id="modal-details-transaction" class="modal"><div class="modal-content"><div class="modal-title" id="modal-transaction-titre"><i class="fas fa-info-circle"></i> Détails de la transaction</div><div id="details-transaction-complete" style="margin-bottom: 20px;"></div><div style="margin: 20px 0; text-align: center;"><button class="btn btn-download-recu" onclick="telechargerRecu()"><i class="fas fa-download"></i> Télécharger le reçu (PNG)</button><p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 8px;"><i class="fas fa-info-circle"></i> Le reçu sera généré avec tous les détails de la transaction</p></div><div style="margin: 20px 0;"><h3 style="color: var(--white); margin-bottom: 10px;">Historique</h3><div id="historique-transaction"></div></div><div style="display: flex; gap: 10px; margin-top: 20px;"><select id="modal-changer-statut" style="flex: 2; padding: 12px; background: var(--primary); border: 1px solid var(--gray-300); border-radius: 40px; color: var(--white);"><option value="en_attente">En attente</option><option value="confirme">Confirmer</option><option value="rejete">Rejeter</option></select><button class="btn btn-confirm" onclick="changerStatutTransaction()" style="flex: 1;"><i class="fas fa-check"></i></button></div><div style="margin-top: 20px;"><textarea id="modal-note-transaction" placeholder="Ajouter une note..." style="width: 100%; padding: 14px; background: var(--primary); border: 1px solid var(--gray-300); border-radius: 24px; color: var(--white);"></textarea><button class="btn btn-edit" onclick="ajouterNoteTransaction()" style="margin-top: 10px; width: 100%;"><i class="fas fa-sticky-note"></i> Ajouter note</button></div><button class="btn btn-cancel" onclick="fermerModalTransaction()" style="margin-top: 20px;"><i class="fas fa-times"></i> Fermer</button></div></div>
+    <div id="modal-details-transaction" class="modal"><div class="modal-content"><div class="modal-title" id="modal-transaction-titre"><i class="fas fa-info-circle"></i> Détails de la transaction</div><div id="details-transaction-complete" style="margin-bottom: 20px;"></div><div style="margin: 20px 0; text-align: center;"><button class="btn btn-download-recu" onclick="telechargerRecu()"><i class="fas fa-download"></i> Télécharger le reçu (PNG)</button><p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 8px;"><i class="fas fa-info-circle"></i> Le reçu sera généré avec tous les détails de la transaction</p></div><div style="margin: 20px 0;"><h3 style="color: var(--white); margin-bottom: 10px;">Historique</h3><div id="historique-transaction"></div></div><div style="display: flex; gap: 10px; margin-top: 20px;"><select id="modal-changer-statut" style="flex: 2; padding: 12px; background: var(--primary); border: 1px solid var(--gray-300); border-radius: 40px; color: var(--white);"><option value="en_attente">En attente</option><option value="confirme">Confirmer</option><option value="rejete">Rejeté</option></select><button class="btn btn-confirm" onclick="changerStatutTransaction()" style="flex: 1;"><i class="fas fa-check"></i></button></div><div style="margin-top: 20px;"><textarea id="modal-note-transaction" placeholder="Ajouter une note..." style="width: 100%; padding: 14px; background: var(--primary); border: 1px solid var(--gray-300); border-radius: 24px; color: var(--white);"></textarea><button class="btn btn-edit" onclick="ajouterNoteTransaction()" style="margin-top: 10px; width: 100%;"><i class="fas fa-sticky-note"></i> Ajouter note</button></div><button class="btn btn-cancel" onclick="fermerModalTransaction()" style="margin-top: 20px;"><i class="fas fa-times"></i> Fermer</button></div></div>
     <div id="template-recu" style="position: fixed; left: -9999px; top: 0; width: 600px; background: white; color: black; padding: 30px; font-family: Arial, sans-serif; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);"><div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #3B82F6; padding-bottom: 20px;"><h1 style="color: #0B1A33; margin: 0; font-size: 28px;">TYPH X-CHAIN</h1><p style="color: #666; margin: 5px 0 0;">Reçu de transaction</p></div><div id="recu-contenu" style="margin-bottom: 30px;"></div><div style="border-top: 2px dashed #ccc; padding-top: 20px; text-align: center; color: #999; font-size: 12px;"><p>Ce reçu est généré automatiquement par le système d'administration Typh X-chain</p><p>Date de génération: <span id="recu-date-generation"></span></p></div></div>
     <div id="modal-admin" class="modal"><div class="modal-content"><h3 id="modal-titre"><i class="fas fa-edit"></i> Édition</h3><div id="modal-champs"></div><div class="modal-buttons"><button class="btn btn-cancel" onclick="fermerModal()"><i class="fas fa-times"></i> Annuler</button><button class="btn btn-confirm" onclick="sauvegarderModal()"><i class="fas fa-check"></i> Confirmer</button></div></div></div>
     <div id="notification-toast" class="notification-toast"><div class="toast-icon"><i class="fas fa-bell"></i></div><div class="toast-content"><div class="toast-title">Notification</div><div class="toast-message" id="toast-message"></div></div><button class="toast-close" onclick="fermerToast()">×</button></div>
@@ -325,7 +330,14 @@
             tauxMode: 'auto', usdMGA: 4700,
             limites: { minAchat: 2000, minAchatTRX: 5000, maxAchat: 100000, minVente: 2000, maxVente: 100000 },
             messagesSpeciaux: { trx: "Frais réseau TRC20 : 3% ou -1 TRX si activation" },
-            roue: [], roueActive: false
+            roue: [
+                { id: 'R1', nom: '1 USDT', type: 'crypto', probabilite: 5 },
+                { id: 'R2', nom: '2 USDT', type: 'crypto', probabilite: 3 },
+                { id: 'R3', nom: '5000 Ar', type: 'fiat', probabilite: 10 },
+                { id: 'R4', nom: '10000 Ar', type: 'fiat', probabilite: 5 },
+                { id: 'R5', nom: 'Merci de votre fidélité', type: 'rien', probabilite: 77 }
+            ],
+            roueActive: true
         };
         
         let utilisateurs = {};
@@ -390,10 +402,12 @@
                 messagesSpeciaux: { trx: "Frais réseau TRC20 : 3% ou -1 TRX si activation" },
                 roue: [
                     { id: 'R1', nom: '1 USDT', type: 'crypto', probabilite: 5 },
-                    { id: 'R2', nom: '5000 Ar', type: 'fiat', probabilite: 10 },
-                    { id: 'R3', nom: 'Retentez demain', type: 'rien', probabilite: 85 }
+                    { id: 'R2', nom: '2 USDT', type: 'crypto', probabilite: 3 },
+                    { id: 'R3', nom: '5000 Ar', type: 'fiat', probabilite: 10 },
+                    { id: 'R4', nom: '10000 Ar', type: 'fiat', probabilite: 5 },
+                    { id: 'R5', nom: 'Merci de votre fidélité', type: 'rien', probabilite: 77 }
                 ],
-                roueActive: false
+                roueActive: true
             };
         }
 
@@ -404,35 +418,17 @@
         
         function rafraichirNumeros() { rafraichirUtilisateurs(); afficherNumeros(); }
         
-        // ==================== FONCTIONS DE SAUVEGARDE AUTOMATIQUE ====================
-        
         async function sauvegarderUneTransaction(transaction) {
             if (!transaction || !transaction.id) return false;
-            
             const sauvegarde = {
-                id: transaction.id,
-                type: transaction.type,
-                dateOriginale: transaction.date,
-                dateSauvegarde: new Date().toISOString(),
-                utilisateur: transaction.utilisateur,
-                email: transaction.email,
-                userID: transaction.userID,
-                montant: transaction.montant,
-                montantRecu: transaction.montantRecu || null,
-                crypto: transaction.crypto || null,
-                reseau: transaction.reseau || null,
-                operateur: transaction.operateur || null,
-                numero: transaction.numero || null,
-                nomNumero: transaction.nomNumero || null,
-                adresse: transaction.adresse || null,
-                adresseLiee: transaction.adresseLiee || null,
-                lotGagne: transaction.lotGagne || null,
-                txid: transaction.txid,
-                statutOriginal: transaction.statut,
-                traitee: false,
+                id: transaction.id, type: transaction.type, dateOriginale: transaction.date, dateSauvegarde: new Date().toISOString(),
+                utilisateur: transaction.utilisateur, email: transaction.email, userID: transaction.userID,
+                montant: transaction.montant, montantRecu: transaction.montantRecu || null, crypto: transaction.crypto || null,
+                reseau: transaction.reseau || null, operateur: transaction.operateur || null, numero: transaction.numero || null,
+                nomNumero: transaction.nomNumero || null, adresse: transaction.adresse || null, adresseLiee: transaction.adresseLiee || null,
+                lotGagne: transaction.lotGagne || null, txid: transaction.txid, statutOriginal: transaction.statut, traitee: false,
                 historique: transaction.historique || []
             };
-            
             await database.ref(`donnees/transactions_sauvegardees/${transaction.id}`).set(sauvegarde);
             transactionsSauvegardees[transaction.id] = sauvegarde;
             return true;
@@ -441,62 +437,36 @@
         async function sauvegarderToutesAttentes() {
             const demandesArray = getDemandesTableau();
             const enAttente = demandesArray.filter(d => d.statut === 'en_attente');
-            
-            if (enAttente.length === 0) {
-                alert('✅ Aucune transaction en attente à sauvegarder.');
-                return;
-            }
-            
+            if (enAttente.length === 0) { alert('✅ Aucune transaction en attente à sauvegarder.'); return; }
             if (!confirm(`📦 Sauvegarder ${enAttente.length} transaction(s) en attente ?\n\nCes transactions seront copiées dans un espace de sauvegarde sécurisé.`)) return;
-            
             let sauvegardeCount = 0;
-            for (const demande of enAttente) {
-                await sauvegarderUneTransaction(demande);
-                sauvegardeCount++;
-            }
-            
+            for (const demande of enAttente) { await sauvegarderUneTransaction(demande); sauvegardeCount++; }
             alert(`✅ ${sauvegardeCount} transaction(s) sauvegardée(s) avec succès !`);
         }
         
         async function sauvegarderDemandeUnique(id) {
             const demandesArray = getDemandesTableau();
             const demande = demandesArray.find(d => d.id === id);
-            if (!demande) {
-                alert('❌ Demande introuvable');
-                return;
-            }
+            if (!demande) { alert('❌ Demande introuvable'); return; }
             await sauvegarderUneTransaction(demande);
             alert(`✅ Demande ${id} sauvegardée avec succès !`);
         }
         
         let dernieresSauvegardes = {};
-        
         async function sauvegardeAutoSiNouvelleAttente(demandesArray) {
             const enAttente = demandesArray.filter(d => d.statut === 'en_attente');
-            
             for (const demande of enAttente) {
                 const derniereSauvegarde = dernieresSauvegardes[demande.id];
                 const maintenant = Date.now();
-                
                 if (!derniereSauvegarde || (maintenant - derniereSauvegarde) > 60000) { 
                     await sauvegarderUneTransaction(demande);
                     dernieresSauvegardes[demande.id] = maintenant;
-                    console.log(`✅ Sauvegarde auto: Transaction ${demande.id} sauvegardée`);
-                    
                     const toast = document.getElementById('notification-toast');
-                    if (toast) {
-                        document.getElementById('toast-message').textContent = `💰 Nouvelle transaction en attente sauvegardée automatiquement`;
-                        toast.classList.add('show');
-                        setTimeout(() => toast.classList.remove('show'), 3000);
-                    }
+                    if (toast) { document.getElementById('toast-message').textContent = `💰 Nouvelle transaction en attente sauvegardée automatiquement`; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); }
                 }
             }
-            
-            Object.keys(dernieresSauvegardes).forEach(id => {
-                if (maintenant - dernieresSauvegardes[id] > 300000) {
-                    delete dernieresSauvegardes[id];
-                }
-            });
+            const maintenant = Date.now();
+            Object.keys(dernieresSauvegardes).forEach(id => { if (maintenant - dernieresSauvegardes[id] > 300000) { delete dernieresSauvegardes[id]; } });
         }
         
         function demarrerEcouteDemandes() {
@@ -504,11 +474,8 @@
                 const demandes = snapshot.val();
                 if(demandes) {
                     donnees.demandes = demandes;
-                    console.log('🔄 Nouvelles demandes détectées:', Object.keys(demandes).length);
-                    
                     const demandesArray = getDemandesTableau();
                     await sauvegardeAutoSiNouvelleAttente(demandesArray);
-                    
                     const ongletActif = document.getElementById('demandes-tab').style.display !== 'none';
                     if(ongletActif) afficherDemandes();
                     const enAttente = demandesArray.filter(d => d.statut === 'en_attente').length;
@@ -520,19 +487,15 @@
         }
         
         function forcerChargementDemandes() {
-            console.log('🔄 Forçage du chargement des demandes...');
             database.ref('donnees/demandes').once('value').then(async (snapshot) => {
                 const demandes = snapshot.val();
-                console.log('📋 Demandes depuis Firebase:', demandes);
                 if(demandes) {
                     donnees.demandes = demandes;
                     const demandesArray = getDemandesTableau();
                     await sauvegardeAutoSiNouvelleAttente(demandesArray);
                     afficherDemandes();
                     alert(`✅ ${demandesArray.length} demande(s) chargée(s)`);
-                } else {
-                    alert('❌ Aucune demande trouvée dans Firebase');
-                }
+                } else { alert('❌ Aucune demande trouvée dans Firebase'); }
             }).catch(err => { console.error('Erreur:', err); alert('Erreur de chargement: ' + err.message); });
         }
         
@@ -542,6 +505,16 @@
                 const data = s.val();
                 if(data && Object.keys(data).length > 0){
                     donnees = { ...obtenirDonneesParDefaut(), ...data };
+                    
+                    let roueFirebase = data.roue;
+                    if (roueFirebase) {
+                        let tr = Array.isArray(roueFirebase) ? roueFirebase : Object.values(roueFirebase);
+                        donnees.roue = tr.filter(item => item !== null);
+                    } else {
+                        donnees.roue = obtenirDonneesParDefaut().roue;
+                    }
+                    if(!donnees.roue || donnees.roue.length === 0) donnees.roue = obtenirDonneesParDefaut().roue;
+
                     if(!donnees.limites) donnees.limites = obtenirDonneesParDefaut().limites;
                     if(!donnees.messagesSpeciaux) donnees.messagesSpeciaux = obtenirDonneesParDefaut().messagesSpeciaux;
                     if(!donnees.taux) donnees.taux = {};
@@ -551,21 +524,16 @@
                     if(!donnees.operateurs) donnees.operateurs = obtenirDonneesParDefaut().operateurs;
                     if(!donnees.cryptos) donnees.cryptos = obtenirDonneesParDefaut().cryptos;
                     if(!donnees.demandes) donnees.demandes = {};
-                    if(!donnees.roue) donnees.roue = obtenirDonneesParDefaut().roue;
-                    if(donnees.roueActive === undefined) donnees.roueActive = false;
+                    donnees.roueActive = true;
+                    database.ref('donnees/roueActive').set(true);
                     tauxUSD_MGA = donnees.usdMGA || 4700;
-                } else { donnees = obtenirDonneesParDefaut(); }
+                } else { 
+                    donnees = obtenirDonneesParDefaut();
+                    donnees.roueActive = true;
+                    database.ref('donnees/roueActive').set(true);
+                }
                 cacheTaux.set(donnees.taux);
                 rafraichirUtilisateurs();
-                
-                // AJOUT : Écouteur en temps réel pour la roue
-                database.ref('donnees/roueActive').on('value', snap => {
-                    if (snap.exists()) {
-                        donnees.roueActive = snap.val();
-                        mettreAJourRoueUI();
-                    }
-                });
-
                 mettreAJourStats(); afficherTout();
                 document.getElementById('usd-mga-display').textContent = donnees.usdMGA.toLocaleString();
             }).catch(e => { console.error(e); donnees = obtenirDonneesParDefaut(); afficherTout(); });
@@ -659,17 +627,15 @@
                 l.innerHTML = '<div class="item-row">Aucune demande</div>'; 
                 return; 
             }
-            
             const typeFiltre = document.getElementById('filtre-type')?.value || 'all';
             const statutFiltre = document.getElementById('filtre-statut')?.value || 'all';
-            
             let filtrees = demandesArray;
             if(typeFiltre !== 'all') filtrees = filtrees.filter(d => d.type === typeFiltre);
             if(statutFiltre !== 'all') filtrees = filtrees.filter(d => d.statut === statutFiltre);
-            
             l.innerHTML = filtrees.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(d => {
                 let detailsHtml = '';
                 let contactClient = '';
+                let bonusClass = d.type === 'BONUS' ? 'bonus' : '';
                 if(d.type === 'ACHAT') {
                     detailsHtml = `<div>Montant: ${echapperHTML(d.montant)} Ar</div><div style="color:var(--success);font-weight:600;">Vous recevez: ${d.montantRecu?d.montantRecu.toFixed(4)+' '+d.crypto:'Calcul...'}</div>`;
                     contactClient = d.adresse ? `<span style="color:var(--accent); font-size:0.85rem;"><i class="fas fa-link"></i> ${echapperHTML(d.adresse)}</span>` : '';
@@ -679,11 +645,11 @@
                     contactClient = d.adresseLiee ? `<div style="background: rgba(59,130,246,0.15); border: 1px solid var(--accent); padding: 8px 12px; border-radius: 12px; margin-top: 8px;"><span style="color:var(--accent); font-size:0.9rem; font-weight:bold;"><i class="fas fa-link"></i> Adresse de réception liée :</span><br><span style="color:var(--white); font-size:0.85rem; word-break:break-all;">${echapperHTML(d.adresseLiee)}</span></div>` : '';
                 }
                 else if(d.type === 'BONUS') {
-                    detailsHtml = `<div>Lot gagné: <strong style="color:var(--accent);">${echapperHTML(d.lotGagne || d.montant || 'N/A')}</strong></div>`;
-                    contactClient = `<div style="background: rgba(16,185,129,0.15); border: 1px solid var(--success); padding: 8px 12px; border-radius: 12px; margin-top: 8px;"><span style="color:var(--success); font-size:0.9rem; font-weight:bold;"><i class="fas fa-map-marker-alt"></i> Contact pour réception :</span><br><span style="color:var(--white); font-size:0.85rem; word-break:break-all;"><strong>${echapperHTML(d.adresse || d.numero || 'N/A')}</strong></span></div>`;
+                    detailsHtml = `<div style="color:var(--bonus);font-weight:600;">🎰 Lot gagné: <strong>${echapperHTML(d.lotGagne || d.montant || 'N/A')}</strong></div>`;
+                    contactClient = `<div style="background: rgba(139,92,246,0.15); border: 1px solid var(--bonus); padding: 8px 12px; border-radius: 12px; margin-top: 8px;"><span style="color:var(--bonus); font-size:0.9rem; font-weight:bold;"><i class="fas fa-map-marker-alt"></i> 📍 Information de réception :</span><br><span style="color:var(--white); font-size:0.85rem; word-break:break-all;"><strong>${echapperHTML(d.adresse || d.numero || 'Non spécifiée')}</strong></span></div>`;
                 }
 
-                return `<div class="request-item">
+                return `<div class="request-item ${bonusClass}">
                     <div class="request-header">
                         <div><span><i class="fas ${d.type==='ACHAT'?'fa-arrow-down':(d.type==='VENTE'?'fa-arrow-up':'fa-gift')}"></i> ${echapperHTML(d.type)}</span></div>
                         <span style="color:var(--text-secondary);font-size:0.8rem;">${echapperHTML(new Date(d.date).toLocaleString())}</span>
@@ -746,14 +712,19 @@
             let filtres = Object.values(utilisateurs); 
             if(rechercheUtilisateurs) filtres = filtres.filter(u => u.nom?.toLowerCase().includes(rechercheUtilisateurs) || u.email?.toLowerCase().includes(rechercheUtilisateurs)); 
             if(filtres.length === 0){ liste.innerHTML='<div class="item-row">Aucun utilisateur</div>'; return; } 
-            liste.innerHTML = filtres.map((u,i)=>`<div class="user-item"><div class="user-header"><span class="user-name"><i class="fas fa-user-circle"></i> ${echapperHTML(u.nom)}</span><span style="background:var(--accent);padding:4px 10px;border-radius:40px;font-size:0.8rem;">${echapperHTML(u.id||'ID inconnu')}</span></div><div class="user-email"><i class="fas fa-envelope"></i> ${echapperHTML(u.email||'Email non renseigné')}</div><div class="user-detail"><span><i class="fas fa-calendar"></i> ${echapperHTML(new Date(u.dateInscription).toLocaleDateString())}</span><span><i class="fas fa-phone"></i> ${Object.keys(u.numeros||{}).length} numéro(s)</span></div></div>`).join(''); 
+            liste.innerHTML = filtres.map((u,i)=>`<div class="user-item"><div class="user-header"><div style="display:flex; align-items:center; gap:10px;"><span class="user-name"><i class="fas fa-user-circle"></i> ${echapperHTML(u.nom)}</span><span style="background:var(--accent);padding:4px 10px;border-radius:40px;font-size:0.8rem;">${echapperHTML(u.id||'ID inconnu')}</span></div><button class="btn btn-warning" style="font-size: 0.8rem; padding: 6px 12px; height: 32px; border:none; border-radius:40px; cursor:pointer;" onclick="reinitialiserMotDePasseUtilisateur('${echapperHTML(u.email)}')"><i class="fas fa-key"></i> Réinitialiser MDP</button></div><div class="user-email"><i class="fas fa-envelope"></i> ${echapperHTML(u.email||'Email non renseigné')}</div><div class="user-detail"><span style="margin-right:15px;"><i class="fas fa-calendar"></i> ${echapperHTML(new Date(u.dateInscription).toLocaleDateString())}</span><span><i class="fas fa-phone"></i> ${Object.keys(u.numeros||{}).length} numéro(s)</span></div></div>`).join(''); 
+        }
+        
+        function reinitialiserMotDePasseUtilisateur(email) {
+            if (!email || email === 'undefined' || email === 'Email non renseigné') { alert('Email invalide pour cet utilisateur.'); return; }
+            if (confirm(`Envoyer un lien de réinitialisation de mot de passe à ${email} ?`)) {
+                auth.sendPasswordResetEmail(email).then(() => { alert(`✅ Lien de réinitialisation envoyé à ${email}.`); }).catch((error) => { console.error(error); alert(`❌ Erreur : ${error.message}`); });
+            }
         }
         
         function mettreAJourStats() { 
             let numerosAttente = 0; 
-            Object.values(utilisateurs).forEach(user => { 
-                if(user.numeros) numerosAttente += Object.values(user.numeros).filter(n => n.statut === 'en_attente').length; 
-            }); 
+            Object.values(utilisateurs).forEach(user => { if(user.numeros) numerosAttente += Object.values(user.numeros).filter(n => n.statut === 'en_attente').length; }); 
             const demandesArray = getDemandesTableau();
             document.getElementById('stats-utilisateurs').textContent = Object.keys(utilisateurs).length; 
             document.getElementById('stats-numeros-attente').textContent = numerosAttente; 
@@ -764,40 +735,11 @@
         
         function filtrerUtilisateurs(){ rechercheUtilisateurs=document.getElementById('recherche-utilisateur')?.value.toLowerCase()||''; afficherUtilisateurs(); }
         
-        function mettreAJourRoueUI() {
-            const statusText = document.getElementById('roue-status-text');
-            const btnToggle = document.getElementById('btn-toggle-roue');
-            if(!statusText || !btnToggle) return;
-            if(donnees.roueActive) {
-                statusText.innerHTML = 'Actuellement: <span style="color: var(--success);">ACTIVÉE</span>';
-                btnToggle.innerHTML = '<i class="fas fa-pause"></i> DÉSACTIVER';
-                btnToggle.className = 'btn btn-pause';
-            } else {
-                statusText.innerHTML = 'Actuellement: <span style="color: var(--danger);">DÉSACTIVÉE</span>';
-                btnToggle.innerHTML = '<i class="fas fa-play"></i> ACTIVER';
-                btnToggle.className = 'btn btn-play';
-            }
-        }
-
-        function toggleRoueActive() {
-            const nouvelEtat = !donnees.roueActive;
-            database.ref('donnees/roueActive').set(nouvelEtat).then(() => {
-                const msg = nouvelEtat ? 'ACTIVÉE' : 'DÉSACTIVÉE';
-                const toast = document.getElementById('notification-toast');
-                if (toast) {
-                    document.getElementById('toast-message').textContent = `🎁 La Roue de la Fortune est maintenant ${msg}`;
-                    toast.classList.add('show');
-                    setTimeout(() => toast.classList.remove('show'), 3000);
-                }
-            }).catch(e => {
-                alert('Erreur lors de la modification : ' + e.message);
-            });
-        }
-
         function afficherRoue(){ 
-            mettreAJourRoueUI();
             const l=document.getElementById('roue-liste'); 
             if(!l) return; 
+            let tr = Array.isArray(donnees.roue) ? donnees.roue : (typeof donnees.roue === 'object' && donnees.roue !== null ? Object.values(donnees.roue) : []);
+            donnees.roue = tr.filter(item => item !== null);
             if(!donnees.roue||donnees.roue.length===0){ 
                 l.innerHTML='<div class="item-row">Aucun lot configuré</div>'; 
                 document.getElementById('roue-total-prob').innerHTML='Total Probabilité: <span style="color:var(--danger);">0%</span>'; 
@@ -806,10 +748,23 @@
             let t=0; 
             l.innerHTML=donnees.roue.map((r,i)=>{ 
                 t+=parseFloat(r.probabilite)||0; 
-                return `<div class="item-row"><div class="item-info"><div class="item-nom"><i class="fas fa-gift" style="color:var(--accent);"></i> ${echapperHTML(r.nom)}</div><div class="item-reponse">Type: ${r.type.toUpperCase()} | Probabilité: <strong>${r.probabilite}%</strong></div></div><div class="item-actions"><button class="btn btn-edit" onclick="ouvrirModal('roue',${i})"><i class="fas fa-edit"></i></button><button class="btn btn-delete" onclick="supprimer('roue',${i})"><i class="fas fa-trash"></i></button></div></div>`; 
+                let typeIcon = r.type === 'crypto' ? 'fa-coins' : (r.type === 'fiat' ? 'fa-money-bill' : 'fa-face-frown');
+                let typeColor = r.type === 'crypto' ? 'var(--binance)' : (r.type === 'fiat' ? 'var(--success)' : 'var(--warning)');
+                return `<div class="roue-lot-item">
+                    <div class="roue-lot-info">
+                        <div class="roue-lot-nom"><i class="fas ${typeIcon}" style="color:${typeColor}; margin-right:8px;"></i> ${echapperHTML(r.nom)}</div>
+                        <div class="roue-lot-type">Type: ${r.type.toUpperCase()}</div>
+                    </div>
+                    <div class="roue-lot-prob">${r.probabilite}%</div>
+                    <div class="item-actions" style="margin-left:10px;">
+                        <button class="btn btn-edit" onclick="ouvrirModal('roue',${i})" style="padding:6px 12px;"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-delete" onclick="supprimer('roue',${i})" style="padding:6px 12px;"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`; 
             }).join(''); 
+            document.getElementById('roue-prob-total').textContent = t;
             const el=document.getElementById('roue-total-prob'); 
-            el.innerHTML=`Total Probabilité: <span style="color:${Math.abs(t-100)<0.01?'var(--success)':'var(--danger)'};">${t}%</span> ${Math.abs(t-100)>0.01?'(Attention: le total doit être exactement 100%)':''}`; 
+            if(el) el.innerHTML=`Total Probabilité: <span style="color:${Math.abs(t-100)<0.01?'var(--success)':'var(--danger)'};">${t}%</span> ${Math.abs(t-100)>0.01?'(Attention: le total doit être exactement 100%)':''}`; 
         }
 
         function afficherTout() { 
@@ -833,9 +788,16 @@
         }
         
         let modalType, modalIndex, modalMode, modalCryptoNom;
-        function ouvrirModal(type,index=-1,cryptoNom=null){ modalType=type; modalIndex=index; modalCryptoNom=cryptoNom; modalMode=index===-1?'ajout':'modification'; const modal=document.getElementById('modal-admin'); const titre=document.getElementById('modal-titre'); const champs=document.getElementById('modal-champs'); let html=''; switch(type){ case 'portefeuille': titre.innerHTML='<i class="fas fa-briefcase"></i> '+(modalMode==='ajout'?'Nouveau portefeuille':'Modifier portefeuille'); if(modalMode==='ajout') html=`<input type="text" id="modal-nom" placeholder="Nom du portefeuille"><textarea id="modal-reponse" placeholder="Description"></textarea><textarea id="modal-message" placeholder="Message de confirmation"></textarea><select id="modal-reseau"><option value="">Sélectionner un réseau</option>${(donnees.reseaux||[]).map(r=>`<option value="${echapperHTML(r.nom)}">${echapperHTML(r.nom)} (${echapperHTML(r.crypto)})</option>`).join('')}</select><div style="margin-top:15px; background:var(--bg-dark); padding:10px; border-radius:10px;"><label style="display:flex; align-items:center; gap:10px; color:var(--text-primary); cursor:pointer;"><input type="checkbox" id="modal-liaison-requise" style="width:18px; height:18px; accent-color:var(--accent);"> Nécessite une liaison d'adresse</label></div>`; else html=`<input type="text" id="modal-nom" value="${echapperHTML(donnees.portefeuilles[index].nom)}"><textarea id="modal-reponse">${echapperHTML(donnees.portefeuilles[index].reponse||'')}</textarea><textarea id="modal-message">${echapperHTML(donnees.portefeuilles[index].messageConfirmation||'')}</textarea><select id="modal-reseau"><option value="">Sélectionner un réseau</option>${(donnees.reseaux||[]).map(r=>`<option value="${echapperHTML(r.nom)}" ${donnees.portefeuilles[index].reseau===r.nom?'selected':''}>${echapperHTML(r.nom)} (${echapperHTML(r.crypto)})</option>`).join('')}</select><div style="margin-top:15px; background:var(--bg-dark); padding:10px; border-radius:10px;"><label style="display:flex; align-items:center; gap:10px; color:var(--text-primary); cursor:pointer;"><input type="checkbox" id="modal-liaison-requise" style="width:18px; height:18px; accent-color:var(--accent);" ${donnees.portefeuilles[index].liaisonRequise ? 'checked' : ''}> Nécessite une liaison d'adresse</label></div>`; break; case 'operateur': titre.innerHTML='<i class="fas fa-mobile-alt"></i> '+(modalMode==='ajout'?'Nouvel opérateur':'Modifier opérateur'); if(modalMode==='ajout') html=`<input type="text" id="modal-nom" placeholder="Nom"><textarea id="modal-message" placeholder="Message de confirmation"></textarea>`; else html=`<input type="text" id="modal-nom" value="${echapperHTML(donnees.operateurs[index].nom)}"><textarea id="modal-message">${echapperHTML(donnees.operateurs[index].messageConfirmation||'')}</textarea>`; break; case 'reseau': titre.innerHTML='<i class="fas fa-network-wired"></i> '+(modalMode==='ajout'?'Nouveau réseau':'Modifier réseau'); if(modalMode==='ajout') html=`<input type="text" id="modal-nom" placeholder="Nom du réseau"><select id="modal-crypto">${(donnees.cryptos||[]).map(c=>`<option value="${echapperHTML(c)}">${echapperHTML(c)}</option>`).join('')}</select><input type="number" id="modal-frais-reseau" placeholder="Frais réseau (%)" step="0.1" min="0">`; else html=`<input type="text" id="modal-nom" value="${echapperHTML(donnees.reseaux[index].nom)}"><select id="modal-crypto">${(donnees.cryptos||[]).map(c=>`<option value="${echapperHTML(c)}" ${donnees.reseaux[index].crypto===c?'selected':''}>${echapperHTML(c)}</option>`).join('')}</select><input type="number" id="modal-frais-reseau" step="0.1" min="0" value="${donnees.reseaux[index].fraisReseau||0}">`; break; case 'crypto': titre.innerHTML='<i class="fas fa-coins"></i> '+(modalMode==='ajout'?'Ajouter crypto':'Modifier crypto'); html=`<input type="text" id="modal-nom" placeholder="Nom (ex: USDT, BTC)" value="${modalMode==='modification'?echapperHTML(donnees.cryptos[index]):''}">`; break; case 'taux': const crypto=cryptoNom||(modalMode==='modification'?Object.keys(donnees.taux)[index]:''); const taux=crypto&&donnees.taux[crypto]?donnees.taux[crypto]:{prixUSD:0,prixMGA:0,variation:"0",couleur:"positive"}; titre.innerHTML=`<i class="fas fa-chart-line"></i> Modifier taux ${echapperHTML(crypto)}`; html=`<input type="hidden" id="modal-crypto" value="${echapperHTML(crypto)}"><div style="margin-bottom:15px;color:var(--text-secondary);">Crypto: <strong>${echapperHTML(crypto)}</strong></div><div style="background:var(--bg-dark);padding:15px;border-radius:20px;margin-bottom:20px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span>Prix USD:</span><span style="font-weight:600;">$${taux.prixUSD.toFixed(2)}</span></div><div style="display:flex;justify-content:space-between;"><span>Prix MGA:</span><span style="font-weight:600;color:var(--warning);">${taux.prixMGA.toLocaleString()} Ar</span></div></div><input type="number" id="modal-prix-usd" placeholder="Prix USD" step="0.01" value="${taux.prixUSD||0}"><input type="number" id="modal-prix-mga" placeholder="Prix MGA" value="${taux.prixMGA||0}"><input type="text" id="modal-variation" placeholder="Variation %" value="${echapperHTML(taux.variation||'0')}"><select id="modal-couleur"><option value="positive" ${taux.couleur==='positive'?'selected':''}>Positif (+)</option><option value="negative" ${taux.couleur==='negative'?'selected':''}>Négatif (-)</option></select>`; break; case 'roue': titre.innerHTML='<i class="fas fa-gift"></i> '+(modalMode==='ajout'?'Nouveau Lot':'Modifier Lot'); let rDef = {nom:'', type:'crypto', probabilite:0}; let rObj = modalMode === 'modification' ? donnees.roue[index] : rDef; html=`<input type="text" id="modal-roue-nom" placeholder="Nom du lot (ex: 5000 Ar ou 1 USDT)" value="${echapperHTML(rObj.nom)}"> <select id="modal-roue-type" style="width: 100%; padding: 16px; margin-bottom: 16px; background: var(--primary); border: 1px solid var(--gray-300); border-radius: 40px; color: var(--white);"> <option value="crypto" ${rObj.type==='crypto'?'selected':''}>Crypto</option> <option value="fiat" ${rObj.type==='fiat'?'selected':''}>Ariary</option> <option value="rien" ${rObj.type==='rien'?'selected':''}>Perdant (Rien)</option> </select> <input type="number" id="modal-roue-prob" placeholder="Probabilité en %" step="0.1" min="0" max="100" value="${rObj.probabilite}">`; break; } if(html){ champs.innerHTML=html; modal.classList.add('active'); } }
+        function ouvrirModal(type,index=-1,cryptoNom=null){ modalType=type; modalIndex=index; modalCryptoNom=cryptoNom; modalMode=index===-1?'ajout':'modification'; const modal=document.getElementById('modal-admin'); const titre=document.getElementById('modal-titre'); const champs=document.getElementById('modal-champs'); let html=''; switch(type){ case 'portefeuille': titre.innerHTML='<i class="fas fa-briefcase"></i> '+(modalMode==='ajout'?'Nouveau portefeuille':'Modifier portefeuille'); if(modalMode==='ajout') html=`<input type="text" id="modal-nom" placeholder="Nom du portefeuille"><textarea id="modal-reponse" placeholder="Description"></textarea><textarea id="modal-message" placeholder="Message de confirmation"></textarea><select id="modal-reseau"><option value="">Sélectionner un réseau</option>${(donnees.reseaux||[]).map(r=>`<option value="${echapperHTML(r.nom)}">${echapperHTML(r.nom)} (${echapperHTML(r.crypto)})</option>`).join('')}</select><div style="margin-top:15px; background:var(--bg-dark); padding:10px; border-radius:10px;"><label style="display:flex; align-items:center; gap:10px; color:var(--text-primary); cursor:pointer;"><input type="checkbox" id="modal-liaison-requise" style="width:18px; height:18px; accent-color:var(--accent);"> Nécessite une liaison d'adresse</label></div>`; else html=`<input type="text" id="modal-nom" value="${echapperHTML(donnees.portefeuilles[index].nom)}"><textarea id="modal-reponse">${echapperHTML(donnees.portefeuilles[index].reponse||'')}</textarea><textarea id="modal-message">${echapperHTML(donnees.portefeuilles[index].messageConfirmation||'')}</textarea><select id="modal-reseau"><option value="">Sélectionner un réseau</option>${(donnees.reseaux||[]).map(r=>`<option value="${echapperHTML(r.nom)}" ${donnees.portefeuilles[index].reseau===r.nom?'selected':''}>${echapperHTML(r.nom)} (${echapperHTML(r.crypto)})</option>`).join('')}</select><div style="margin-top:15px; background:var(--bg-dark); padding:10px; border-radius:10px;"><label style="display:flex; align-items:center; gap:10px; color:var(--text-primary); cursor:pointer;"><input type="checkbox" id="modal-liaison-requise" style="width:18px; height:18px; accent-color:var(--accent);" ${donnees.portefeuilles[index].liaisonRequise ? 'checked' : ''}> Nécessite une liaison d'adresse</label></div>`; break; case 'operateur': titre.innerHTML='<i class="fas fa-mobile-alt"></i> '+(modalMode==='ajout'?'Nouvel opérateur':'Modifier opérateur'); if(modalMode==='ajout') html=`<input type="text" id="modal-nom" placeholder="Nom"><textarea id="modal-message" placeholder="Message de confirmation"></textarea>`; else html=`<input type="text" id="modal-nom" value="${echapperHTML(donnees.operateurs[index].nom)}"><textarea id="modal-message">${echapperHTML(donnees.operateurs[index].messageConfirmation||'')}</textarea>`; break; case 'reseau': titre.innerHTML='<i class="fas fa-network-wired"></i> '+(modalMode==='ajout'?'Nouveau réseau':'Modifier réseau'); if(modalMode==='ajout') html=`<input type="text" id="modal-nom" placeholder="Nom du réseau"><select id="modal-crypto">${(donnees.cryptos||[]).map(c=>`<option value="${echapperHTML(c)}">${echapperHTML(c)}</option>`).join('')}</select><input type="number" id="modal-frais-reseau" placeholder="Frais réseau (%)" step="0.1" min="0">`; else html=`<input type="text" id="modal-nom" value="${echapperHTML(donnees.reseaux[index].nom)}"><select id="modal-crypto">${(donnees.cryptos||[]).map(c=>`<option value="${echapperHTML(c)}" ${donnees.reseaux[index].crypto===c?'selected':''}>${echapperHTML(c)}</option>`).join('')}</select><input type="number" id="modal-frais-reseau" step="0.1" min="0" value="${donnees.reseaux[index].fraisReseau||0}">`; break; case 'crypto': titre.innerHTML='<i class="fas fa-coins"></i> '+(modalMode==='ajout'?'Ajouter crypto':'Modifier crypto'); html=`<input type="text" id="modal-nom" placeholder="Nom (ex: USDT, BTC)" value="${modalMode==='modification'?echapperHTML(donnees.cryptos[index]):''}">`; break; case 'taux': const crypto=cryptoNom||(modalMode==='modification'?Object.keys(donnees.taux)[index]:''); const taux=crypto&&donnees.taux[crypto]?donnees.taux[crypto]:{prixUSD:0,prixMGA:0,variation:"0",couleur:"positive"}; titre.innerHTML=`<i class="fas fa-chart-line"></i> Modifier taux ${echapperHTML(crypto)}`; html=`<input type="hidden" id="modal-crypto" value="${echapperHTML(crypto)}"><div style="margin-bottom:15px;color:var(--text-secondary);">Crypto: <strong>${echapperHTML(crypto)}</strong></div><div style="background:var(--bg-dark);padding:15px;border-radius:20px;margin-bottom:20px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span>Prix USD:</span><span style="font-weight:600;">$${taux.prixUSD.toFixed(2)}</span></div><div style="display:flex;justify-content:space-between;"><span>Prix MGA:</span><span style="font-weight:600;color:var(--warning);">${taux.prixMGA.toLocaleString()} Ar</span></div></div><input type="number" id="modal-prix-usd" placeholder="Prix USD" step="0.01" value="${taux.prixUSD||0}"><input type="number" id="modal-prix-mga" placeholder="Prix MGA" value="${taux.prixMGA||0}"><input type="text" id="modal-variation" placeholder="Variation %" value="${echapperHTML(taux.variation||'0')}"><select id="modal-couleur"><option value="positive" ${taux.couleur==='positive'?'selected':''}>Positif (+)</option><option value="negative" ${taux.couleur==='negative'?'selected':''}>Négatif (-)</option></select>`; break; case 'roue': titre.innerHTML='<i class="fas fa-gift"></i> '+(modalMode==='ajout'?'Nouveau Lot de la Roue':'Modifier Lot'); let rDef = {nom:'', type:'crypto', probabilite:0}; let rObj = modalMode === 'modification' ? donnees.roue[index] : rDef; html=`<input type="text" id="modal-roue-nom" placeholder="Nom du lot (ex: 5000 Ar ou 1 USDT ou Merci...)" value="${echapperHTML(rObj.nom)}"> 
+                    <select id="modal-roue-type" style="width: 100%; padding: 16px; margin-bottom: 16px; background: var(--primary); border: 1px solid var(--gray-300); border-radius: 40px; color: var(--white);">
+                        <option value="crypto" ${rObj.type==='crypto'?'selected':''}>💰 Crypto (ex: USDT)</option>
+                        <option value="fiat" ${rObj.type==='fiat'?'selected':''}>💵 Ariary (ex: 5000 Ar)</option>
+                        <option value="rien" ${rObj.type==='rien'?'selected':''}>😢 Perdant (Merci de votre fidélité)</option>
+                    </select> 
+                    <input type="number" id="modal-roue-prob" placeholder="Probabilité en % (total doit être 100%)" step="0.1" min="0" max="100" value="${rObj.probabilite}">
+                    <div class="info-message" style="margin-top:10px;"><i class="fas fa-info-circle"></i> La somme des probabilités doit être égale à 100%</div>`; break; } if(html){ champs.innerHTML=html; modal.classList.add('active'); } }
         function fermerModal(){ document.getElementById('modal-admin').classList.remove('active'); }
-        function sauvegarderModal(){ const nom=document.getElementById('modal-nom')?.value; switch(modalType){ case 'portefeuille': if(!nom){ alert('Nom requis'); return; } const reponse=document.getElementById('modal-reponse')?.value||''; const message=document.getElementById('modal-message')?.value||''; const reseau=document.getElementById('modal-reseau')?.value||''; const liaisonRequise = document.getElementById('modal-liaison-requise')?.checked || false; if(modalMode==='ajout') donnees.portefeuilles.push({nom,reponse,messageConfirmation:message,reseau,liaisonRequise}); else donnees.portefeuilles[modalIndex]={...donnees.portefeuilles[modalIndex],nom,reponse,messageConfirmation:message,reseau,liaisonRequise}; database.ref('donnees/portefeuilles').set(donnees.portefeuilles); break; case 'operateur': if(!nom){ alert('Nom requis'); return; } const msg=document.getElementById('modal-message')?.value||''; if(modalMode==='ajout') donnees.operateurs.push({nom,messageConfirmation:msg}); else donnees.operateurs[modalIndex]={...donnees.operateurs[modalIndex],nom,messageConfirmation:msg}; database.ref('donnees/operateurs').set(donnees.operateurs); break; case 'reseau': if(!nom){ alert('Nom requis'); return; } const crypto=document.getElementById('modal-crypto')?.value; const frais=parseFloat(document.getElementById('modal-frais-reseau')?.value)||0; if(modalMode==='ajout'){ if(!donnees.reseaux) donnees.reseaux=[]; donnees.reseaux.push({nom,crypto,fraisReseau:frais}); } else donnees.reseaux[modalIndex]={...donnees.reseaux[modalIndex],nom,crypto,fraisReseau:frais}; database.ref('donnees/reseaux').set(donnees.reseaux); break; case 'crypto': if(!nom){ alert('Nom requis'); return; } if(modalMode==='ajout'){ if(!donnees.cryptos.includes(nom)){ donnees.cryptos.push(nom); if(!donnees.taux[nom]) donnees.taux[nom]={prixUSD:nom==='USDT'?1:0,prixMGA:nom==='USDT'?donnees.usdMGA:0,variation:"0",couleur:"positive",source:'manual'}; } } else{ const ancien=donnees.cryptos[modalIndex]; if(ancien!==nom&&donnees.taux[ancien]){ donnees.taux[nom]=donnees.taux[ancien]; delete donnees.taux[ancien]; } donnees.cryptos[modalIndex]=nom; } database.ref('donnees/cryptos').set(donnees.cryptos); database.ref('donnees/taux').set(donnees.taux); cacheTaux.set(donnees.taux); break; case 'taux': const c=document.getElementById('modal-crypto')?.value; if(c){ const pu=parseFloat(document.getElementById('modal-prix-usd')?.value)||0; const pm=parseFloat(document.getElementById('modal-prix-mga')?.value)||0; donnees.taux[c]={prixUSD:pu,prixMGA:pm,variation:document.getElementById('modal-variation')?.value||"0",couleur:document.getElementById('modal-couleur')?.value||"positive",lastUpdate:new Date().toISOString(),source:'manual'}; if(donnees.tauxMode==='auto') setTauxMode('manual'); database.ref('donnees/taux').set(donnees.taux); cacheTaux.set(donnees.taux); } break; case 'roue': const nomR=document.getElementById('modal-roue-nom')?.value; if(!nomR){ alert('Nom requis'); return; } const typeR=document.getElementById('modal-roue-type')?.value; const probR=parseFloat(document.getElementById('modal-roue-prob')?.value)||0; if(!donnees.roue) donnees.roue=[]; if(modalMode==='ajout') donnees.roue.push({id:'ROUE-'+Date.now(), nom:nomR, type:typeR, probabilite:probR}); else donnees.roue[modalIndex]={...donnees.roue[modalIndex], nom:nomR, type:typeR, probabilite:probR}; database.ref('donnees/roue').set(donnees.roue); break; } fermerModal(); afficherTout(); }
+        function sauvegarderModal(){ const nom=document.getElementById('modal-nom')?.value; switch(modalType){ case 'portefeuille': if(!nom){ alert('Nom requis'); return; } const reponse=document.getElementById('modal-reponse')?.value||''; const message=document.getElementById('modal-message')?.value||''; const reseau=document.getElementById('modal-reseau')?.value||''; const liaisonRequise = document.getElementById('modal-liaison-requise')?.checked || false; if(modalMode==='ajout') donnees.portefeuilles.push({nom,reponse,messageConfirmation:message,reseau,liaisonRequise}); else donnees.portefeuilles[modalIndex]={...donnees.portefeuilles[modalIndex],nom,reponse,messageConfirmation:message,reseau,liaisonRequise}; database.ref('donnees/portefeuilles').set(donnees.portefeuilles); break; case 'operateur': if(!nom){ alert('Nom requis'); return; } const msg=document.getElementById('modal-message')?.value||''; if(modalMode==='ajout') donnees.operateurs.push({nom,messageConfirmation:msg}); else donnees.operateurs[modalIndex]={...donnees.operateurs[modalIndex],nom,messageConfirmation:msg}; database.ref('donnees/operateurs').set(donnees.operateurs); break; case 'reseau': if(!nom){ alert('Nom requis'); return; } const crypto=document.getElementById('modal-crypto')?.value; const frais=parseFloat(document.getElementById('modal-frais-reseau')?.value)||0; if(modalMode==='ajout'){ if(!donnees.reseaux) donnees.reseaux=[]; donnees.reseaux.push({nom,crypto,fraisReseau:frais}); } else donnees.reseaux[modalIndex]={...donnees.reseaux[modalIndex],nom,crypto,fraisReseau:frais}; database.ref('donnees/reseaux').set(donnees.reseaux); break; case 'crypto': if(!nom){ alert('Nom requis'); return; } if(modalMode==='ajout'){ if(!donnees.cryptos.includes(nom)){ donnees.cryptos.push(nom); if(!donnees.taux[nom]) donnees.taux[nom]={prixUSD:nom==='USDT'?1:0,prixMGA:nom==='USDT'?donnees.usdMGA:0,variation:"0",couleur:"positive",source:'manual'}; } } else{ const ancien=donnees.cryptos[modalIndex]; if(ancien!==nom&&donnees.taux[ancien]){ donnees.taux[nom]=donnees.taux[ancien]; delete donnees.taux[ancien]; } donnees.cryptos[modalIndex]=nom; } database.ref('donnees/cryptos').set(donnees.cryptos); database.ref('donnees/taux').set(donnees.taux); cacheTaux.set(donnees.taux); break; case 'taux': const c=document.getElementById('modal-crypto')?.value; if(c){ const pu=parseFloat(document.getElementById('modal-prix-usd')?.value)||0; const pm=parseFloat(document.getElementById('modal-prix-mga')?.value)||0; donnees.taux[c]={prixUSD:pu,prixMGA:pm,variation:document.getElementById('modal-variation')?.value||"0",couleur:document.getElementById('modal-couleur')?.value||"positive",lastUpdate:new Date().toISOString(),source:'manual'}; if(donnees.tauxMode==='auto') setTauxMode('manual'); database.ref('donnees/taux').set(donnees.taux); cacheTaux.set(donnees.taux); } break; case 'roue': const nomR=document.getElementById('modal-roue-nom')?.value; if(!nomR){ alert('Nom du lot requis'); return; } const typeR=document.getElementById('modal-roue-type')?.value; const probR=parseFloat(document.getElementById('modal-roue-prob')?.value)||0; if(probR < 0 || probR > 100){ alert('La probabilité doit être entre 0 et 100'); return; } let trRoue = Array.isArray(donnees.roue) ? donnees.roue : (typeof donnees.roue === 'object' && donnees.roue !== null ? Object.values(donnees.roue) : []); donnees.roue = trRoue.filter(item => item !== null); if(!donnees.roue) donnees.roue=[]; if(modalMode==='ajout') donnees.roue.push({id:'ROUE-'+Date.now()+'-'+Math.random().toString(36).substr(2,4), nom:nomR, type:typeR, probabilite:probR}); else donnees.roue[modalIndex]={...donnees.roue[modalIndex], nom:nomR, type:typeR, probabilite:probR}; database.ref('donnees/roue').set(donnees.roue); break; } fermerModal(); afficherTout(); }
         
         function switchTab(tab){ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); ['gestion','taux','pause','utilisateurs','numeros','demandes','news','transactions','config', 'roue'].forEach(t=>document.getElementById(t+'-tab').style.display='none'); if(tab==='gestion'){ document.querySelectorAll('.tab')[0].classList.add('active'); document.getElementById('gestion-tab').style.display='block'; } else if(tab==='taux'){ document.querySelectorAll('.tab')[1].classList.add('active'); document.getElementById('taux-tab').style.display='block'; afficherTauxSimplifies(); } else if(tab==='pause'){ document.querySelectorAll('.tab')[2].classList.add('active'); document.getElementById('pause-tab').style.display='block'; mettreAJourPauseUI(); } else if(tab==='utilisateurs'){ document.querySelectorAll('.tab')[3].classList.add('active'); document.getElementById('utilisateurs-tab').style.display='block'; afficherUtilisateurs(); } else if(tab==='numeros'){ document.querySelectorAll('.tab')[4].classList.add('active'); document.getElementById('numeros-tab').style.display='block'; afficherNumeros(); } else if(tab==='demandes'){ document.querySelectorAll('.tab')[5].classList.add('active'); document.getElementById('demandes-tab').style.display='block'; afficherDemandes(); } else if(tab==='news'){ document.querySelectorAll('.tab')[6].classList.add('active'); document.getElementById('news-tab').style.display='block'; afficherNews(); annulerEditionNews(); } else if(tab==='transactions'){ document.querySelectorAll('.tab')[7].classList.add('active'); document.getElementById('transactions-tab').style.display='block'; afficherTransactions(); calculerStatsTransactions(); if(document.getElementById('notif-transactions')) document.getElementById('notif-transactions').style.background='var(--warning)'; } else if(tab==='config'){ document.querySelectorAll('.tab')[8].classList.add('active'); document.getElementById('config-tab').style.display='block'; mettreAJourAffichageLimites(); } else if(tab==='roue'){ document.querySelectorAll('.tab')[9].classList.add('active'); document.getElementById('roue-tab').style.display='block'; afficherRoue(); } }
         
@@ -847,7 +809,7 @@
         function sauvegarderMessagesSpeciaux(){ if(!donnees.messagesSpeciaux) donnees.messagesSpeciaux={}; donnees.messagesSpeciaux.trx=document.getElementById('config-message-trx').value; database.ref('donnees/messagesSpeciaux').set(donnees.messagesSpeciaux); alert('✅ Message spécial sauvegardé'); }
         function verifierConnexionFirebase(){ database.ref('.info/connected').once('value').then(s=>alert(s.val()?'✅ Connecté à Firebase':'❌ Déconnecté')).catch(e=>alert('❌ Erreur: '+e.message)); }
         function exporterDonnees(){ const a=document.createElement('a'); a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify({...donnees, utilisateurs},null,2)); a.download=`typh-data-export-${new Date().toISOString().split('T')[0]}.json`; a.click(); }
-        function supprimer(type,idx){ if(!confirm('Supprimer ?')) return; switch(type){ case 'portefeuille': donnees.portefeuilles.splice(idx,1); database.ref('donnees/portefeuilles').set(donnees.portefeuilles); break; case 'operateur': donnees.operateurs.splice(idx,1); database.ref('donnees/operateurs').set(donnees.operateurs); break; case 'reseau': donnees.reseaux.splice(idx,1); database.ref('donnees/reseaux').set(donnees.reseaux); break; case 'crypto': const c=donnees.cryptos[idx]; donnees.cryptos.splice(idx,1); if(donnees.taux&&donnees.taux[c]) delete donnees.taux[c]; database.ref('donnees/cryptos').set(donnees.cryptos); database.ref('donnees/taux').set(donnees.taux); cacheTaux.set(donnees.taux); break; case 'roue': donnees.roue.splice(idx,1); database.ref('donnees/roue').set(donnees.roue); break; } afficherTout(); }
+        function supprimer(type,idx){ if(!confirm('Supprimer ?')) return; switch(type){ case 'portefeuille': donnees.portefeuilles.splice(idx,1); database.ref('donnees/portefeuilles').set(donnees.portefeuilles); break; case 'operateur': donnees.operateurs.splice(idx,1); database.ref('donnees/operateurs').set(donnees.operateurs); break; case 'reseau': donnees.reseaux.splice(idx,1); database.ref('donnees/reseaux').set(donnees.reseaux); break; case 'crypto': const c=donnees.cryptos[idx]; donnees.cryptos.splice(idx,1); if(donnees.taux&&donnees.taux[c]) delete donnees.taux[c]; database.ref('donnees/cryptos').set(donnees.cryptos); database.ref('donnees/taux').set(donnees.taux); cacheTaux.set(donnees.taux); break; case 'roue': let rData = Array.isArray(donnees.roue) ? donnees.roue : (typeof donnees.roue === 'object' && donnees.roue !== null ? Object.values(donnees.roue) : []); rData = rData.filter(item => item !== null); rData.splice(idx,1); donnees.roue = rData; database.ref('donnees/roue').set(donnees.roue); break; } afficherTout(); }
         
         function afficherTransactions(){ 
             const l=document.getElementById('transactions-liste'); 
@@ -860,11 +822,11 @@
             let filtrees=filtrerTransactionsListe(demandesArray); 
             l.innerHTML=filtrees.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(tx=>{
                 let recuHtml = '';
+                let bonusClass = '';
                 if(tx.type==='ACHAT') recuHtml = tx.montantRecu?tx.montantRecu.toFixed(4)+' '+tx.crypto:'Calcul...';
                 else if(tx.type==='VENTE') recuHtml = tx.montantRecu?tx.montantRecu.toLocaleString()+' Ar':'Calcul...';
-                else if(tx.type==='BONUS') recuHtml = echapperHTML(tx.lotGagne || tx.montant || 'N/A');
-
-                return `<div class="transaction-item ${tx.statut}" onclick="voirDetailsTransaction('${echapperHTML(tx.id)}')"><div class="transaction-header"><span class="badge-type ${tx.type}"><i class="fas ${tx.type==='ACHAT'?'fa-arrow-down':(tx.type==='VENTE'?'fa-arrow-up':'fa-gift')}"></i> ${echapperHTML(tx.type)}</span><span class="badge-statut ${tx.statut}">${echapperHTML(tx.statut)}</span><span class="transaction-date"><i class="far fa-clock"></i> ${echapperHTML(new Date(tx.date).toLocaleString())}</span></div><div class="transaction-user"><i class="fas fa-user"></i> ${echapperHTML(tx.utilisateur)} (${echapperHTML(tx.userID||'ID inconnu')})</div><div class="transaction-details"><div class="detail-item"><span class="detail-label">${tx.type==='BONUS'?'Lot gagné':'Vous recevez'}</span><span class="detail-value" style="color:var(--success);">${recuHtml}</span></div></div><div class="transaction-txid"><i class="fas fa-hashtag"></i> TXID/Preuve: ${echapperHTML(tx.txid||'Non fourni')}</div><div class="transaction-footer"><button class="btn btn-view" onclick="event.stopPropagation(); voirDetailsTransaction('${echapperHTML(tx.id)}')"><i class="fas fa-eye"></i> Voir détails</button>${tx.statut==='en_attente'?`<button class="btn btn-success" onclick="event.stopPropagation(); approuverDemande('${echapperHTML(tx.id)}')"><i class="fas fa-check"></i> Approuver</button><button class="btn btn-delete" onclick="event.stopPropagation(); rejeterDemande('${echapperHTML(tx.id)}')"><i class="fas fa-times"></i> Rejeter</button><button class="btn btn-save-attentes" onclick="event.stopPropagation(); sauvegarderDemandeUnique('${echapperHTML(tx.id)}')"><i class="fas fa-save"></i> Sauvegarder</button>`:''}</div></div>`;
+                else if(tx.type==='BONUS') { recuHtml = echapperHTML(tx.lotGagne || tx.montant || 'N/A'); bonusClass = 'bonus-en_attente'; }
+                return `<div class="transaction-item ${tx.statut} ${bonusClass}" onclick="voirDetailsTransaction('${echapperHTML(tx.id)}')"><div class="transaction-header"><span class="badge-type ${tx.type}"><i class="fas ${tx.type==='ACHAT'?'fa-arrow-down':(tx.type==='VENTE'?'fa-arrow-up':'fa-gift')}"></i> ${echapperHTML(tx.type)}</span><span class="badge-statut ${tx.statut}">${echapperHTML(tx.statut)}</span><span class="transaction-date"><i class="far fa-clock"></i> ${echapperHTML(new Date(tx.date).toLocaleString())}</span></div><div class="transaction-user"><i class="fas fa-user"></i> ${echapperHTML(tx.utilisateur)} (${echapperHTML(tx.userID||'ID inconnu')})</div><div class="transaction-details"><div class="detail-item"><span class="detail-label">${tx.type==='BONUS'?'Lot gagné':'Vous recevez'}</span><span class="detail-value" style="color:${tx.type==='BONUS'?'var(--bonus)':'var(--success)'};">${recuHtml}</span></div></div><div class="transaction-txid"><i class="fas fa-hashtag"></i> TXID/Preuve: ${echapperHTML(tx.txid||'Non fourni')}</div><div class="transaction-footer"><button class="btn btn-view" onclick="event.stopPropagation(); voirDetailsTransaction('${echapperHTML(tx.id)}')"><i class="fas fa-eye"></i> Voir détails</button>${tx.statut==='en_attente'?`<button class="btn btn-success" onclick="event.stopPropagation(); approuverDemande('${echapperHTML(tx.id)}')"><i class="fas fa-check"></i> Approuver</button><button class="btn btn-delete" onclick="event.stopPropagation(); rejeterDemande('${echapperHTML(tx.id)}')"><i class="fas fa-times"></i> Rejeter</button><button class="btn btn-save-attentes" onclick="event.stopPropagation(); sauvegarderDemandeUnique('${echapperHTML(tx.id)}')"><i class="fas fa-save"></i> Sauvegarder</button>`:''}</div></div>`;
             }).join(''); 
         }
         
@@ -915,22 +877,26 @@
             if(tx.type==='ACHAT') montantRecu = (tx.montantRecu?tx.montantRecu.toFixed(4):'0')+' '+tx.crypto;
             else if(tx.type==='VENTE') montantRecu = (tx.montantRecu?tx.montantRecu.toLocaleString():'0')+' Ar';
             else if(tx.type==='BONUS') montantRecu = tx.lotGagne || tx.montant || 'N/A';
-            
             let adresseLieeHtml = tx.adresseLiee ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Adresse de liaison:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.adresseLiee)}</td></tr>` : '';
-
             let beneficiaire = '';
-            if(tx.type==='ACHAT'){
-                beneficiaire = `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Adresse:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.adresse||'Non spécifiée')}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Numéro débité:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${tx.nomNumero?echapperHTML(tx.nomNumero)+' ('+echapperHTML(tx.numero)+')':echapperHTML(tx.numero||'Non spécifié')}</td></tr>`;
-            } else if(tx.type==='VENTE'){
-                beneficiaire = `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Bénéficiaire:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.nomNumero||tx.utilisateur)}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Numéro crédité:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.numero||'Non spécifié')}</td></tr>${adresseLieeHtml}`;
-            } else if(tx.type==='BONUS'){
-                beneficiaire = `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Info Réception:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.adresse || tx.numero || 'N/A')}</td></tr>`;
-            }
-            
-            let montantEnvoyeHtml = tx.type !== 'BONUS' ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Montant envoyé:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.montant)} ${tx.type==='ACHAT'?'Ar':tx.crypto}</td></tr>` : '';
+            if(tx.type==='ACHAT'){ beneficiaire = `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Adresse:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.adresse||'Non spécifiée')}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Numéro débité:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${tx.nomNumero?echapperHTML(tx.nomNumero)+' ('+echapperHTML(tx.numero)+')':echapperHTML(tx.numero||'Non spécifié')}</td></tr>`; }
+            else if(tx.type==='VENTE'){ beneficiaire = `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Bénéficiaire:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.nomNumero||tx.utilisateur)}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Numéro crédité:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.numero||'Non spécifié')}</td></tr>${adresseLieeHtml}`; }
+            else if(tx.type==='BONUS'){ beneficiaire = `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Info Réception:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.adresse || tx.numero || 'N/A')}</td></tr>`; }
+            let montantEnvoyeHtml = tx.type !== 'BONUS' ? `<td><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Montant envoyé:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.montant)} ${tx.type==='ACHAT'?'Ar':tx.crypto}</td></tr>` : '';
             let reseauHtml = tx.type !== 'BONUS' ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Réseau:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.reseau||'N/A')}</td></tr>` : '';
-
-            recu.innerHTML=`<table style="width:100%;border-collapse:collapse;margin:20px 0;"><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>ID Transaction:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.id)}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>ID Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.userID||'Non attribué')}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Type:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.type)}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Statut:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.statut)}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.utilisateur)}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Email:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.email)}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Date:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(new Date(tx.date).toLocaleString('fr-FR'))}</td></tr>${montantEnvoyeHtml}<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>${tx.type==='BONUS'?'Lot gagné':'Vous recevez'}:</strong><td style="padding:8px;border-bottom:1px solid #eee;color:#059669;font-weight:bold;">${echapperHTML(montantRecu)}</td></tr>${reseauHtml}${beneficiaire}<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>TXID/Preuve:</strong><td style="padding:8px;border-bottom:1px solid #eee;font-size:0.8rem;word-break:break-all;">${echapperHTML(tx.txid||'Non fourni')}</td></tr></table>`; 
+            recu.innerHTML=`<table style="width:100%;border-collapse:collapse;margin:20px 0;"><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>ID Transaction:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.id)}</td></tr>
+                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>ID Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.userID||'Non attribué')}</td></tr>
+                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Type:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.type)}</td></tr>
+                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Statut:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.statut)}</td></tr>
+                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.utilisateur)}</td></tr>
+                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Email:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.email)}</td></tr>
+                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Date:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(new Date(tx.date).toLocaleString('fr-FR'))}</td></tr>
+                    ${montantEnvoyeHtml}
+                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>${tx.type==='BONUS'?'Lot gagné':'Vous recevez'}:</strong><td style="padding:8px;border-bottom:1px solid #eee;color:#059669;font-weight:bold;">${echapperHTML(montantRecu)}</td></tr>
+                    ${reseauHtml}
+                    ${beneficiaire}
+                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>TXID/Preuve:</strong><td style="padding:8px;border-bottom:1px solid #eee;font-size:0.8rem;word-break:break-all;">${echapperHTML(tx.txid||'Non fourni')}</td></tr>
+                </table>`; 
             dateGen.textContent=echapperHTML(new Date().toLocaleString('fr-FR')); 
             html2canvas(document.getElementById('template-recu'),{scale:2,backgroundColor:'#ffffff',logging:false}).then(canvas=>{ const a=document.createElement('a'); a.download=`recu-${tx.id}-${Date.now()}.png`; a.href=canvas.toDataURL('image/png'); a.click(); const demandesArray2 = getDemandesTableau();
             const tx2=demandesArray2.find(d=>d.id===tx.id); if(tx2){ if(!tx2.historique) tx2.historique=[]; tx2.historique.push({date:new Date().toISOString(),action:'RECU_TELECHARGE',details:'Reçu téléchargé par admin'}); sauvegarderDemandes(demandesArray2); } }).catch(e=>{ console.error(e); alert('❌ Erreur génération reçu'); }); 
@@ -942,17 +908,14 @@
             const tx=demandesArray?.find(d=>d.id===id); 
             if(!tx) return; 
             transactionSelectionneeId=id; 
-            let html=`<div class="info-row"><span class="info-label">ID:</span><span class="info-value">${echapperHTML(tx.id)}</span></div><div class="info-row"><span class="info-label">ID Client:</span><span class="info-value">${echapperHTML(tx.userID||'Non attribué')}</span></div><div class="info-row"><span class="info-label">Type:</span><span class="info-value" style="color:${tx.type==='ACHAT'?'var(--success)':(tx.type==='VENTE'?'var(--warning)':'#c4b5fd')}"><i class="fas ${tx.type==='ACHAT'?'fa-arrow-down':(tx.type==='VENTE'?'fa-arrow-up':'fa-gift')}"></i> ${echapperHTML(tx.type)}</span></div><div class="info-row"><span class="info-label">Statut:</span><span class="info-value badge-statut ${tx.statut}">${echapperHTML(tx.statut)}</span></div><div class="info-row"><span class="info-label">Client:</span><span class="info-value">${echapperHTML(tx.utilisateur)}</span></div><div class="info-row"><span class="info-label">Email:</span><span class="info-value">${echapperHTML(tx.email)}</span></div><div class="info-row"><span class="info-label">Date:</span><span class="info-value">${echapperHTML(new Date(tx.date).toLocaleString())}</span></div>`; 
-            
+            let html=`<div class="info-row"><span class="info-label">ID:</span><span class="info-value">${echapperHTML(tx.id)}</span></div><div class="info-row"><span class="info-label">ID Client:</span><span class="info-value">${echapperHTML(tx.userID||'Non attribué')}</span></div><div class="info-row"><span class="info-label">Type:</span><span class="info-value" style="color:${tx.type==='ACHAT'?'var(--success)':(tx.type==='VENTE'?'var(--warning)':'var(--bonus)')}"><i class="fas ${tx.type==='ACHAT'?'fa-arrow-down':(tx.type==='VENTE'?'fa-arrow-up':'fa-gift')}"></i> ${echapperHTML(tx.type)}</span></div><div class="info-row"><span class="info-label">Statut:</span><span class="info-value badge-statut ${tx.statut}">${echapperHTML(tx.statut)}</span></div><div class="info-row"><span class="info-label">Client:</span><span class="info-value">${echapperHTML(tx.utilisateur)}</span></div><div class="info-row"><span class="info-label">Email:</span><span class="info-value">${echapperHTML(tx.email)}</span></div><div class="info-row"><span class="info-label">Date:</span><span class="info-value">${echapperHTML(new Date(tx.date).toLocaleString())}</span></div>`; 
             if(tx.type==='ACHAT'){ 
                 html+=`<div class="info-row"><span class="info-label">Vous recevez:</span><span class="info-value" style="color:var(--success);font-weight:700;">${tx.montantRecu?tx.montantRecu.toFixed(4)+' '+tx.crypto:'Calcul...'}</span></div><div class="info-row"><span class="info-label">Opérateur:</span><span class="info-value">${echapperHTML(tx.operateur||'N/A')}</span></div><div class="info-row"><span class="info-label">Montant envoyé:</span><span class="info-value">${echapperHTML(tx.montant)} Ar</span></div><div class="info-row"><span class="info-label">Réseau:</span><span class="info-value">${echapperHTML(tx.reseau||'N/A')}</span></div><div class="info-row"><span class="info-label">Portefeuille:</span><span class="info-value">${echapperHTML(tx.portefeuille||'N/A')}</span></div><div class="info-row"><span class="info-label">Adresse:</span><span class="info-value" style="word-break:break-all;">${echapperHTML(tx.adresse||'N/A')}</span></div><div class="info-row"><span class="info-label">Numéro débité:</span><span class="info-value">${tx.nomNumero?echapperHTML(tx.nomNumero)+' ('+echapperHTML(tx.numero)+')':echapperHTML(tx.numero||'Non spécifié')}</span></div>`; 
             } else if(tx.type==='VENTE') { 
                 html+=`<div class="info-row"><span class="info-label">Vous recevez:</span><span class="info-value" style="color:var(--success);font-weight:700;">${tx.montantRecu?tx.montantRecu.toLocaleString()+' Ar':'Calcul...'}</span></div><div class="info-row"><span class="info-label">Crypto envoyée:</span><span class="info-value">${echapperHTML(tx.montant)} ${echapperHTML(tx.crypto)}</span></div><div class="info-row"><span class="info-label">Réseau:</span><span class="info-value">${echapperHTML(tx.reseau||'N/A')}</span></div><div class="info-row"><span class="info-label">Opérateur:</span><span class="info-value">${echapperHTML(tx.operateur||'N/A')}</span></div><div class="info-row"><span class="info-label">Portefeuille:</span><span class="info-value">${echapperHTML(tx.portefeuille||'N/A')}</span></div><div class="info-row"><span class="info-label">Bénéficiaire:</span><span class="info-value">${echapperHTML(tx.nomNumero||tx.utilisateur)}</span></div><div class="info-row"><span class="info-label">Numéro crédité:</span><span class="info-value">${echapperHTML(tx.numero||'N/A')}</span></div>`; 
-                if (tx.adresseLiee) {
-                    html+=`<div class="info-row" style="background: rgba(59,130,246,0.1); padding: 12px; border-radius: 12px; border: 1px solid var(--accent); margin-top: 10px; display: block;"><span class="info-label" style="color:var(--accent); width:100%; margin-bottom:8px; display:block; font-weight:700;"><i class="fas fa-link"></i> Adresse de réception du client:</span><span class="info-value" style="word-break:break-all; color:var(--white); font-weight:bold; display:block;">${echapperHTML(tx.adresseLiee)}</span></div>`;
-                }
+                if (tx.adresseLiee) { html+=`<div class="info-row" style="background: rgba(59,130,246,0.1); padding: 12px; border-radius: 12px; border: 1px solid var(--accent); margin-top: 10px; display: block;"><span class="info-label" style="color:var(--accent); width:100%; margin-bottom:8px; display:block; font-weight:700;"><i class="fas fa-link"></i> Adresse de réception du client:</span><span class="info-value" style="word-break:break-all; color:var(--white); font-weight:bold; display:block;">${echapperHTML(tx.adresseLiee)}</span></div>`; }
             } else if(tx.type==='BONUS') {
-                html+=`<div class="info-row"><span class="info-label">Lot gagné:</span><span class="info-value" style="color:var(--success);font-weight:700;">${echapperHTML(tx.lotGagne || tx.montant)}</span></div><div class="info-row" style="background: rgba(16,185,129,0.1); padding: 12px; border-radius: 12px; border: 1px solid var(--success); margin-top: 10px; display: block;"><span class="info-label" style="color:var(--success); width:100%; margin-bottom:8px; display:block; font-weight:700;"><i class="fas fa-map-marker-alt"></i> Info réception:</span><span class="info-value" style="word-break:break-all; color:var(--white); font-weight:bold; display:block;">${echapperHTML(tx.adresse || tx.numero || 'N/A')}</span></div>`;
+                html+=`<div class="info-row"><span class="info-label">Lot gagné:</span><span class="info-value" style="color:var(--bonus);font-weight:700;">${echapperHTML(tx.lotGagne || tx.montant)}</span></div><div class="info-row" style="background: rgba(139,92,246,0.1); padding: 12px; border-radius: 12px; border: 1px solid var(--bonus); margin-top: 10px; display: block;"><span class="info-label" style="color:var(--bonus); width:100%; margin-bottom:8px; display:block; font-weight:700;"><i class="fas fa-map-marker-alt"></i> 📍 Info réception (entrée par l'utilisateur):</span><span class="info-value" style="word-break:break-all; color:var(--white); font-weight:bold; display:block;">${echapperHTML(tx.adresse || tx.numero || 'N/A')}</span></div>`;
             }
             html+=`<div class="info-row"><span class="info-label">TXID/Preuve:</span><span class="info-value" style="word-break:break-all;">${echapperHTML(tx.txid||'Non fourni')}</span></div>${tx.messagePaiement?`<div class="info-row"><span class="info-label">Message:</span><span class="info-value">${echapperHTML(tx.messagePaiement)}</span></div>`:''}`; 
             document.getElementById('details-transaction-complete').innerHTML=html; 
@@ -1015,7 +978,7 @@
         function fermerToast() { const toast = document.getElementById('notification-toast'); if (toast) { toast.classList.remove('show'); if (toastTimer) clearTimeout(toastTimer); } }
         
         let dernieresTransactions = [];
-        function envoyerNotificationTransaction(transaction) { if (!notificationPermission) return; if (dernieresTransactions.includes(transaction.id)) return; dernieresTransactions.push(transaction.id); if (dernieresTransactions.length > 10) dernieresTransactions.shift(); let montant = ''; if(transaction.type === 'ACHAT') montant = `${transaction.montant} Ar → ${transaction.montantRecu?.toFixed(4)} ${transaction.crypto}`; else if(transaction.type === 'VENTE') montant = `${transaction.montant} ${transaction.crypto} → ${transaction.montantRecu?.toLocaleString()} Ar`; else if(transaction.type === 'BONUS') montant = `Lot: ${transaction.lotGagne || transaction.montant}`; const notification = new Notification('💰 Nouvelle transaction en attente', { body: `${transaction.utilisateur} - ${transaction.type}: ${montant}`, vibrate: [200,100,200], tag: transaction.id, actions: [{ action: 'view', title: '👁️ Voir' }, { action: 'approve', title: '✅ Approuver' }, { action: 'reject', title: '❌ Rejeter' }] }); notification.onclick = function() { window.focus(); switchTab('transactions'); voirDetailsTransaction(transaction.id); this.close(); }; notification.onaction = function(e) { window.focus(); switchTab('transactions'); if (e.action === 'view') voirDetailsTransaction(transaction.id); else if (e.action === 'approve') setTimeout(() => approuverDemande(transaction.id), 500); else if (e.action === 'reject') setTimeout(() => rejeterDemande(transaction.id), 500); this.close(); }; }
+        function envoyerNotificationTransaction(transaction) { if (!notificationPermission) return; if (dernieresTransactions.includes(transaction.id)) return; dernieresTransactions.push(transaction.id); if (dernieresTransactions.length > 10) dernieresTransactions.shift(); let montant = ''; if(transaction.type === 'ACHAT') montant = `${transaction.montant} Ar → ${transaction.montantRecu?.toFixed(4)} ${transaction.crypto}`; else if(transaction.type === 'VENTE') montant = `${transaction.montant} ${transaction.crypto} → ${transaction.montantRecu?.toLocaleString()} Ar`; else if(transaction.type === 'BONUS') montant = `🎰 Bonus: ${transaction.lotGagne || transaction.montant}`; const notification = new Notification('💰 Nouvelle transaction en attente', { body: `${transaction.utilisateur} - ${transaction.type}: ${montant}`, vibrate: [200,100,200], tag: transaction.id, actions: [{ action: 'view', title: '👁️ Voir' }, { action: 'approve', title: '✅ Approuver' }, { action: 'reject', title: '❌ Rejeter' }] }); notification.onclick = function() { window.focus(); switchTab('transactions'); voirDetailsTransaction(transaction.id); this.close(); }; notification.onaction = function(e) { window.focus(); switchTab('transactions'); if (e.action === 'view') voirDetailsTransaction(transaction.id); else if (e.action === 'approve') setTimeout(() => approuverDemande(transaction.id), 500); else if (e.action === 'reject') setTimeout(() => rejeterDemande(transaction.id), 500); this.close(); }; }
         
         function verifierNouvellesTransactions() { 
             const demandesArray = getDemandesTableau();
@@ -1045,7 +1008,7 @@
             dernierCompteTransactions = enAttente; 
         }
 
-        window.addEventListener('load',function(){ console.log('🚀 Page admin chargée - Configuration de la Roue corrigée et Adresse Liée optimisée'); });
+        window.addEventListener('load',function(){ console.log('🚀 Page admin chargée - Roue de la Fortune configurée et fonctionnelle'); });
     </script>
 </body>
 </html>

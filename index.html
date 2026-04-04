@@ -193,11 +193,16 @@
         .adresse-details { font-size: 0.75rem; color: var(--accent); display: flex; gap: 15px; margin-top: 8px; }
         .btn-delete-adresse { background: var(--danger); padding: 6px 12px; font-size: 0.75rem; width: auto; margin-top: 8px; }
         
-        /* Styles Roue Bonus */
-        .wheel-container { position: relative; width: 280px; height: 280px; margin: 20px auto; border-radius: 50%; border: 4px solid var(--accent); overflow: hidden; box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); }
+        /* Styles Roue Bonus Simple */
+        .wheel-container { position: relative; width: 280px; height: 280px; margin: 20px auto; border-radius: 50%; overflow: hidden; box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); }
         .wheel { width: 100%; height: 100%; border-radius: 50%; transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99); position: relative; }
         .wheel-pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid white; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
         .wheel-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; background: var(--bg-dark); border-radius: 50%; z-index: 5; border: 3px solid var(--accent); }
+        .btn-wheel-disabled { background: var(--gray-300) !important; cursor: not-allowed !important; opacity: 0.5 !important; transform: none !important; }
+        .btn-wheel-active { background: linear-gradient(135deg, #8b5cf6, #6d28d9) !important; cursor: pointer !important; opacity: 1 !important; }
+        .roue-lots { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 15px 0; }
+        .roue-lot-badge { background: var(--primary); padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; color: var(--text-secondary); }
+        .roue-lot-badge.winner { background: var(--success); color: white; }
 
         @media (max-width: 768px) { .hero-title { font-size: 2rem; } .rates-grid { grid-template-columns: repeat(2, 1fr); } .pin-digit { width: 45px; height: 45px; font-size: 1.3rem; } .modal-content { padding: 20px; } }
     </style>
@@ -210,7 +215,7 @@
             <div style="display: flex; flex-direction: column; align-items: flex-end; margin: -10px 0 30px; padding-right: 10px;"><a href="https://typh-xchain.site/apk" target="_blank" class="btn-download-green"><i class="fas fa-arrow-down"></i></a><div style="margin-top:5px;"><span style="color:var(--text-secondary);font-size:0.85rem;"><i class="fas fa-download" style="color:#10B981;"></i> Télécharger l'application</span></div></div>
             <div class="features-grid"><div class="feature-card"><div class="feature-icon"><i class="fas fa-bolt"></i></div><h3 class="feature-title">Rapide</h3><p class="feature-description">Transactions en moins de 5 minutes, 15h/24 et 7j/7</p></div><div class="feature-card"><div class="feature-icon"><i class="fas fa-shield-alt"></i></div><h3 class="feature-title">Sécurisé</h3><p class="feature-description">Validation par code PIN à 6 chiffres</p></div><div class="feature-card"><div class="feature-icon"><i class="fas fa-hand-holding-usd"></i></div><h3 class="feature-title">Meilleurs taux</h3><p class="feature-description">Des taux compétitifs mis à jour en temps réel depuis Binance</p></div><div class="feature-card"><div class="feature-icon"><i class="fas fa-mobile-alt"></i></div><h3 class="feature-title">Mobile Money</h3><p class="feature-description">Compatible MVola, Orange Money, Airtel Money</p></div></div>
             <div class="stats-section"><div class="stat-item"><div class="stat-number">1K+</div><div class="stat-label">Utilisateurs</div></div><div class="stat-item"><div class="stat-number">5K+</div><div class="stat-label">Transactions</div></div><div class="stat-item"><div class="stat-number">4.8</div><div class="stat-label">Note moyenne</div></div><div class="stat-item"><div class="stat-number">24/7</div><div class="stat-label">Support</div></div></div>
-            <div id="testimonials" class="testimonials-section"><h2 class="section-title">Ce que disent nos clients</h2><div class="testimonials-grid"><div class="testimonial-card"><div class="testimonial-header"><div class="testimonial-avatar"><i class="fas fa-user"></i></div><div><div class="testimonial-name">Rojo Anaïs</div><div class="testimonial-date">Il y a 2 jours</div></div></div><div class="testimonial-text">"Atokisana à 100% no sady rapide !"</div><div class="testimonial-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div></div><div class="testimonial-card"><div class="testimonial-header"><div class="testimonial-avatar"><i class="fas fa-user"></i></div><div><div class="testimonial-name">Santatra Cedrick</div><div class="testimonial-date">Il y a 5 jours</div></div></div><div class="testimonial-text">"Mahay mandray olona sady manoro sy manampy"</div><div class="testimonial-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i></div></div><div class="testimonial-card"><div class="testimonial-header"><div class="testimonial-avatar"><i class="fas fa-user"></i></div><div><div class="testimonial-name">Mahefa Rakotonirina</div><div class="testimonial-date">Il y a 1 semaine</div></div></div><div class="testimonial-text">"Efa 02 taona niarahana fa milam sady atokisana hatrany foana."</div><div class="testimonial-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div></div></div><div style="text-align:center;margin-top:30px;"><a href="https://www.facebook.com/Typh.Exchange.Ofisialy" target="_blank" class="btn-support"><i class="fab fa-facebook-f"></i> Support Facebook</a></div></div>
+            <div id="testimonials" class="testimonials-section"><h2 class="section-title">Ce que disent nos clients</h2><div class="testimonials-grid"><div class="testimonial-card"><div class="testimonial-header"><div class="testimonial-avatar"><i class="fas fa-user"></i></div><div><div class="testimonial-name">Tantely Hervée</div><div class="testimonial-date">Il y a 2 jours</div></div></div><div class="testimonial-text">"Atokisana à 100% no sady rapide !"</div><div class="testimonial-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div></div><div class="testimonial-card"><div class="testimonial-header"><div class="testimonial-avatar"><i class="fas fa-user"></i></div><div><div class="testimonial-name">Santatra Cedrick</div><div class="testimonial-date">Il y a 5 jours</div></div></div><div class="testimonial-text">"Mahay mandray olona sady manoro sy manampy"</div><div class="testimonial-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i></div></div><div class="testimonial-card"><div class="testimonial-header"><div class="testimonial-avatar"><i class="fas fa-user"></i></div><div><div class="testimonial-name">Mahefa Rakotonirina</div><div class="testimonial-date">Il y a 1 semaine</div></div></div><div class="testimonial-text">"Efa 02 taona niarahana fa milam sady atokisana hatrany foana."</div><div class="testimonial-rating"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div></div></div><div style="text-align:center;margin-top:30px;"><a href="https://www.facebook.com/Typh.Exchange.Ofisialy" target="_blank" class="btn-support"><i class="fab fa-facebook-f"></i> Support Facebook</a></div></div>
             <div class="footer-copyright">Copyright ©2026 All rights reserved | Dev. Typh</div>
         </div>
         <div id="accueil-section" class="platform-section"><div class="card"><div class="card-header"><h2 class="card-title"><i class="fas fa-chart-line"></i> Taux en direct <span class="binance-badge"><i class="fab fa-binance"></i> Binance</span></h2></div><div class="info-message"><i class="fas fa-info-circle"></i><span>Les taux sont actualisés toutes les 30 minutes. <a href="#" onclick="syncBinanceManuel()" style="color: var(--accent);">Actualiser maintenant</a></span></div><div class="last-update" id="taux-last-update">Mise à jour: ...</div><div class="rates-grid" id="taux-direct"></div></div><div class="card"><h2 class="card-title" style="margin-bottom:16px;"><i class="fas fa-history"></i> Transactions par nos clients</h2><ul class="activity-list" id="recent-activity"></ul></div><div class="card"><h2 class="card-title" style="margin-bottom:16px;"><i class="fas fa-newspaper"></i> Actualités & Annonces</h2><div class="news-container" id="news-container"></div></div></div>
@@ -237,10 +242,12 @@
         <div id="profil-section" class="platform-section">
             <div class="card"><h2 class="card-title"><i class="fas fa-user-circle"></i> Profil</h2><div class="profile-info" id="profil-infos"></div></div>
             
-            <div class="card" id="card-bonus" style="display:none; text-align:center; background: linear-gradient(135deg, var(--bg-card), #1e1b4b); border-color: #8b5cf6;">
-                <h2 class="card-title" style="justify-content:center;"><i class="fas fa-gift" style="color:#c4b5fd;"></i> Bonus Journalier</h2>
-                <p style="color:var(--text-secondary); margin:10px 0; font-size:0.9rem;">Félicitations ! Vous avez une transaction confirmée aujourd'hui. Tournez la roue pour gagner un prix.</p>
-                <button class="btn btn-success" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); margin-top:10px;" onclick="ouvrirModalRoue()"><i class="fas fa-dharmachakra"></i> Tourner la Roue</button>
+            <div class="card" id="card-bonus" style="text-align:center; background: linear-gradient(135deg, var(--bg-card), #1e1b4b); border-color: #8b5cf6;">
+                <h2 class="card-title" style="justify-content:center;"><i class="fas fa-gift" style="color:#c4b5fd;"></i> Bonus Journalier - Roue de la Fortune</h2>
+                <div id="bonus-lots-preview" class="roue-lots"></div>
+                <p id="bonus-message" style="color:var(--text-secondary); margin:10px 0; font-size:0.9rem;">🎰 Tournez la roue et gagnez des lots !</p>
+                <button id="btn-roue-action" class="btn btn-wheel-disabled" onclick="ouvrirModalRoue()" disabled><i class="fas fa-dharmachakra"></i> Tourner la Roue</button>
+                <p id="bonus-restriction" style="color:var(--warning); font-size:0.8rem; margin-top:8px;">🔒 Une transaction confirmée aujourd'hui est requise pour jouer</p>
             </div>
 
             <div class="card"><h2 class="card-title"><i class="fas fa-key"></i> Code PIN de sécurité</h2><div id="pin-management"></div><button class="btn btn-success" onclick="gererPIN()" id="btn-gerer-pin"><i class="fas fa-key"></i> Configurer mon code PIN</button></div>
@@ -249,6 +256,7 @@
     <div class="bottom-nav" id="bottom-nav"><div class="nav-menu"><div class="nav-item" onclick="switchPlatformSection('accueil')" id="nav-accueil"><i class="fas fa-home"></i><span>Accueil</span></div><div class="nav-item" onclick="verifierAvantAcces('achat')" id="nav-achat"><i class="fas fa-arrow-down"></i><span>Dépôt</span></div><div class="nav-item" onclick="verifierAvantAcces('vente')" id="nav-vente"><i class="fas fa-arrow-up"></i><span>Retrait</span></div><div class="nav-item" onclick="verifierAvantAcces('demandes')" id="nav-demandes"><i class="fas fa-clipboard-list"></i><span>Demandes</span></div><div class="nav-item" onclick="switchPlatformSection('profil')" id="nav-profil"><i class="fas fa-user-circle"></i><span>Profil</span></div></div></div>
 
     <div id="modal-auth" class="modal"><div class="modal-content"><div class="modal-title"><i class="fas fa-sign-in-alt"></i> Bienvenue</div><div style="display:flex;gap:10px;margin-bottom:20px;"><button class="btn btn-success" style="flex:1;" onclick="switchAuthMode('connexion')" id="btn-connexion-mode">Connexion</button><button class="btn" style="flex:1;background:var(--gray-300);" onclick="switchAuthMode('inscription')" id="btn-inscription-mode">Inscription</button></div><div id="connexion-form"><input type="email" id="email-connexion" class="modal-input" placeholder="Email"><input type="password" id="password-connexion" class="modal-input" placeholder="Mot de passe"><div style="display:flex;align-items:center;gap:8px;margin:15px 0;"><input type="checkbox" id="check-rester-connecte" style="width:18px;height:18px;accent-color:var(--accent);" checked><label style="color:var(--text-secondary);font-size:0.85rem;"><i class="fas fa-lock"></i> Rester connecté</label></div><div style="text-align:right;margin:10px 0 20px;"><span onclick="ouvrirModalMotDePasseOublie()" style="color:var(--accent);cursor:pointer;font-size:0.85rem;"><i class="fas fa-question-circle"></i> Mot de passe oublié ?</span></div></div><div id="inscription-form" style="display:none;"><input type="text" id="nom-inscription" class="modal-input" placeholder="Nom complet"><input type="email" id="email-inscription" class="modal-input" placeholder="Email"><input type="password" id="password-inscription" class="modal-input" placeholder="Mot de passe"></div><div class="error-message" id="erreur-auth"><i class="fas fa-exclamation-triangle"></i> <span id="erreur-texte"></span></div><button class="btn btn-success" onclick="authentifier()" id="btn-auth"><i class="fas fa-check"></i> Se connecter</button></div></div>
+    
     <div id="modal-motdepasse-oublie" class="modal"><div class="modal-content"><div class="modal-title"><i class="fas fa-shield-alt"></i> Récupération sécurisée</div><div id="etape-1-mdp" style="display:block;"><p style="color:var(--text-secondary);margin-bottom:20px;"><i class="fas fa-info-circle"></i> Vérification en 2 étapes</p><input type="email" id="email-recuperation" class="modal-input" placeholder="Votre email"><input type="tel" id="numero-recuperation" class="modal-input" placeholder="Votre numéro enregistré" style="margin-top:10px;"><div class="error-message" id="erreur-recuperation"></div><div class="modal-buttons" style="margin-top:20px;"><button class="btn btn-cancel" onclick="fermerModalMotDePasseOublie()">Annuler</button><button class="btn btn-confirm" onclick="verifierEmailEtNumero()">Vérifier</button></div></div><div id="etape-2-mdp" style="display:none;"><p style="color:var(--success);margin-bottom:10px;"><i class="fas fa-check-circle"></i> Identité vérifiée pour <span id="email-affiche"></span></p><input type="password" id="nouveau-motdepasse" class="modal-input" placeholder="Nouveau mot de passe (6+ caractères)"><input type="password" id="confirmer-motdepasse" class="modal-input" placeholder="Confirmer mot de passe"><div class="error-message" id="erreur-nouveau-mdp"></div><div class="modal-buttons" style="margin-top:20px;"><button class="btn btn-cancel" onclick="retourEtape1()">Retour</button><button class="btn btn-confirm" onclick="reinitialiserMotDePasse()">Réinitialiser</button></div></div></div></div>
     
     <div id="modal-pin" class="modal"><div class="modal-content"><div class="modal-title"><i class="fas fa-lock"></i> Code PIN</div><div id="pin-setup" style="display:block;"><p style="color:var(--text-secondary);margin-bottom:20px;">Entrez un code PIN à 6 chiffres</p><div class="pin-digits" id="pin-setup-digits"><div class="pin-digit" id="setup-digit1"></div><div class="pin-digit" id="setup-digit2"></div><div class="pin-digit" id="setup-digit3"></div><div class="pin-digit" id="setup-digit4"></div><div class="pin-digit" id="setup-digit5"></div><div class="pin-digit" id="setup-digit6"></div></div><div class="pin-keypad" id="pin-setup-keypad"><div class="pin-key" onclick="ajouterChiffrePIN('setup','1')">1</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','2')">2</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','3')">3</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','4')">4</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','5')">5</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','6')">6</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','7')">7</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','8')">8</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','9')">9</div><div class="pin-key special" onclick="effacerDernierPIN('setup')">⌫</div><div class="pin-key" onclick="ajouterChiffrePIN('setup','0')">0</div><div class="pin-key special" onclick="effacerPIN('setup')">C</div></div><p style="color:var(--text-secondary);margin:10px 0;">Confirmer</p><div class="pin-digits" id="pin-setup-confirm-digits"><div class="pin-digit" id="setup-confirm-digit1"></div><div class="pin-digit" id="setup-confirm-digit2"></div><div class="pin-digit" id="setup-confirm-digit3"></div><div class="pin-digit" id="setup-confirm-digit4"></div><div class="pin-digit" id="setup-confirm-digit5"></div><div class="pin-digit" id="setup-confirm-digit6"></div></div><div class="pin-keypad" id="pin-setup-confirm-keypad"><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','1')">1</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','2')">2</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','3')">3</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','4')">4</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','5')">5</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','6')">6</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','7')">7</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','8')">8</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','9')">9</div><div class="pin-key special" onclick="effacerDernierPIN('setup-confirm')">⌫</div><div class="pin-key" onclick="ajouterChiffrePIN('setup-confirm','0')">0</div><div class="pin-key special" onclick="effacerPIN('setup-confirm')">C</div></div><div class="error-message" id="pin-setup-error"></div><button class="btn btn-success" onclick="sauvegarderPIN()" style="margin-top:20px;"><i class="fas fa-check"></i> Enregistrer</button></div>
@@ -282,13 +290,14 @@
                     </div>
                     <div class="wheel-center"></div>
                 </div>
-                <button class="btn btn-success" id="btn-tourner-roue" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); font-size:1.2rem; margin-top:20px;" onclick="tournerRoue()"><i class="fas fa-gift"></i> TOURNER !</button>
+                <div id="roue-lots-display" class="roue-lots" style="margin:15px 0; font-size:0.8rem;"></div>
+                <button class="btn btn-success" id="btn-tourner-roue" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); font-size:1.2rem; margin-top:10px;" onclick="tournerRoue()"><i class="fas fa-gift"></i> TOURNER !</button>
             </div>
 
             <div id="roue-resultat" style="display:none; margin-top:20px;">
                 <h3 id="texte-resultat" style="font-size:1.5rem; color:var(--success); margin-bottom:15px;">Félicitations !</h3>
                 <p style="color:var(--text-secondary); margin-bottom:15px;" id="texte-instruction-bonus"></p>
-                <input type="text" id="input-bonus-contact" class="modal-input" placeholder="Votre Adresse ou Numéro (selon le lot)">
+                <input type="text" id="input-bonus-contact" class="modal-input" placeholder="Votre adresse de réception (crypto ou numéro)">
                 <div class="error-message" id="erreur-bonus"></div>
                 <button class="btn btn-confirm" onclick="reclamerBonus()" style="width:100%; margin-top:10px;"><i class="fas fa-paper-plane"></i> Réclamer mon gain</button>
             </div>
@@ -318,7 +327,7 @@
             tauxMode: 'auto', usdMGA: 4700,
             limites: { minAchat: 2000, minAchatTRX: 5000, maxAchat: 100000, minVente: 2000, maxVente: 100000 },
             messagesSpeciaux: { trx: "Frais réseau TRC20 : 3% ou -1 TRX si activation" },
-            roue: [], roueActive: false
+            roue: [], roueActive: true
         };
         
         let utilisateurCourant = null;
@@ -342,6 +351,15 @@
         let lotsRoue = [];
         let lotGagneInfo = null;
 
+        // Lots par défaut si aucun configuré par admin
+        const lotsParDefaut = [
+            { id: 'L1', nom: '1 BITCOIN', type: 'crypto', probabilite: 0 },
+            { id: 'L2', nom: 'Frais de gaz - 0.00001 BNB', type: 'crypto', probabilite: 13 },
+            { id: 'L3', nom: 'Crédit 500 Ar', type: 'fiat', probabilite: 5 },
+            { id: 'L4', nom: '0.2 TON', type: 'crypto', probabilite: 5 },
+            { id: 'L5', nom: 'Merci de votre fidélité', type: 'rien', probabilite: 77 }
+        ];
+
         function getDemandesTableau() {
             if(!donnees.demandes) return [];
             if(Array.isArray(donnees.demandes)) return donnees.demandes;
@@ -353,6 +371,7 @@
             demandesArray.forEach(d => { if(d && d.id) demandesObj[d.id] = d; });
             donnees.demandes = demandesObj;
             database.ref('donnees/demandes').set(demandesObj);
+            verifierAccesBonus();
         }
         
         const cacheTaux = {
@@ -378,7 +397,7 @@
                 portefeuilles: [], operateurs: [], cryptos: ["USDT","BTC","ETH","BNB","LTC","SOL","TRX","DOGE","MATIC","SUI","XRP","TON","USDC"],
                 reseaux: [], frais: { achat: 1.5, vente: 2.0 }, pause: { achat: false, vente: false }, taux: {}, demandes: {}, news: [],
                 tauxMode: 'auto', usdMGA: 4700, limites: { minAchat: 2000, minAchatTRX: 5000, maxAchat: 100000, minVente: 2000, maxVente: 100000 },
-                messagesSpeciaux: { trx: "Frais réseau TRC20 : 3% ou -1 TRX si activation" }, roue: [], roueActive: false
+                messagesSpeciaux: { trx: "Frais réseau TRC20 : 3% ou -1 TRX si activation" }, roue: lotsParDefaut, roueActive: true
             };
         }
 
@@ -423,6 +442,16 @@
                 const data = s.val();
                 if(data && Object.keys(data).length > 0){
                     donnees = { ...obtenirDonneesParDefaut(), ...data };
+                    
+                    let roueFirebase = data.roue;
+                    if (roueFirebase) {
+                        let tr = Array.isArray(roueFirebase) ? roueFirebase : Object.values(roueFirebase);
+                        donnees.roue = tr.filter(item => item !== null);
+                    } else {
+                        donnees.roue = lotsParDefaut;
+                    }
+                    if(!donnees.roue || donnees.roue.length === 0) donnees.roue = lotsParDefaut;
+
                     if(!donnees.limites) donnees.limites = obtenirDonneesParDefaut().limites;
                     if(!donnees.messagesSpeciaux) donnees.messagesSpeciaux = obtenirDonneesParDefaut().messagesSpeciaux;
                     if(!donnees.taux) donnees.taux = {};
@@ -432,35 +461,41 @@
                     if(!donnees.operateurs) donnees.operateurs = obtenirDonneesParDefaut().operateurs;
                     if(!donnees.cryptos) donnees.cryptos = obtenirDonneesParDefaut().cryptos;
                     if(!donnees.demandes) donnees.demandes = {};
-                    if(!donnees.roue) donnees.roue = obtenirDonneesParDefaut().roue;
-                    if(donnees.roueActive === undefined) donnees.roueActive = false;
+                    if(donnees.roueActive === undefined) donnees.roueActive = true;
                     donnees.portefeuilles = donnees.portefeuilles.map(p => ({ ...p, liaisonRequise: p.liaisonRequise || false }));
                     tauxUSD_MGA = donnees.usdMGA || 4700;
                 } else {
                     donnees = obtenirDonneesParDefaut();
+                    donnees.roueActive = true;
                 }
                 
                 cacheTaux.set(donnees.taux);
                 
-                // === AJOUTS DES LISTENERS TEMPS RÉEL (ROUE ET DEMANDES) ===
                 database.ref('donnees/roueActive').on('value', snap => {
-                    donnees.roueActive = snap.val() || false;
+                    donnees.roueActive = snap.val() !== false;
                     verifierAccesBonus();
                 });
                 
                 database.ref('donnees/roue').on('value', snap => {
-                    donnees.roue = snap.val() || [];
+                    const roueData = snap.val();
+                    if(roueData) {
+                        let tr = Array.isArray(roueData) ? roueData : Object.values(roueData);
+                        donnees.roue = tr.filter(item => item !== null);
+                    } else {
+                        donnees.roue = lotsParDefaut;
+                    }
+                    if(!donnees.roue || donnees.roue.length === 0) donnees.roue = lotsParDefaut;
+                    afficherApercuLots();
                 });
 
                 database.ref('donnees/demandes').on('value', snap => {
                     if(snap.exists()) {
                         donnees.demandes = snap.val();
                         mettreAJourMesDemandes();
-                        verifierAccesBonus();
                         mettreAJourActiviteRecente();
+                        verifierAccesBonus();
                     }
                 });
-                // =========================================================
                 
                 if(monUid) {
                     database.ref(`donnees/utilisateurs/${monUid}`).once('value').then(snap => {
@@ -473,6 +508,8 @@
                             mettreAJourAffichage();
                             demarrerEcouteNumeros();
                             demarrerEcouteAdresses();
+                            verifierAccesBonus();
+                            afficherApercuLots();
                             if(document.getElementById('landing-page').style.display !== 'none') showPlatform();
                         }
                     });
@@ -482,7 +519,17 @@
                 afficherNews();
                 afficherTauxSimplifies();
                 demarrerSyncBinance();
+                afficherApercuLots();
             }).catch(e => { console.error(e); donnees = obtenirDonneesParDefaut(); mettreAJourAffichage(); });
+        }
+
+        function afficherApercuLots() {
+            const container = document.getElementById('bonus-lots-preview');
+            if(!container) return;
+            let tr = Array.isArray(donnees.roue) ? donnees.roue : (typeof donnees.roue === 'object' ? Object.values(donnees.roue) : []);
+            tr = tr.filter(item => item !== null);
+            const lots = (tr && tr.length > 0) ? tr : lotsParDefaut;
+            container.innerHTML = lots.map(lot => `<span class="roue-lot-badge">${echapperHTML(lot.nom)}</span>`).join('');
         }
 
         async function demarrerSyncBinance() {
@@ -577,8 +624,6 @@
         function fermerRecuTaux() { document.getElementById('modal-recu-taux').classList.remove('active'); }
         
         function telechargerRecuTaux() {
-            const crypto = document.getElementById('recu-taux-crypto')?.innerText || '';
-            const prix = document.getElementById('recu-taux-prix')?.innerText || '';
             const taux = donnees.taux[tauxCourantCrypto];
             if(!taux) return;
             const symbole = tauxCourantCrypto === 'MATIC' ? 'POL' : tauxCourantCrypto;
@@ -652,6 +697,7 @@
             mettreAJourLimiteAchat();
             mettreAJourChampAdresseVente();
             verifierAccesBonus();
+            afficherApercuLots();
             if(utilisateurCourant){
                 document.getElementById('userBadge').innerHTML=`<i class="fas fa-user-check"></i> ${echapperHTML(utilisateurCourant.nom)}`;
                 document.getElementById('carte-deconnexion').style.display='block';
@@ -661,13 +707,21 @@
             }
         }
 
-        // ====== GESTION BONUS ROUE ======
+        // ====== GESTION BONUS ROUE SIMPLE ======
         function verifierAccesBonus() {
-            const cardBonus = document.getElementById('card-bonus');
-            if(!cardBonus) return;
-            if(!utilisateurCourant || !donnees.roueActive) { 
-                cardBonus.style.display = 'none'; 
-                return; 
+            const btnRoue = document.getElementById('btn-roue-action');
+            const msgRestriction = document.getElementById('bonus-restriction');
+            const msgNormal = document.getElementById('bonus-message');
+            
+            if(!btnRoue) return;
+            
+            if(!utilisateurCourant) {
+                btnRoue.disabled = true;
+                btnRoue.classList.add('btn-wheel-disabled');
+                if(msgRestriction) msgRestriction.style.display = 'block';
+                if(msgRestriction) msgRestriction.innerHTML = '🔒 Connectez-vous pour jouer';
+                if(msgNormal) msgNormal.textContent = '💰 Roue de la Fortune';
+                return;
             }
             
             const aujourdhui = new Date().toLocaleDateString('fr-FR');
@@ -687,9 +741,25 @@
             );
 
             if(aTransactionAujourdhui && !aJoueAujourdhui) {
-                cardBonus.style.display = 'block';
+                btnRoue.disabled = false;
+                btnRoue.classList.remove('btn-wheel-disabled');
+                btnRoue.classList.add('btn-wheel-active');
+                if(msgRestriction) msgRestriction.style.display = 'none';
+                if(msgNormal) msgNormal.textContent = '🎉 Félicitations ! Vous avez une transaction confirmée aujourd\'hui. Tournez la roue !';
+            } else if(aJoueAujourdhui) {
+                btnRoue.disabled = true;
+                btnRoue.classList.add('btn-wheel-disabled');
+                btnRoue.classList.remove('btn-wheel-active');
+                if(msgRestriction) msgRestriction.style.display = 'block';
+                if(msgRestriction) msgRestriction.innerHTML = '⏰ Vous avez déjà joué aujourd\'hui. Revenez demain !';
+                if(msgNormal) msgNormal.textContent = '💰 Roue de la Fortune';
             } else {
-                cardBonus.style.display = 'none';
+                btnRoue.disabled = true;
+                btnRoue.classList.add('btn-wheel-disabled');
+                btnRoue.classList.remove('btn-wheel-active');
+                if(msgRestriction) msgRestriction.style.display = 'block';
+                if(msgRestriction) msgRestriction.innerHTML = '🔒 Une transaction confirmée aujourd\'hui est requise pour jouer';
+                if(msgNormal) msgNormal.textContent = '💰 Roue de la Fortune';
             }
         }
 
@@ -701,15 +771,13 @@
             const centerY = canvas.height / 2;
             const radius = centerX;
             
-            lotsRoue = (donnees.roue && donnees.roue.length > 0) ? donnees.roue : [
-                { nom: '1 USDT', type: 'crypto', probabilite: 5 },
-                { nom: '5000 Ar', type: 'fiat', probabilite: 10 },
-                { nom: 'Rien', type: 'rien', probabilite: 85 }
-            ];
+            let tr = Array.isArray(donnees.roue) ? donnees.roue : (typeof donnees.roue === 'object' ? Object.values(donnees.roue) : []);
+            tr = tr.filter(item => item !== null);
+            lotsRoue = (tr && tr.length > 0) ? tr : lotsParDefaut;
 
             const totalLots = lotsRoue.length;
             const arcSize = (2 * Math.PI) / totalLots;
-            const couleurs = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+            const couleurs = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -717,7 +785,6 @@
                 const angleStart = i * arcSize - Math.PI / 2;
                 const angleEnd = angleStart + arcSize;
 
-                // Dessin du segment
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
                 ctx.arc(centerX, centerY, radius, angleStart, angleEnd);
@@ -727,25 +794,53 @@
                 ctx.strokeStyle = '#1e1b4b';
                 ctx.stroke();
 
-                // Dessin du texte bien centré
                 ctx.save();
                 ctx.translate(centerX, centerY);
                 ctx.rotate(angleStart + arcSize / 2);
                 ctx.textAlign = 'right';
                 ctx.textBaseline = 'middle';
                 ctx.fillStyle = 'white';
-                ctx.font = 'bold 16px Inter';
-                // Le texte est écrit à une distance de (radius - 20) du centre
-                ctx.fillText(lotsRoue[i].nom, radius - 20, 0);
+                ctx.font = 'bold 14px Inter';
+                let nomCourt = lotsRoue[i].nom;
+                if(nomCourt.length > 12) nomCourt = nomCourt.substring(0,10)+'..';
+                ctx.fillText(nomCourt, radius - 20, 0);
                 ctx.restore();
+            }
+            
+            const lotsDisplay = document.getElementById('roue-lots-display');
+            if(lotsDisplay) {
+                lotsDisplay.innerHTML = lotsRoue.map(lot => `<span class="roue-lot-badge">${echapperHTML(lot.nom)}</span>`).join('');
             }
         }
 
         function ouvrirModalRoue() {
-            if(!donnees.roue || donnees.roue.length === 0) {
-                alert('La roue n\'est pas encore configurée.');
+            if(!utilisateurCourant) { showAuthModal(); return; }
+            
+            const aujourdhui = new Date().toLocaleDateString('fr-FR');
+            const demandesArray = getDemandesTableau();
+            
+            const aTransactionAujourdhui = demandesArray.some(d => 
+                d.userID === monUid && 
+                d.statut === 'confirme' && 
+                (d.type === 'ACHAT' || d.type === 'VENTE') &&
+                new Date(d.date).toLocaleDateString('fr-FR') === aujourdhui
+            );
+            
+            const aJoueAujourdhui = demandesArray.some(d => 
+                d.userID === monUid && 
+                d.type === 'BONUS' && 
+                new Date(d.date).toLocaleDateString('fr-FR') === aujourdhui
+            );
+
+            if(!aTransactionAujourdhui) {
+                alert('Vous devez avoir une transaction confirmée aujourd\'hui pour jouer à la roue !');
                 return;
             }
+            if(aJoueAujourdhui) {
+                alert('Vous avez déjà joué aujourd\'hui. Revenez demain !');
+                return;
+            }
+            
             document.getElementById('roue-jeu').style.display = 'block';
             document.getElementById('roue-resultat').style.display = 'none';
             document.getElementById('btn-tourner-roue').disabled = false;
@@ -757,7 +852,12 @@
             document.getElementById('modal-roue').classList.add('active');
         }
 
-        function fermerModalRoue() { document.getElementById('modal-roue').classList.remove('active'); }
+        function fermerModalRoue() { 
+            document.getElementById('modal-roue').classList.remove('active');
+            lotGagneInfo = null;
+            document.getElementById('input-bonus-contact').value = '';
+            document.getElementById('erreur-bonus').classList.remove('show');
+        }
 
         function tournerRoue() {
             document.getElementById('btn-tourner-roue').disabled = true;
@@ -791,28 +891,42 @@
             document.getElementById('roue-jeu').style.display = 'none';
             document.getElementById('roue-resultat').style.display = 'block';
             
-            if (lotGagneInfo.type === 'rien' || lotGagneInfo.nom.toLowerCase().includes('retentez') || lotGagneInfo.nom.toLowerCase().includes('perdu')) {
-                document.getElementById('texte-resultat').innerHTML = `😢 Pas de chance !`;
+            if (lotGagneInfo.type === 'rien' || lotGagneInfo.nom.toLowerCase().includes('merci') || lotGagneInfo.nom.toLowerCase().includes('retentez')) {
+                document.getElementById('texte-resultat').innerHTML = `😢 Pas de chance cette fois !`;
                 document.getElementById('texte-resultat').style.color = 'var(--danger)';
-                document.getElementById('texte-instruction-bonus').textContent = `Vous êtes tombé sur : ${lotGagneInfo.nom}. Retentez votre chance demain !`;
+                document.getElementById('texte-instruction-bonus').textContent = `Vous êtes tombé sur : "${lotGagneInfo.nom}". Retentez votre chance demain !`;
                 document.getElementById('input-bonus-contact').style.display = 'none';
                 enregistrerTentativeBonusPerdue();
                 document.getElementById('btn-fermer-roue').style.display = 'block';
-                document.querySelector('#roue-resultat .btn-confirm').style.display = 'none';
+                const btnReclamer = document.querySelector('#roue-resultat .btn-confirm');
+                if(btnReclamer) btnReclamer.style.display = 'none';
             } else {
-                document.getElementById('texte-resultat').innerHTML = `🎉 Vous avez gagné !`;
+                document.getElementById('texte-resultat').innerHTML = `🎉 Félicitations ! Vous avez gagné !`;
                 document.getElementById('texte-resultat').style.color = 'var(--success)';
-                document.getElementById('texte-instruction-bonus').textContent = `Lot : ${lotGagneInfo.nom}. Entrez vos informations de réception.`;
+                document.getElementById('texte-instruction-bonus').textContent = `Lot : ${lotGagneInfo.nom}. Entrez vos informations de réception ci-dessous.`;
                 const input = document.getElementById('input-bonus-contact');
                 input.style.display = 'block';
                 input.value = '';
-                input.placeholder = lotGagneInfo.type === 'crypto' ? "Votre adresse Crypto (selon le lot)" : "Votre Numéro (MVola, Orange, etc.)";
-                document.querySelector('#roue-resultat .btn-confirm').style.display = 'block';
+                input.placeholder = lotGagneInfo.type === 'crypto' ? "Votre adresse Crypto (ex: wallet address)" : "Votre Numéro Mobile Money (MVola, Orange, Airtel)";
+                const btnReclamer = document.querySelector('#roue-resultat .btn-confirm');
+                if(btnReclamer) btnReclamer.style.display = 'block';
             }
         }
         
         async function enregistrerTentativeBonusPerdue() {
-            const demande = { id: genererIDStable(utilisateurCourant.email, 'LOSE-'+Date.now()), type: 'BONUS', date: new Date().toISOString(), utilisateur: utilisateurCourant.nom, email: utilisateurCourant.email, userID: monUid, statut: 'rejete', lotGagne: lotGagneInfo.nom, notes: 'Gain non applicable / Tentative enregistrée' };
+            if(!utilisateurCourant || !lotGagneInfo) return;
+            const demande = { 
+                id: genererIDStable(utilisateurCourant.email, 'LOSE-'+Date.now()), 
+                type: 'BONUS', 
+                date: new Date().toISOString(), 
+                utilisateur: utilisateurCourant.nom, 
+                email: utilisateurCourant.email, 
+                userID: monUid, 
+                statut: 'rejete', 
+                lotGagne: lotGagneInfo.nom, 
+                montant: '0',
+                notes: 'Tentative de bonus - pas de gain' 
+            };
             const demandesArray = getDemandesTableau();
             demandesArray.unshift(demande);
             sauvegarderDemandes(demandesArray);
@@ -822,7 +936,11 @@
         async function reclamerBonus() {
             const contact = document.getElementById('input-bonus-contact').value.trim();
             const errDiv = document.getElementById('erreur-bonus');
-            if (!contact) { errDiv.textContent = "Veuillez fournir votre information de réception."; errDiv.classList.add('show'); return; }
+            if (!contact) { 
+                errDiv.textContent = "Veuillez fournir votre information de réception."; 
+                errDiv.classList.add('show'); 
+                return; 
+            }
             
             const demande = { 
                 id: genererIDStable(utilisateurCourant.email, 'BONUS-'+Date.now()), 
@@ -835,7 +953,7 @@
                 lotGagne: lotGagneInfo.nom, 
                 montant: lotGagneInfo.nom, 
                 adresse: contact, 
-                txid: 'RECU-ROUE-'+Date.now().toString().substring(0,6) 
+                txid: 'ROUE-'+Date.now().toString().substring(0,8) 
             };
             const demandesArray = getDemandesTableau();
             demandesArray.unshift(demande);
@@ -851,7 +969,118 @@
             }, 2000);
         }
 
-        // ============================================
+        // ====== RÉCUPÉRATION MOT DE PASSE ======
+        let utilisateurRecuperation = null;
+        
+        async function verifierEmailEtNumero() {
+            const email = document.getElementById('email-recuperation').value.trim();
+            const numero = document.getElementById('numero-recuperation').value.trim();
+            const erreurDiv = document.getElementById('erreur-recuperation');
+            
+            if(!email || !numero) {
+                erreurDiv.textContent = 'Veuillez entrer votre email et numéro';
+                erreurDiv.classList.add('show');
+                return;
+            }
+            
+            try {
+                const snapshot = await database.ref('donnees/utilisateurs').once('value');
+                const users = snapshot.val() || {};
+                
+                let userTrouve = null;
+                let uidTrouve = null;
+                
+                for(const [uid, userData] of Object.entries(users)) {
+                    if(userData.email === email) {
+                        if(userData.numeros) {
+                            const numerosApprouves = Object.values(userData.numeros).filter(n => n.statut === 'approuve');
+                            const numeroTrouve = numerosApprouves.some(n => n.numero === numero);
+                            if(numeroTrouve) {
+                                userTrouve = userData;
+                                uidTrouve = uid;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if(userTrouve && uidTrouve) {
+                    utilisateurRecuperation = { ...userTrouve, uid: uidTrouve };
+                    document.getElementById('email-affiche').textContent = email;
+                    document.getElementById('etape-1-mdp').style.display = 'none';
+                    document.getElementById('etape-2-mdp').style.display = 'block';
+                    erreurDiv.classList.remove('show');
+                } else {
+                    erreurDiv.textContent = 'Email ou numéro non reconnu. Vérifiez vos informations.';
+                    erreurDiv.classList.add('show');
+                }
+            } catch(error) {
+                console.error(error);
+                erreurDiv.textContent = 'Erreur lors de la vérification';
+                erreurDiv.classList.add('show');
+            }
+        }
+        
+        async function reinitialiserMotDePasse() {
+            const nouveauMdp = document.getElementById('nouveau-motdepasse').value;
+            const confirmerMdp = document.getElementById('confirmer-motdepasse').value;
+            const erreurDiv = document.getElementById('erreur-nouveau-mdp');
+            
+            if(!nouveauMdp || nouveauMdp.length < 6) {
+                erreurDiv.textContent = 'Mot de passe doit contenir au moins 6 caractères';
+                erreurDiv.classList.add('show');
+                return;
+            }
+            
+            if(nouveauMdp !== confirmerMdp) {
+                erreurDiv.textContent = 'Les mots de passe ne correspondent pas';
+                erreurDiv.classList.add('show');
+                return;
+            }
+            
+            if(!utilisateurRecuperation || !utilisateurRecuperation.email) {
+                erreurDiv.textContent = 'Session expirée, veuillez recommencer';
+                erreurDiv.classList.add('show');
+                return;
+            }
+            
+            try {
+                const user = auth.currentUser;
+                if(user && user.email === utilisateurRecuperation.email) {
+                    await user.updatePassword(nouveauMdp);
+                    alert('✅ Mot de passe modifié avec succès !');
+                } else {
+                    await auth.sendPasswordResetEmail(utilisateurRecuperation.email);
+                    alert(`Un lien de réinitialisation a été envoyé à ${utilisateurRecuperation.email}. Veuillez vérifier votre boîte mail.`);
+                }
+                fermerModalMotDePasseOublie();
+                utilisateurRecuperation = null;
+            } catch(error) {
+                console.error(error);
+                erreurDiv.textContent = error.message || 'Erreur lors de la réinitialisation';
+                erreurDiv.classList.add('show');
+            }
+        }
+        
+        function retourEtape1() {
+            document.getElementById('etape-1-mdp').style.display = 'block';
+            document.getElementById('etape-2-mdp').style.display = 'none';
+            document.getElementById('erreur-recuperation').classList.remove('show');
+            document.getElementById('erreur-nouveau-mdp').classList.remove('show');
+            utilisateurRecuperation = null;
+        }
+        
+        function ouvrirModalMotDePasseOublie() {
+            document.getElementById('modal-motdepasse-oublie').classList.add('active');
+            retourEtape1();
+        }
+        
+        function fermerModalMotDePasseOublie() {
+            document.getElementById('modal-motdepasse-oublie').classList.remove('active');
+            utilisateurRecuperation = null;
+        }
+
+        // ====== FIN RÉCUPÉRATION MDP ======
 
         function verifierPause(){ 
             const pa=donnees.pause?.achat; 
@@ -1283,6 +1512,7 @@
                 mettreAJourAffichage();
                 demarrerEcouteNumeros();
                 demarrerEcouteAdresses();
+                verifierAccesBonus();
                 if(document.getElementById('landing-page').style.display !== 'none') showPlatform();
             } else {
                 utilisateurCourant = null;
@@ -1337,7 +1567,6 @@
                 const portefeuille = donnees.portefeuilles?.find(p => p.nom === portefeuilleNom);
                 const adresseUtilisee = (portefeuille?.liaisonRequise && adresseLieeSelectionnee) ? adresseLieeSelectionnee : null;
                 
-                // === CORRECTION ICI : Remplacement de adressePersonnelle par adresseLiee ===
                 transactionEnAttente = {
                     type: 'VENTE',
                     montant: parseFloat(document.getElementById('montant-vente').value),
@@ -1476,7 +1705,6 @@
         
         function selectionnerCasePIN(idx){}
         
-        // ====== RESET PIN ======
         function afficherResetPIN() {
             document.getElementById('pin-verification').style.display = 'none';
             document.getElementById('pin-reset').style.display = 'block';
@@ -1558,7 +1786,11 @@
             transactionEnAttente = null;
             typeTransactionEnCours = null;
             adresseLieeSelectionnee = null;
-            setTimeout(() => { switchPlatformSection('demandes'); mettreAJourMesDemandes(); }, 2000);
+            setTimeout(() => { 
+                switchPlatformSection('demandes'); 
+                mettreAJourMesDemandes();
+                verifierAccesBonus();
+            }, 2000);
         }
         
         function ouvrirModalSucces(demande){
@@ -1599,7 +1831,7 @@
             if(monUid) {
                 database.ref('donnees/demandes').once('value').then((snapshot) => {
                     const demandes = snapshot.val();
-                    if(demandes) { donnees.demandes = demandes; mettreAJourMesDemandes(); alert('✅ Demandes actualisées avec succès'); }
+                    if(demandes) { donnees.demandes = demandes; mettreAJourMesDemandes(); verifierAccesBonus(); alert('✅ Demandes actualisées avec succès'); }
                     else { donnees.demandes = {}; mettreAJourMesDemandes(); alert('Aucune demande trouvée'); }
                 }).catch(err => { console.error('Erreur rafraîchissement:', err); alert('Erreur lors du rafraîchissement: ' + err.message); });
             } else { alert('Veuillez vous connecter'); }
@@ -1647,11 +1879,6 @@
         }
         
         function fermerDetailsDemande(){ document.getElementById('modal-details-demande').classList.remove('active'); }
-        function ouvrirModalMotDePasseOublie(){ document.getElementById('modal-motdepasse-oublie').classList.add('active'); }
-        function fermerModalMotDePasseOublie(){ document.getElementById('modal-motdepasse-oublie').classList.remove('active'); }
-        function retourEtape1(){ document.getElementById('etape-1-mdp').style.display='block'; document.getElementById('etape-2-mdp').style.display='none'; }
-        async function verifierEmailEtNumero(){ alert('Fonctionnalité de récupération - Contactez le support'); }
-        async function reinitialiserMotDePasse(){ alert('Contactez le support pour réinitialiser votre mot de passe'); }
 
         function verifierAvantAcces(s){ 
             if(!sessionValide||!utilisateurCourant){ showAuthModal(); return; } 
@@ -1673,12 +1900,12 @@
             if(s==='vente'){ afficherReponseVente(); estimerVente(); afficherFraisReseauVente(); verifierLimitesVente(); mettreAJourListeNumerosVente(); mettreAJourChampAdresseVente(); } 
             if(s==='achat'){ estimerAchat(); afficherFraisReseauAchat(); verifierLimitesAchat(); mettreAJourListeNumerosAchat(); mettreAJourLimiteAchat(); } 
             if(s==='demandes'&&utilisateurCourant) mettreAJourMesDemandes(); 
-            if(s==='profil') { mettreAJourNumerosUtilisateur(); verifierAccesBonus(); }
+            if(s==='profil') { mettreAJourNumerosUtilisateur(); verifierAccesBonus(); afficherApercuLots(); }
             if(s==='accueil') afficherNews(); 
         }
 
         document.querySelector('.logo').addEventListener('dblclick',()=>window.open('admin.html','_blank'));
-        window.addEventListener('load',function(){ chargerDonnees(); console.log('🚀 Page index chargée - Version Roue de la Fortune & POL Fix'); });
+        window.addEventListener('load',function(){ chargerDonnees(); console.log('🚀 Page index chargée - Roue Simple fonctionnelle'); });
     </script>
 </body>
 </html>
