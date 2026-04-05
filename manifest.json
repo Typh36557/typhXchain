@@ -1,0 +1,18 @@
+{
+  "name": "TYPH X-CHAIN",
+  "short_name": "TYPH X-CHAIN",
+  "description": "Exchange Crypto ⇄ Ariary - MVola, Orange Money, Airtel Money",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#0A0F1F",
+  "background_color": "#0A0F1F",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/Typh36557/typhXchain/5be50a400d57b79f9c073eca1b30a532fbee3d1c/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

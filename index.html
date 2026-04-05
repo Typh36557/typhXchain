@@ -2,8 +2,17 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>TYPH X-CHAIN • Exchange Crypto ⇄ Ariary</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0A0F1F">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TYPH X-CHAIN">
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/Typh36557/typhXchain/5be50a400d57b79f9c073eca1b30a532fbee3d1c/logo.png">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -23,7 +32,9 @@
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-dark); color: var(--text-primary); line-height: 1.5; min-height: 100vh; display: flex; flex-direction: column; }
         .app-header { background: rgba(19, 27, 47, 0.95); backdrop-filter: blur(10px); padding: 16px 20px; border-bottom: 1px solid rgba(59,130,246,0.2); position: sticky; top: 0; z-index: 100; }
         .header-content { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; }
-        .logo { font-size: 1.6rem; font-weight: 700; background: linear-gradient(135deg, #FFFFFF, #3B82F6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; cursor: pointer; letter-spacing: -0.5px; }
+        .logo { display: flex; align-items: center; gap: 8px; font-size: 1.6rem; font-weight: 700; background: linear-gradient(135deg, #FFFFFF, #3B82F6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; cursor: pointer; letter-spacing: -0.5px; }
+        .logo-img { height: 3.2rem; width: auto; display: inline-block; background: transparent; -webkit-background-clip: unset; -webkit-text-fill-color: unset; }
+        .logo span { background: inherit; -webkit-background-clip: inherit; -webkit-text-fill-color: inherit; }
         .user-badge { background: rgba(59,130,246,0.1); padding: 8px 18px; border-radius: 40px; font-size: 0.85rem; font-weight: 500; color: var(--text-primary); border: 1px solid rgba(59,130,246,0.3); display: flex; align-items: center; gap: 8px; cursor: pointer; transition: var(--transition); }
         .user-badge:hover { background: rgba(59,130,246,0.2); border-color: var(--accent); }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px 20px 100px 20px; width: 100%; flex: 1; }
@@ -208,7 +219,15 @@
     </style>
 </head>
 <body>
-    <div class="app-header"><div class="header-content"><div class="logo" onclick="showLandingPage()">TYPH X-CHAIN</div><div><div class="user-badge" id="userBadge" onclick="showAuthModal()"><i class="fas fa-user-circle"></i> Connexion</div></div></div></div>
+    <div class="app-header">
+        <div class="header-content">
+            <div class="logo" onclick="showLandingPage()">
+                <img src="https://raw.githubusercontent.com/Typh36557/typhXchain/5be50a400d57b79f9c073eca1b30a532fbee3d1c/logo.png" alt="Logo" class="logo-img">
+                <span>TYPH X-CHAIN</span>
+            </div>
+            <div><div class="user-badge" id="userBadge" onclick="showAuthModal()"><i class="fas fa-user-circle"></i> Connexion</div></div>
+        </div>
+    </div>
     <div class="container">
         <div id="landing-page" class="landing-page">
             <div class="hero-section"><h1 class="hero-title">TYPH X-CHAIN</h1><h2 class="hero-subtitle">Crypto ⇌ Mvola, Orange et Airtel</h2><p class="hero-description">La solution la plus simple pour convertir vos cryptos et Mobile Money.</p><button class="btn-hero" onclick="showAuthModal()"><i class="fas fa-rocket"></i> Echanger maintenant</button><div class="reviews-link" onclick="scrollToTestimonials()"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i> Premium Service</div></div>
@@ -268,11 +287,11 @@
     
     <div id="modal-confirmation" class="modal"><div class="modal-content"><div class="modal-title" id="modal-titre"><i class="fas fa-clock"></i> Vérification de la transaction</div><div id="details-demande" class="request-detail-modal"></div><div id="message-paiement-container" style="display:none;"><div class="message-admin" id="message-paiement"><i class="fas fa-info-circle"></i><div class="message-admin-content" id="message-paiement-texte"></div><button class="btn-copy" onclick="copierMessagePaiement()" id="btn-copy-paiement"><i class="fas fa-copy"></i> Copier</button></div></div><div class="timer-large" id="confirmation-timer"><i class="fas fa-hourglass-half"></i><span id="timer-display">15:00</span></div><div class="form-group" style="margin:20px 0;"><label class="form-label"><i class="fas fa-hashtag"></i> TXID ou PREUVE D'ENVOI</label><div class="input-wrapper"><input type="text" id="txid-input" placeholder="Entrez le TXID ou votre adresse d'envoi ou message preuve"></div></div><div class="warning-message"><i class="fas fa-exclamation-triangle"></i><span>Vérifiez bien le numéro ou l'adresse d'envoi ,et aussi les informations avant d'envoyer ! </span></div><div class="modal-buttons"><button class="btn btn-cancel" onclick="fermerModalConfirmation()"><i class="fas fa-times"></i> Annuler</button><button class="btn btn-confirm" onclick="validerConfirmation()" id="btn-confirmer-avec-txid"><i class="fas fa-arrow-right"></i> Confirmer</button></div></div></div>
     <div id="modal-details-demande" class="modal"><div class="modal-content"><div class="modal-title"><i class="fas fa-info-circle"></i> Détails</div><div id="details-demande-complete" class="request-detail-modal"></div><button class="btn btn-cancel" onclick="fermerDetailsDemande()"><i class="fas fa-times"></i> Fermer</button></div></div>
-    <div id="modal-recu" class="modal"><div class="modal-content"><div class="receipt-header"><h2>TYPH X-CHAIN</h2><p><i class="fas fa-receipt"></i> Reçu de transaction</p></div><div id="recu-content"></div><div class="receipt-actions"><button class="btn-receipt" onclick="verifierMesActifs()"><i class="fas fa-wallet"></i> Vérifier mes actifs</button><div class="rating-section"><div class="rating-title">RAPIDE - SIMPLE - SÉCURISÉ</div><div class="rating-stars"><i class="fas fa-star" onclick="noter(1)"></i><i class="fas fa-star" onclick="noter(2)"></i><i class="fas fa-star" onclick="noter(3)"></i><i class="fas fa-star" onclick="noter(4)"></i><i class="fas fa-star" onclick="noter(5)"></i></div><div class="rating-buttons"><span class="rating-btn" onclick="noter('positif')">Positive</span><span class="rating-btn" onclick="noter('negatif')">Négative</span></div></div></div><button class="btn btn-cancel" onclick="fermerModalRecu()" style="margin-top:20px;"><i class="fas fa-times"></i> Fermer</button></div></div>
+    <div id="modal-recu" class="modal"><div class="modal-content"><div class="receipt-header" style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px;"><img src="https://raw.githubusercontent.com/Typh36557/typhXchain/5be50a400d57b79f9c073eca1b30a532fbee3d1c/logo.png" alt="Logo" style="height: 64px; width: auto;"><h2 style="margin:0;">TYPH X-CHAIN</h2></div><div id="recu-content"></div><div class="receipt-actions"><button class="btn-receipt" onclick="verifierMesActifs()"><i class="fas fa-wallet"></i> Vérifier mes actifs</button><div class="rating-section"><div class="rating-title">RAPIDE - SIMPLE - SÉCURISÉ</div><div class="rating-stars"><i class="fas fa-star" onclick="noter(1)"></i><i class="fas fa-star" onclick="noter(2)"></i><i class="fas fa-star" onclick="noter(3)"></i><i class="fas fa-star" onclick="noter(4)"></i><i class="fas fa-star" onclick="noter(5)"></i></div><div class="rating-buttons"><span class="rating-btn" onclick="noter('positif')">Positive</span><span class="rating-btn" onclick="noter('negatif')">Négative</span></div></div></div><button class="btn btn-cancel" onclick="fermerModalRecu()" style="margin-top:20px;"><i class="fas fa-times"></i> Fermer</button></div></div>
     
-    <div id="modal-recu-taux" class="modal"><div class="modal-content modal-taux-content" style="max-width: 500px; border: 2px solid var(--binance);"><div class="modal-title"><i class="fas fa-chart-line"></i> Détails du taux</div><div id="recu-taux-content"></div><div class="receipt-actions" style="display: flex; gap: 10px; margin-top: 20px;"><button class="btn-receipt" onclick="fermerRecuTaux()" style="flex: 1; background: var(--gray-300);"><i class="fas fa-times"></i> Fermer</button><button class="btn-receipt" onclick="telechargerRecuTaux()" style="flex: 1; background: var(--success);"><i class="fas fa-camera"></i> Télécharger</button></div></div></div>
+    <div id="modal-recu-taux" class="modal"><div class="modal-content modal-taux-content" style="max-width: 500px; border: 2px solid var(--binance);"><div class="modal-title" style="justify-content:center; gap:10px;"><img src="https://raw.githubusercontent.com/Typh36557/typhXchain/5be50a400d57b79f9c073eca1b30a532fbee3d1c/logo.png" alt="Logo" style="height: 56px; width: auto;"><span>TYPH X-CHAIN</span></div><div id="recu-taux-content"></div><div class="receipt-actions" style="display: flex; gap: 10px; margin-top: 20px;"><button class="btn-receipt" onclick="fermerRecuTaux()" style="flex: 1; background: var(--gray-300);"><i class="fas fa-times"></i> Fermer</button><button class="btn-receipt" onclick="telechargerRecuTaux()" style="flex: 1; background: var(--success);"><i class="fas fa-camera"></i> Télécharger</button></div></div></div>
     
-    <div id="template-recu-taux" style="position: fixed; left: -9999px; top: 0; width: 500px; background: #131B2F; color: white; padding: 30px; font-family: 'Inter', sans-serif; border-radius: 40px; border: 2px solid #F0B90B;"><div style="text-align: center; margin-bottom: 30px; border-bottom: 1px solid #2D3A4A; padding-bottom: 20px;"><h1 style="color: white; margin: 0; font-size: 28px; background: linear-gradient(135deg, #FFFFFF, #3B82F6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">TYPH X-CHAIN</h1><p style="color: #94A3B8; margin: 5px 0 0;"><i class="fas fa-chart-line"></i> Détails du taux de change</p></div><div id="recu-taux-capture-content"></div><div style="border-top: 1px solid #2D3A4A; padding-top: 20px; text-align: center; color: #94A3B8; font-size: 12px;"><p>Document généré automatiquement par TYPH X-CHAIN</p><p>Date de génération: <span id="recu-taux-date-generation"></span></p></div></div>
+    <div id="template-recu-taux" style="position: fixed; left: -9999px; top: 0; width: 500px; background: #131B2F; color: white; padding: 30px; font-family: 'Inter', sans-serif; border-radius: 40px; border: 2px solid #F0B90B;"><div style="text-align: center; margin-bottom: 30px; border-bottom: 1px solid #2D3A4A; padding-bottom: 20px;"><div style="display: flex; align-items: center; justify-content: center; gap: 10px;"><img src="https://raw.githubusercontent.com/Typh36557/typhXchain/5be50a400d57b79f9c073eca1b30a532fbee3d1c/logo.png" alt="Logo" style="height: 72px; width: auto;"><h1 style="color: white; margin: 0; font-size: 28px; background: linear-gradient(135deg, #FFFFFF, #3B82F6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">TYPH X-CHAIN</h1></div><p style="color: #94A3B8; margin: 5px 0 0;"><i class="fas fa-chart-line"></i> Détails du taux de change</p></div><div id="recu-taux-capture-content"></div><div style="border-top: 1px solid #2D3A4A; padding-top: 20px; text-align: center; color: #94A3B8; font-size: 12px;"><p>Document généré automatiquement par TYPH X-CHAIN</p><p>Date de génération: <span id="recu-taux-date-generation"></span></p></div></div>
     
     <div id="modal-news-detail" class="modal"><div class="modal-content"><div class="modal-title" id="modal-news-title"><i class="fas fa-newspaper"></i> Actualité</div><div id="modal-news-content" style="color:var(--text-primary);line-height:1.6;margin-bottom:20px;"></div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--gray-300);"><span id="modal-news-date" style="color:var(--text-secondary);font-size:0.85rem;"></span><span id="modal-news-author" style="color:var(--accent);font-size:0.85rem;"></span></div><button class="btn btn-cancel" onclick="fermerModalNews()" style="margin-top:20px;"><i class="fas fa-times"></i> Fermer</button></div></div>
     
@@ -307,6 +326,17 @@
     </div>
 
     <script>
+        // Service Worker Registration for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(reg => {
+                    console.log('Service Worker registered successfully:', reg);
+                }).catch(err => {
+                    console.log('Service Worker registration failed:', err);
+                });
+            });
+        }
+
         const firebaseConfig = {
             apiKey: "AIzaSyAC6xQXWg_5EplLDPQu_7RuuQ0NrCUSQ2g",
             authDomain: "typhxchain.firebaseapp.com",
@@ -351,7 +381,6 @@
         let lotsRoue = [];
         let lotGagneInfo = null;
 
-        // Lots par défaut si aucun configuré par admin
         const lotsParDefaut = [
             { id: 'L1', nom: '10 $', type: 'crypto', probabilite: 0 },
             { id: 'L2', nom: 'Frais de gaz - 0.00004 BNB', type: 'crypto', probabilite: 3 },
@@ -617,7 +646,7 @@
             const variationClass = taux.couleur === 'positive' ? 'positive' : 'negative';
             const variationIcon = taux.couleur === 'positive' ? 'arrow-up' : 'arrow-down';
             const dateMAJ = taux.lastUpdate ? new Date(taux.lastUpdate).toLocaleString('fr-FR') : new Date().toLocaleString('fr-FR');
-            recuContent.innerHTML = `<div class="receipt-header" style="text-align: center; margin-bottom: 20px;"><h2 style="color: var(--white);">TYPH X-CHAIN</h2><p style="color: var(--text-secondary);"><i class="fas fa-chart-line"></i> Taux de change ${symbole}/Ar</p></div><div class="receipt-amount-large" style="background: linear-gradient(135deg, var(--primary), var(--bg-dark)); border-radius: 40px; padding: 25px; text-align: center; margin: 20px 0;"><div class="amount" id="recu-taux-prix" style="font-size: 2.5rem; font-weight: 700; color: var(--white);">${taux.prixMGA.toLocaleString()} Ar</div><div class="description" style="color: var(--text-secondary); margin-top: 5px;">1 ${symbole} = ${taux.prixMGA.toLocaleString()} Ariary</div><div class="rate-change ${variationClass}" style="justify-content: center; margin-top: 12px; font-size: 1rem;"><i class="fas fa-${variationIcon}"></i> ${taux.variation}%</div></div><div class="receipt-details" style="background: var(--primary); border-radius: 28px; padding: 20px;"><div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-300);"><span class="detail-label" style="color: var(--text-secondary);">Cryptomonnaie</span><span class="detail-value" style="color: var(--white); font-weight: 600;" id="recu-taux-crypto">${symbole}</span></div><div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-300);"><span class="detail-label" style="color: var(--text-secondary);">Prix USD</span><span class="detail-value" style="color: var(--white);">$${taux.prixUSD.toFixed(2)}</span></div><div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-300);"><span class="detail-label" style="color: var(--text-secondary);">Prix MGA</span><span class="detail-value" style="color: var(--white); font-weight: 600;">${taux.prixMGA.toLocaleString()} Ar</span></div><div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-300);"><span class="detail-label" style="color: var(--text-secondary);">Source</span><span class="detail-value" style="color: var(--white);">${taux.source === 'binance' ? '<i class="fab fa-binance"></i> Binance' : 'Manuel'}</span></div><div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0;"><span class="detail-label" style="color: var(--text-secondary);">Dernière mise à jour</span><span class="detail-value" style="color: var(--white);">${dateMAJ}</span></div></div>`;
+            recuContent.innerHTML = `<div class="receipt-header" style="text-align: center; margin-bottom: 20px;"><div style="display: flex; align-items: center; justify-content: center; gap: 10px;"><img src="https://raw.githubusercontent.com/Typh36557/typhXchain/5be50a400d57b79f9c073eca1b30a532fbee3d1c/logo.png" alt="Logo" style="height: 32px; width: auto;"><h2 style="color: var(--white); margin:0;">TYPH X-CHAIN</h2></div><p style="color: var(--text-secondary); margin-top:5px;"><i class="fas fa-chart-line"></i> Taux de change ${symbole}/Ar</p></div><div class="receipt-amount-large" style="background: linear-gradient(135deg, var(--primary), var(--bg-dark)); border-radius: 40px; padding: 25px; text-align: center; margin: 20px 0;"><div class="amount" id="recu-taux-prix" style="font-size: 2.5rem; font-weight: 700; color: var(--white);">${taux.prixMGA.toLocaleString()} Ar</div><div class="description" style="color: var(--text-secondary); margin-top: 5px;">1 ${symbole} = ${taux.prixMGA.toLocaleString()} Ariary</div><div class="rate-change ${variationClass}" style="justify-content: center; margin-top: 12px; font-size: 1rem;"><i class="fas fa-${variationIcon}"></i> ${taux.variation}%</div></div><div class="receipt-details" style="background: var(--primary); border-radius: 28px; padding: 20px;"><div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-300);"><span class="detail-label" style="color: var(--text-secondary);">Cryptomonnaie</span><span class="detail-value" style="color: var(--white); font-weight: 600;" id="recu-taux-crypto">${symbole}</span></div><div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-300);"><span class="detail-label" style="color: var(--text-secondary);">Prix USD</span><span class="detail-value" style="color: var(--white);">$${taux.prixUSD.toFixed(2)}</span></div><div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-300);"><span class="detail-label" style="color: var(--text-secondary);">Prix MGA</span><span class="detail-value" style="color: var(--white); font-weight: 600;">${taux.prixMGA.toLocaleString()} Ar</span></div><div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-300);"><span class="detail-label" style="color: var(--text-secondary);">Source</span><span class="detail-value" style="color: var(--white);">${taux.source === 'binance' ? '<i class="fab fa-binance"></i> Binance' : 'Manuel'}</span></div><div class="detail-row" style="display: flex; justify-content: space-between; padding: 10px 0;"><span class="detail-label" style="color: var(--text-secondary);">Dernière mise à jour</span><span class="detail-value" style="color: var(--white);">${dateMAJ}</span></div></div>`;
             modal.classList.add('active');
         }
         
@@ -707,7 +736,6 @@
             }
         }
 
-        // ====== GESTION BONUS ROUE SIMPLE ======
         function verifierAccesBonus() {
             const btnRoue = document.getElementById('btn-roue-action');
             const msgRestriction = document.getElementById('bonus-restriction');
@@ -969,7 +997,6 @@
             }, 2000);
         }
 
-        // ====== RÉCUPÉRATION MOT DE PASSE ======
         let utilisateurRecuperation = null;
         
         async function verifierEmailEtNumero() {
@@ -1079,8 +1106,6 @@
             document.getElementById('modal-motdepasse-oublie').classList.remove('active');
             utilisateurRecuperation = null;
         }
-
-        // ====== FIN RÉCUPÉRATION MDP ======
 
         function verifierPause(){ 
             const pa=donnees.pause?.achat; 
