@@ -319,6 +319,9 @@
                             <div class="affiliate-stat"><div class="affiliate-stat-number" id="stat-tours-utilises">0</div><div class="affiliate-stat-label">Tours utilisés</div></div>
                         </div>
                     </div>
+                    <button class="btn btn-success" onclick="forcerEnvoiBonusParrainage()" style="width: 100%; margin-bottom: 20px; background: var(--bonus);">
+                        <i class="fas fa-gift"></i> 🎁 FORCER L'ENVOI DES BONUS (Tours gratuits aux parrains)
+                    </button>
                     <div class="filter-bar"><input type="text" id="recherche-parrain" placeholder="Rechercher par nom, email ou ID..." oninput="afficherParrainages()"></div>
                     <div id="parrainages-liste" class="item-list"></div>
                 </div>
@@ -629,22 +632,74 @@
             if(!listeAttente || !listeApprouves) return;
             const rechercheNom = document.getElementById('recherche-numero-nom')?.value.toLowerCase() || '';
             const rechercheId = document.getElementById('recherche-numero-id')?.value.toLowerCase() || '';
-            let htmlAttente = '', htmlApprouves = '';
+            
+            let numerosAttente = [];
+            let numerosApprouves = [];
+            
             Object.entries(utilisateurs).forEach(([uid, user]) => {
                 if(!user.numeros) return;
                 const userNom = (user.nom || '').toLowerCase();
                 const userID = (user.id || uid.substring(0,8)).toLowerCase();
                 const correspondRecherche = (rechercheNom === '' || userNom.includes(rechercheNom)) && (rechercheId === '' || userID.includes(rechercheId) || uid.toLowerCase().includes(rechercheId));
                 if(!correspondRecherche) return;
+                
                 Object.entries(user.numeros).forEach(([numId, num]) => {
+                    const dateSoumission = num.dateSoumission || num.date || new Date().toISOString();
                     const userNomAff = user.nom || 'Inconnu';
                     const userEmail = user.email || 'Email non renseigné';
                     const userIDAff = user.id || uid.substring(0,8);
-                    const html = `<div class="numero-item"><div class="numero-header"><span class="numero-user"><i class="fas fa-user"></i> ${echapperHTML(userNomAff)} (${echapperHTML(userIDAff)})</span><span class="numero-status-badge ${num.statut === 'en_attente' ? 'badge-attente' : (num.statut === 'approuve' ? 'badge-approuve' : 'badge-rejete')}">${num.statut === 'en_attente' ? 'En attente' : (num.statut === 'approuve' ? 'Approuvé' : 'Rejeté')}</span></div><div class="numero-info"><div><i class="fas fa-user-tag"></i> Nom: ${echapperHTML(num.nom)}</div><div><i class="fas fa-phone"></i> ${echapperHTML(num.numero)}</div><div><i class="fas fa-envelope"></i> ${echapperHTML(userEmail)}</div><div><i class="fas fa-id-card"></i> ID: ${echapperHTML(userIDAff)}</div><div><i class="fas fa-fingerprint"></i> UID: ${echapperHTML(uid.substring(0,12))}...</div></div>${num.statut === 'en_attente' ? `<div style="display: flex; gap: 10px; margin-top: 10px;"><button class="btn btn-approuver" onclick="approuverNumero('${echapperHTML(uid)}', '${echapperHTML(numId)}')"><i class="fas fa-check"></i> Approuver</button><button class="btn btn-rejeter" onclick="rejeterNumero('${echapperHTML(uid)}', '${echapperHTML(numId)}')"><i class="fas fa-times"></i> Rejeter</button></div>` : ''}</div>`;
-                    if(num.statut === 'en_attente') htmlAttente += html;
-                    else if(num.statut === 'approuve') htmlApprouves += html;
+                    const numObj = {
+                        uid, numId, num,
+                        userNomAff, userEmail, userIDAff, uid,
+                        dateSoumission, dateObj: new Date(dateSoumission)
+                    };
+                    if(num.statut === 'en_attente') numerosAttente.push(numObj);
+                    else if(num.statut === 'approuve') numerosApprouves.push(numObj);
                 });
             });
+            
+            // Trier du plus ancien au plus récent
+            numerosAttente.sort((a,b) => a.dateObj - b.dateObj);
+            numerosApprouves.sort((a,b) => a.dateObj - b.dateObj);
+            
+            let htmlAttente = '', htmlApprouves = '';
+            
+            numerosAttente.forEach(({uid, numId, num, userNomAff, userEmail, userIDAff, dateSoumission}) => {
+                const dateFormatee = new Date(dateSoumission).toLocaleString('fr-FR');
+                htmlAttente += `<div class="numero-item">
+                    <div class="numero-header">
+                        <span class="numero-user"><i class="fas fa-user"></i> ${echapperHTML(userNomAff)} (${echapperHTML(userIDAff)})</span>
+                        <span class="numero-status-badge badge-attente">En attente</span>
+                    </div>
+                    <div class="numero-info">
+                        <div><i class="fas fa-user-tag"></i> Nom: ${echapperHTML(num.nom)}</div>
+                        <div><i class="fas fa-phone"></i> ${echapperHTML(num.numero)}</div>
+                        <div><i class="fas fa-envelope"></i> ${echapperHTML(userEmail)}</div>
+                        <div><i class="fas fa-id-card"></i> ID: ${echapperHTML(userIDAff)}</div>
+                        <div><i class="fas fa-calendar-alt"></i> Date: ${dateFormatee}</div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button class="btn btn-approuver" onclick="approuverNumero('${echapperHTML(uid)}', '${echapperHTML(numId)}')"><i class="fas fa-check"></i> Approuver</button>
+                        <button class="btn btn-rejeter" onclick="rejeterNumero('${echapperHTML(uid)}', '${echapperHTML(numId)}')"><i class="fas fa-times"></i> Rejeter</button>
+                    </div>
+                </div>`;
+            });
+            
+            numerosApprouves.forEach(({uid, numId, num, userNomAff, userEmail, userIDAff, dateSoumission}) => {
+                const dateFormatee = new Date(dateSoumission).toLocaleString('fr-FR');
+                htmlApprouves += `<div class="numero-item">
+                    <div class="numero-header">
+                        <span class="numero-user"><i class="fas fa-user"></i> ${echapperHTML(userNomAff)} (${echapperHTML(userIDAff)})</span>
+                        <span class="numero-status-badge badge-approuve">Approuvé</span>
+                    </div>
+                    <div class="numero-info">
+                        <div><i class="fas fa-user-tag"></i> Nom: ${echapperHTML(num.nom)}</div>
+                        <div><i class="fas fa-phone"></i> ${echapperHTML(num.numero)}</div>
+                        <div><i class="fas fa-calendar-alt"></i> Date: ${dateFormatee}</div>
+                    </div>
+                </div>`;
+            });
+            
             listeAttente.innerHTML = htmlAttente || '<div class="item-row">Aucune demande en attente</div>';
             listeApprouves.innerHTML = htmlApprouves || '<div class="item-row">Aucun numéro approuvé</div>';
         }
@@ -708,6 +763,66 @@
             document.getElementById('stat-tours-utilises').textContent = totalToursUtilises;
             
             liste.innerHTML = html || '<div class="item-row">Aucune donnée de parrainage</div>';
+        }
+
+        // Nouvelle fonction pour forcer l'envoi des bonus aux parrains
+        async function forcerEnvoiBonusParrainage() {
+            if(!confirm("⚠️ Cette action va vérifier TOUS les utilisateurs et attribuer les tours gratuits aux parrains qui ont des filleuls avec numéro approuvé mais qui n'ont pas encore reçu leur bonus.\n\nContinuer ?")) return;
+            
+            let bonusDistribues = 0;
+            let utilisateursTraites = 0;
+            let errors = [];
+            
+            for (const [uid, userData] of Object.entries(utilisateurs)) {
+                // Vérifier si l'utilisateur a un parrain
+                if (userData.parrainId && !userData.bonusParrainageDonne) {
+                    // Vérifier si l'utilisateur a au moins un numéro approuvé
+                    let aNumeroApprouve = false;
+                    if (userData.numeros) {
+                        aNumeroApprouve = Object.values(userData.numeros).some(num => num.statut === 'approuve');
+                    }
+                    
+                    if (aNumeroApprouve) {
+                        // Attribuer le bonus au parrain
+                        const parrainId = userData.parrainId;
+                        const parrainRef = database.ref(`donnees/utilisateurs/${parrainId}`);
+                        const parrainSnap = await parrainRef.once('value');
+                        const parrainData = parrainSnap.val();
+                        
+                        if (parrainData) {
+                            const nouveauxTours = (parrainData.toursGratuits || 0) + 1;
+                            const nouveauxFilleuls = (parrainData.filleulsCount || 0) + 1;
+                            await parrainRef.update({ 
+                                toursGratuits: nouveauxTours, 
+                                filleulsCount: nouveauxFilleuls 
+                            });
+                            await database.ref(`donnees/utilisateurs/${uid}`).update({ 
+                                bonusParrainageDonne: true 
+                            });
+                            bonusDistribues++;
+                            utilisateursTraites++;
+                            console.log(`✅ Bonus attribué: ${userData.nom} (filleul) → ${parrainData.nom} (parrain)`);
+                        } else {
+                            errors.push(`Parrain introuvable pour ${userData.nom} (ID: ${userData.parrainId})`);
+                        }
+                    } else {
+                        utilisateursTraites++;
+                    }
+                }
+            }
+            
+            // Recharger les données
+            await rafraichirUtilisateurs();
+            afficherParrainages();
+            
+            if (bonusDistribues > 0) {
+                alert(`✅ Opération terminée !\n\n${bonusDistribues} bonus distribués avec succès.\n${errors.length} erreur(s).`);
+            } else {
+                alert(`ℹ️ Aucun nouveau bonus à distribuer.\n\nTous les parrains ont déjà reçu leurs tours gratuits.`);
+            }
+            if (errors.length > 0) {
+                console.error("Erreurs:", errors);
+            }
         }
 
         async function demarrerSyncBinance() { if(binanceInterval) clearInterval(binanceInterval); if(cacheTaux.chargerLocal() && cacheTaux.donnees) { donnees.taux = cacheTaux.donnees; afficherTauxSimplifies(); } await syncBinance(); binanceInterval = setInterval(syncBinance, 1800000); let tempsRestantSync = 30; setInterval(() => { tempsRestantSync--; if(tempsRestantSync < 0) tempsRestantSync = 30; const syncElement = document.getElementById('next-sync'); if(syncElement) syncElement.textContent = `${tempsRestantSync}m`; }, 60000); }
@@ -995,7 +1110,7 @@
             if(tx.type==='ACHAT') montantRecu = (tx.montantRecu?tx.montantRecu.toFixed(4):'0')+' '+tx.crypto;
             else if(tx.type==='VENTE') montantRecu = (tx.montantRecu?tx.montantRecu.toLocaleString():'0')+' Ar';
             else if(tx.type==='BONUS') montantRecu = tx.lotGagne || tx.montant || 'N/A';
-            let adresseLieeHtml = tx.adresseLiee ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Adresse de liaison:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.adresseLiee)}</td></tr>` : '';
+            let adresseLieeHtml = tx.adresseLiee ? `<td><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Adresse de liaison:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.adresseLiee)}</td></tr>` : '';
             let beneficiaire = '';
             if(tx.type==='ACHAT'){ beneficiaire = `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Adresse:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.adresse||'Non spécifiée')}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Numéro débité:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${tx.nomNumero?echapperHTML(tx.nomNumero)+' ('+echapperHTML(tx.numero)+')':echapperHTML(tx.numero||'Non spécifié')}</td></tr>`; }
             else if(tx.type==='VENTE'){ beneficiaire = `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Bénéficiaire:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.nomNumero||tx.utilisateur)}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Numéro crédité:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.numero||'Non spécifié')}</td></tr>${adresseLieeHtml}`; }

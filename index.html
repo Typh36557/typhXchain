@@ -205,8 +205,6 @@
         .adresse-value { color: var(--text-secondary); font-size: 0.85rem; word-break: break-all; margin-bottom: 5px; }
         .adresse-details { font-size: 0.75rem; color: var(--accent); display: flex; gap: 15px; margin-top: 8px; }
         .btn-delete-adresse { background: var(--danger); padding: 6px 12px; font-size: 0.75rem; width: auto; margin-top: 8px; }
-        
-        /* Cadre vert pour le lien d'affiliation */
         .affiliate-card { background: linear-gradient(135deg, #064E3B, #059669); border-radius: 24px; padding: 20px; margin-bottom: 20px; border: 2px solid #34D399; box-shadow: 0 4px 15px rgba(16,185,129,0.3); }
         .affiliate-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: white; }
         .affiliate-link-container { background: rgba(0,0,0,0.3); border-radius: 16px; padding: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
@@ -215,20 +213,15 @@
         .btn-copy-affiliate:hover { background: #D1FAE5; transform: scale(1.02); }
         .affiliate-stats { margin-top: 12px; display: flex; justify-content: space-between; font-size: 0.75rem; color: #D1FAE5; }
         .free-spins-badge { background: #F59E0B; color: #1F2937; padding: 4px 12px; border-radius: 40px; font-size: 0.75rem; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
-        
-        /* Styles Roue Bonus - Version ROUGE */
         .card-bonus-rouge { text-align: center; background: linear-gradient(135deg, var(--bg-card), #7F1D1D); border: 2px solid #EF4444; box-shadow: 0 0 20px rgba(239,68,68,0.3); }
         .card-bonus-rouge .card-title i { color: #F87171; }
-        
         .wheel-container { position: relative; width: 280px; height: 280px; margin: 20px auto; border-radius: 50%; overflow: hidden; box-shadow: 0 0 20px rgba(239,68,68,0.5); }
         .wheel { width: 100%; height: 100%; border-radius: 50%; transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99); position: relative; }
         .wheel-pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid white; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
         .wheel-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; background: var(--bg-dark); border-radius: 50%; z-index: 5; border: 3px solid var(--danger); }
         .btn-wheel-disabled { background: var(--gray-300) !important; cursor: not-allowed !important; opacity: 0.5 !important; transform: none !important; }
         .btn-wheel-active { background: linear-gradient(135deg, #DC2626, #991B1B) !important; cursor: pointer !important; opacity: 1 !important; }
-        /* Suppression de l'affichage des badges sous la roue */
         .roue-lots { display: none; }
-
         @media (max-width: 768px) { .hero-title { font-size: 2rem; } .rates-grid { grid-template-columns: repeat(2, 1fr); } .pin-digit { width: 45px; height: 45px; font-size: 1.3rem; } .modal-content { padding: 20px; } }
     </style>
 </head>
@@ -274,8 +267,6 @@
         </div>
         <div id="profil-section" class="platform-section">
             <div class="card"><h2 class="card-title"><i class="fas fa-user-circle"></i> Profil</h2><div class="profile-info" id="profil-infos"></div></div>
-            
-            <!-- CADRE VERT - Lien d'affiliation -->
             <div id="affiliate-card" class="affiliate-card" style="display: none;">
                 <div class="affiliate-title"><i class="fas fa-link"></i> Votre lien de parrainage</div>
                 <div class="affiliate-link-container">
@@ -290,15 +281,12 @@
                     <i class="fas fa-info-circle"></i> Pour chaque filleul qui valide son numéro, vous gagnez 1 tour gratuit !
                 </div>
             </div>
-
-            <!-- Carte Bonus - Version ROUGE -->
             <div class="card card-bonus-rouge" id="card-bonus" style="text-align:center; background: linear-gradient(135deg, var(--bg-card), #7F1D1D); border: 2px solid #EF4444; box-shadow: 0 0 20px rgba(239,68,68,0.3);">
                 <h2 class="card-title" style="justify-content:center;"><i class="fas fa-gift" style="color:#F87171;"></i> Bonus Journalier - Roue de la Fortune</h2>
                 <p id="bonus-message" style="color:var(--text-secondary); margin:10px 0; font-size:0.9rem;">🎰 Tournez la roue et gagnez des lots !</p>
                 <button id="btn-roue-action" class="btn btn-wheel-disabled" onclick="ouvrirModalRoue()" disabled><i class="fas fa-dharmachakra"></i> Tourner la Roue</button>
                 <p id="bonus-restriction" style="color:var(--warning); font-size:0.8rem; margin-top:8px;">🔒 Une transaction confirmée aujourd'hui ou un tour gratuit est requis</p>
             </div>
-
             <div class="card"><h2 class="card-title"><i class="fas fa-key"></i> Code PIN de sécurité</h2><div id="pin-management"></div><button class="btn btn-success" onclick="gererPIN()" id="btn-gerer-pin"><i class="fas fa-key"></i> Configurer mon code PIN</button></div>
             <div class="card"><h2 class="card-title"><i class="fas fa-link"></i> 🔗 Mes adresses de portefeuille</h2><div id="liste-adresses-utilisateur" class="activity-list"></div><button class="btn btn-success" onclick="ouvrirModalAjoutAdresse()" style="margin-bottom: 10px;"><i class="fas fa-plus"></i> Ajouter une adresse</button><div class="info-message"><i class="fas fa-info-circle"></i> Les adresses enregistrées seront utilisées lors de vos retraits si le portefeuille le nécessite.</div></div><div class="card"><h2 class="card-title"><i class="fas fa-phone-alt"></i> Mes numéros (max 3)</h2><div id="liste-numeros-utilisateur" class="activity-list"></div><div id="form-ajout-numero" style="margin-top:20px;"><div class="form-group"><label class="form-label">Nom complet</label><div class="input-wrapper"><input type="text" id="nouveau-nom" placeholder="Rakoto Jean"></div></div><div class="form-group"><label class="form-label">Numéro</label><div class="input-wrapper"><input type="tel" id="nouveau-numero" placeholder="034 00 000 00"></div></div><button class="btn btn-success" onclick="ajouterNumero()" id="btn-ajouter-numero"><i class="fas fa-plus"></i> Ajouter un numéro</button></div><div style="margin-top:20px;text-align:center;"><a href="https://www.facebook.com/Typh.Exchange.Ofisialy" target="_blank" class="btn-support"><i class="fab fa-facebook-f"></i> Support Facebook</a></div></div><div class="card" id="carte-deconnexion"><h2 class="card-title" style="margin-bottom:16px;"><i class="fas fa-sign-out-alt"></i> Session</h2><button class="btn btn-warning" onclick="deconnexion()" style="background:var(--danger);"><i class="fas fa-power-off"></i> Se déconnecter</button></div></div>
     </div>
@@ -310,15 +298,13 @@
             <input type="text" id="nom-inscription" class="modal-input" placeholder="Nom complet">
             <input type="email" id="email-inscription" class="modal-input" placeholder="Email">
             <input type="password" id="password-inscription" class="modal-input" placeholder="Mot de passe">
-            
-            <!-- Champ parrain visible avec explication -->
             <div style="margin: 10px 0; background: rgba(16,185,129,0.1); border-radius: 20px; padding: 12px;">
                 <label style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-bottom: 5px;">
                     <i class="fas fa-link"></i> Code de parrainage (optionnel)
                 </label>
                 <input type="text" id="parrain-id" class="modal-input" placeholder="Ex: TX-abc1234" style="margin-top: 0;">
                 <p style="color: var(--text-secondary); font-size: 0.7rem; margin-top: 5px;">
-                    <i class="fas fa-info-circle"></i> Entrer le code parrainage et gagner 0% des frais au premier envoi
+                    <i class="fas fa-info-circle"></i> Entrer le code parrainage et bénéficier 0% des frais au premier envoi
                 </p>
             </div>
         </div>
@@ -350,7 +336,6 @@
     <div id="modal-roue" class="modal">
         <div class="modal-content" style="text-align:center; background: linear-gradient(135deg, var(--bg-card), #7F1D1D); border-color: #EF4444;">
             <div class="modal-title" style="justify-content:center;"><i class="fas fa-dharmachakra"></i> Roue de la Fortune</div>
-            
             <div id="roue-jeu">
                 <div class="wheel-container">
                     <div class="wheel-pointer"></div>
@@ -361,7 +346,6 @@
                 </div>
                 <button class="btn btn-success" id="btn-tourner-roue" style="background: linear-gradient(135deg, #DC2626, #991B1B); font-size:1.2rem; margin-top:10px;" onclick="tournerRoue()"><i class="fas fa-gift"></i> TOURNER !</button>
             </div>
-
             <div id="roue-resultat" style="display:none; margin-top:20px;">
                 <h3 id="texte-resultat" style="font-size:1.5rem; color:var(--success); margin-bottom:15px;">Félicitations !</h3>
                 <p style="color:var(--text-secondary); margin-bottom:15px;" id="texte-instruction-bonus"></p>
@@ -369,7 +353,6 @@
                 <div class="error-message" id="erreur-bonus"></div>
                 <button class="btn btn-confirm" onclick="reclamerBonus()" style="width:100%; margin-top:10px;"><i class="fas fa-paper-plane"></i> Réclamer mon gain</button>
             </div>
-            
             <button class="btn btn-cancel" onclick="fermerModalRoue()" id="btn-fermer-roue" style="margin-top:20px; width:100%;"><i class="fas fa-times"></i> Fermer</button>
         </div>
     </div>
@@ -513,10 +496,8 @@
             });
         }
 
-        // Fonction pour tronquer le nom aux 4 premiers mots
         function tronquerNom(nom) {
             if(!nom) return 'Utilisateur';
-            // Nettoyer le nom (enlever les espaces multiples)
             const nomPropre = nom.trim().replace(/\s+/g, ' ');
             const mots = nomPropre.split(' ');
             if(mots.length <= 4) return nomPropre;
@@ -621,7 +602,6 @@
                 return;
             }
             if(affiliateCard) affiliateCard.style.display = 'block';
-            // Correction du lien d'affiliation avec l'URL complète
             const refCode = utilisateurCourant.id || monUid.substring(0,8);
             urlParrainage = `https://typh-xchain.site/?ref=${refCode}`;
             const linkSpan = document.getElementById('affiliate-link');
@@ -1445,13 +1425,11 @@
         }
 
         function showAuthModal(){ 
-            // Vérifier si un ID de parrain est présent dans l'URL
             const urlParams = new URLSearchParams(window.location.search);
             const refId = urlParams.get('ref');
             const parrainInput = document.getElementById('parrain-id');
             if(refId && parrainInput) {
                 parrainInput.value = refId;
-                // Afficher un message de confirmation
                 setTimeout(() => {
                     const msgDiv = document.createElement('div');
                     msgDiv.style.cssText = 'background:rgba(16,185,129,0.2); color:#10B981; padding:10px; border-radius:16px; margin-top:10px; font-size:0.8rem; text-align:center;';
