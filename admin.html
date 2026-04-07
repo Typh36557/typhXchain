@@ -18,7 +18,7 @@
             --gray-200: #2D4B73; --gray-300: #3D5C86; --white: #FFFFFF;
             --shadow: 0 4px 6px -1px rgba(0,0,0,0.3); --radius-lg: 20px; --radius-xl: 24px;
             --binance: #F0B90B; --news-bg: #1a3650; --news-border: #3B82F6;
-            --bonus: #8B5CF6;
+            --bonus: #8B5CF6; --affiliate: #059669;
         }
         body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary); margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
         .app-header { background: var(--bg-card); padding: 18px 20px; border-bottom: 1px solid var(--gray-300); }
@@ -93,9 +93,11 @@
         .stat-value { font-size: 2rem; font-weight: 700; color: var(--accent); margin-bottom: 5px; }
         .stat-label { font-size: 0.85rem; color: var(--text-secondary); }
         .user-item { background: var(--primary); border-radius: 20px; padding: 15px; margin-bottom: 10px; border: 1px solid var(--gray-300); }
-        .user-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .user-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
         .user-name { font-weight: 600; color: var(--white); font-size: 1.1rem; }
         .user-email { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px; }
+        .user-stats { display: flex; gap: 15px; margin-top: 8px; font-size: 0.8rem; }
+        .user-stats span { background: var(--bg-dark); padding: 4px 10px; border-radius: 40px; }
         .frais-item { background: var(--primary); border-radius: 20px; padding: 15px; margin-bottom: 10px; border: 1px solid var(--gray-300); }
         .reseau-item { background: var(--primary); border-radius: 20px; padding: 15px; margin-bottom: 10px; border: 1px solid var(--gray-300); }
         .sync-status { background: var(--primary); border-radius: 16px; padding: 15px; margin: 15px 0; display: flex; align-items: center; justify-content: space-between; }
@@ -188,6 +190,12 @@
         .roue-lot-nom { font-weight: 600; color: var(--white); }
         .roue-lot-type { font-size: 0.7rem; color: var(--text-secondary); }
         .roue-lot-prob { background: var(--accent); padding: 4px 12px; border-radius: 40px; font-size: 0.8rem; font-weight: 600; }
+        .affiliate-stats-card { background: linear-gradient(135deg, #064E3B, #059669); border-radius: 20px; padding: 15px; margin-bottom: 15px; border: 1px solid #34D399; }
+        .affiliate-stats-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; color: white; }
+        .affiliate-stats-values { display: flex; justify-content: space-around; }
+        .affiliate-stat { text-align: center; }
+        .affiliate-stat-number { font-size: 1.5rem; font-weight: 700; color: #D1FAE5; }
+        .affiliate-stat-label { font-size: 0.7rem; color: #A7F3D0; }
         @media (min-width: 768px) { .container { max-width: 600px; margin: 0 auto; } .nav-menu { max-width: 600px; } }
     </style>
 </head>
@@ -214,6 +222,7 @@
                 <div class="stat-card"><div class="stat-value" id="stats-demandes">0</div><div class="stat-label">Demandes</div></div>
                 <div class="stat-card"><div class="stat-value" id="stats-transactions">0</div><div class="stat-label">Transactions confirmées</div></div>
                 <div class="stat-card"><div class="stat-value" id="stats-transactions-attente">0</div><div class="stat-label">En attente</div></div>
+                <div class="stat-card"><div class="stat-value" id="stats-parrainages">0</div><div class="stat-label">Parrainages</div></div>
             </div>
             <div class="tabs">
                 <div class="tab active" onclick="switchTab('gestion')"><i class="fas fa-database"></i> Gestion</div>
@@ -226,6 +235,7 @@
                 <div class="tab" onclick="switchTab('transactions')" id="tab-transactions"><i class="fas fa-exchange-alt"></i> Transactions<span id="notif-transactions" class="notification-badge" style="display: none;">0</span></div>
                 <div class="tab" onclick="switchTab('config')"><i class="fas fa-sliders-h"></i> Configuration</div>
                 <div class="tab" onclick="switchTab('roue')"><i class="fas fa-gift"></i> Bonus Roue</div>
+                <div class="tab" onclick="switchTab('parrainage')"><i class="fas fa-link"></i> Parrainage</div>
             </div>
             <div id="gestion-tab" style="display: block;">
                 <div class="admin-grid">
@@ -288,7 +298,7 @@
                 <div class="admin-card">
                     <h2><i class="fas fa-dharmachakra"></i> 🎰 Configuration des Lots (Roue de la Fortune)</h2>
                     <div class="info-message" style="background: rgba(139,92,246,0.1); border: 1px solid var(--bonus); color: #c4b5fd; margin-bottom: 20px;">
-                        <i class="fas fa-info-circle"></i> <strong>Fonctionnement :</strong> Les clients peuvent jouer une fois par jour après une transaction confirmée. Les gains sont envoyés ici pour approbation.
+                        <i class="fas fa-info-circle"></i> <strong>Fonctionnement :</strong> Les clients peuvent jouer une fois par jour après une transaction confirmée ou avec un tour gratuit. Les gains sont envoyés ici pour approbation.
                     </div>
                     <div id="roue-total-prob" style="margin-bottom: 15px; font-weight: bold; background: var(--bg-dark); padding: 10px; border-radius: 10px;">Total Probabilité: <span id="roue-prob-total">0</span>%</div>
                     <div id="roue-liste" class="item-list"></div>
@@ -296,6 +306,21 @@
                     <div class="info-message" style="margin-top: 20px; background: rgba(16,185,129,0.1); border-color: var(--success);">
                         <i class="fas fa-check-circle"></i> <strong>Lots par défaut actifs :</strong> 1 USDT (5%), 2 USDT (3%), 5000 Ar (10%), 10000 Ar (5%), Merci (77%)
                     </div>
+                </div>
+            </div>
+            <div id="parrainage-tab" style="display: none;">
+                <div class="admin-card">
+                    <h2><i class="fas fa-link"></i> 📊 Statistiques de parrainage</h2>
+                    <div class="affiliate-stats-card">
+                        <div class="affiliate-stats-title"><i class="fas fa-chart-line"></i> Vue d'ensemble</div>
+                        <div class="affiliate-stats-values">
+                            <div class="affiliate-stat"><div class="affiliate-stat-number" id="stat-total-parrainages">0</div><div class="affiliate-stat-label">Total parrainages</div></div>
+                            <div class="affiliate-stat"><div class="affiliate-stat-number" id="stat-tours-offerts">0</div><div class="affiliate-stat-label">Tours offerts</div></div>
+                            <div class="affiliate-stat"><div class="affiliate-stat-number" id="stat-tours-utilises">0</div><div class="affiliate-stat-label">Tours utilisés</div></div>
+                        </div>
+                    </div>
+                    <div class="filter-bar"><input type="text" id="recherche-parrain" placeholder="Rechercher par nom, email ou ID..." oninput="afficherParrainages()"></div>
+                    <div id="parrainages-liste" class="item-list"></div>
                 </div>
             </div>
         </div>
@@ -414,7 +439,7 @@
         function sauvegarderDonnees() { if(enCoursDeMiseAJour) return; if(timeoutSauvegarde) clearTimeout(timeoutSauvegarde); timeoutSauvegarde = setTimeout(() => { enCoursDeMiseAJour = true; database.ref('donnees').update({ portefeuilles: donnees.portefeuilles, operateurs: donnees.operateurs, cryptos: donnees.cryptos, taux: donnees.taux, reseaux: donnees.reseaux, frais: donnees.frais, pause: donnees.pause, demandes: donnees.demandes, news: donnees.news, tauxMode: donnees.tauxMode, usdMGA: donnees.usdMGA, limites: donnees.limites, messagesSpeciaux: donnees.messagesSpeciaux, roue: donnees.roue, roueActive: donnees.roueActive }).then(() => { enCoursDeMiseAJour = false; }).catch(e => { console.error(e); enCoursDeMiseAJour = false; }); }, 2000); }
         function sauvegarderUtilisateurs() { if(enCoursDeMiseAJour) return; if(timeoutSauvegarde) clearTimeout(timeoutSauvegarde); timeoutSauvegarde = setTimeout(() => { enCoursDeMiseAJour = true; database.ref('donnees/utilisateurs').set(utilisateurs).then(() => { enCoursDeMiseAJour = false; }).catch(e => { console.error(e); enCoursDeMiseAJour = false; }); }, 2000); }
         
-        function rafraichirUtilisateurs() { database.ref('donnees/utilisateurs').once('value').then((snap) => { utilisateurs = snap.val() || {}; mettreAJourStats(); afficherNumeros(); afficherUtilisateurs(); }).catch(e => console.error(e)); }
+        function rafraichirUtilisateurs() { database.ref('donnees/utilisateurs').once('value').then((snap) => { utilisateurs = snap.val() || {}; mettreAJourStats(); afficherNumeros(); afficherUtilisateurs(); afficherParrainages(); }).catch(e => console.error(e)); }
         
         function rafraichirNumeros() { rafraichirUtilisateurs(); afficherNumeros(); }
         
@@ -569,7 +594,33 @@
         }
         function logoutAdmin() { auth.signOut(); if(intervalUtilisateurs) clearInterval(intervalUtilisateurs); }
         
-        function approuverNumero(uid, numeroId) { if(!confirm('✅ Approuver ce numéro ?')) return; database.ref(`donnees/utilisateurs/${uid}/numeros/${numeroId}/statut`).set('approuve').then(() => { alert('✅ Numéro approuvé !'); rafraichirUtilisateurs(); }).catch(err => console.error(err)); }
+        async function approuverNumero(uid, numeroId) { 
+            if(!confirm('✅ Approuver ce numéro ?')) return; 
+            await database.ref(`donnees/utilisateurs/${uid}/numeros/${numeroId}/statut`).set('approuve');
+            
+            // Vérifier le parrainage et ajouter un tour gratuit si nécessaire
+            const userSnap = await database.ref(`donnees/utilisateurs/${uid}`).once('value');
+            const userData = userSnap.val();
+            if(userData && userData.parrainId && !userData.bonusParrainageDonne) {
+                const parrainId = userData.parrainId;
+                const parrainRef = database.ref(`donnees/utilisateurs/${parrainId}`);
+                const parrainSnap = await parrainRef.once('value');
+                const parrainData = parrainSnap.val();
+                if(parrainData) {
+                    const nouveauxTours = (parrainData.toursGratuits || 0) + 1;
+                    const nouveauxFilleuls = (parrainData.filleulsCount || 0) + 1;
+                    await parrainRef.update({ toursGratuits: nouveauxTours, filleulsCount: nouveauxFilleuls });
+                    await database.ref(`donnees/utilisateurs/${uid}`).update({ bonusParrainageDonne: true });
+                    alert(`✅ Numéro approuvé ! 1 tour gratuit a été ajouté au parrain.`);
+                } else {
+                    alert(`✅ Numéro approuvé !`);
+                }
+            } else {
+                alert(`✅ Numéro approuvé !`);
+            }
+            rafraichirUtilisateurs();
+        }
+        
         function rejeterNumero(uid, numeroId) { if(!confirm('❌ Rejeter ce numéro ?')) return; database.ref(`donnees/utilisateurs/${uid}/numeros/${numeroId}/statut`).set('rejete').then(() => { alert('Numéro rejeté'); rafraichirUtilisateurs(); }).catch(err => console.error(err)); }
         
         function afficherNumeros() {
@@ -596,6 +647,67 @@
             });
             listeAttente.innerHTML = htmlAttente || '<div class="item-row">Aucune demande en attente</div>';
             listeApprouves.innerHTML = htmlApprouves || '<div class="item-row">Aucun numéro approuvé</div>';
+        }
+
+        function afficherParrainages() {
+            const liste = document.getElementById('parrainages-liste');
+            if(!liste) return;
+            const recherche = document.getElementById('recherche-parrain')?.value.toLowerCase() || '';
+            let html = '';
+            let totalParrainages = 0;
+            let totalToursOfferts = 0;
+            let totalToursUtilises = 0;
+            
+            Object.entries(utilisateurs).forEach(([uid, user]) => {
+                if(!user.parrainId && (!user.filleulsCount || user.filleulsCount === 0)) return;
+                
+                const userNom = (user.nom || '').toLowerCase();
+                const userEmail = (user.email || '').toLowerCase();
+                const userId = (user.id || uid.substring(0,8)).toLowerCase();
+                const correspondRecherche = recherche === '' || userNom.includes(recherche) || userEmail.includes(recherche) || userId.includes(recherche);
+                if(!correspondRecherche) return;
+                
+                if(user.parrainId) {
+                    const parrainData = utilisateurs[user.parrainId];
+                    const parrainNom = parrainData?.nom || 'Inconnu';
+                    const aNumeroApprouve = user.numeros ? Object.values(user.numeros).some(n => n.statut === 'approuve') : false;
+                    const bonusDonne = user.bonusParrainageDonne || false;
+                    html += `<div class="user-item">
+                        <div class="user-header">
+                            <span class="user-name"><i class="fas fa-user-friends"></i> ${echapperHTML(user.nom)}</span>
+                            <span class="user-email">${echapperHTML(user.email)}</span>
+                        </div>
+                        <div class="user-stats">
+                            <span><i class="fas fa-link"></i> Parrain: ${echapperHTML(parrainNom)}</span>
+                            <span><i class="fas fa-phone-alt"></i> Numéro: ${aNumeroApprouve ? '✅ Approuvé' : '⏳ En attente'}</span>
+                            <span><i class="fas fa-gift"></i> Bonus: ${bonusDonne ? '✅ Donné' : '❌ Non donné'}</span>
+                        </div>
+                    </div>`;
+                }
+                
+                if(user.filleulsCount && user.filleulsCount > 0) {
+                    totalParrainages += user.filleulsCount;
+                    totalToursOfferts += user.filleulsCount;
+                    totalToursUtilises += (user.filleulsCount - (user.toursGratuits || 0));
+                    html += `<div class="user-item" style="border-left: 3px solid var(--affiliate);">
+                        <div class="user-header">
+                            <span class="user-name"><i class="fas fa-crown"></i> ${echapperHTML(user.nom)} (Parrain)</span>
+                            <span class="user-email">${echapperHTML(user.email)}</span>
+                        </div>
+                        <div class="user-stats">
+                            <span><i class="fas fa-users"></i> Filleuls: ${user.filleulsCount}</span>
+                            <span><i class="fas fa-ticket-alt"></i> Tours gratuits: ${user.toursGratuits || 0}</span>
+                            <span><i class="fas fa-check-circle"></i> Tours utilisés: ${(user.filleulsCount - (user.toursGratuits || 0))}</span>
+                        </div>
+                    </div>`;
+                }
+            });
+            
+            document.getElementById('stat-total-parrainages').textContent = totalParrainages;
+            document.getElementById('stat-tours-offerts').textContent = totalToursOfferts;
+            document.getElementById('stat-tours-utilises').textContent = totalToursUtilises;
+            
+            liste.innerHTML = html || '<div class="item-row">Aucune donnée de parrainage</div>';
         }
 
         async function demarrerSyncBinance() { if(binanceInterval) clearInterval(binanceInterval); if(cacheTaux.chargerLocal() && cacheTaux.donnees) { donnees.taux = cacheTaux.donnees; afficherTauxSimplifies(); } await syncBinance(); binanceInterval = setInterval(syncBinance, 1800000); let tempsRestantSync = 30; setInterval(() => { tempsRestantSync--; if(tempsRestantSync < 0) tempsRestantSync = 30; const syncElement = document.getElementById('next-sync'); if(syncElement) syncElement.textContent = `${tempsRestantSync}m`; }, 60000); }
@@ -712,7 +824,7 @@
             let filtres = Object.values(utilisateurs); 
             if(rechercheUtilisateurs) filtres = filtres.filter(u => u.nom?.toLowerCase().includes(rechercheUtilisateurs) || u.email?.toLowerCase().includes(rechercheUtilisateurs)); 
             if(filtres.length === 0){ liste.innerHTML='<div class="item-row">Aucun utilisateur</div>'; return; } 
-            liste.innerHTML = filtres.map((u,i)=>`<div class="user-item"><div class="user-header"><div style="display:flex; align-items:center; gap:10px;"><span class="user-name"><i class="fas fa-user-circle"></i> ${echapperHTML(u.nom)}</span><span style="background:var(--accent);padding:4px 10px;border-radius:40px;font-size:0.8rem;">${echapperHTML(u.id||'ID inconnu')}</span></div><button class="btn btn-warning" style="font-size: 0.8rem; padding: 6px 12px; height: 32px; border:none; border-radius:40px; cursor:pointer;" onclick="reinitialiserMotDePasseUtilisateur('${echapperHTML(u.email)}')"><i class="fas fa-key"></i> Réinitialiser MDP</button></div><div class="user-email"><i class="fas fa-envelope"></i> ${echapperHTML(u.email||'Email non renseigné')}</div><div class="user-detail"><span style="margin-right:15px;"><i class="fas fa-calendar"></i> ${echapperHTML(new Date(u.dateInscription).toLocaleDateString())}</span><span><i class="fas fa-phone"></i> ${Object.keys(u.numeros||{}).length} numéro(s)</span></div></div>`).join(''); 
+            liste.innerHTML = filtres.map((u,i)=>`<div class="user-item"><div class="user-header"><div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;"><span class="user-name"><i class="fas fa-user-circle"></i> ${echapperHTML(u.nom)}</span><span style="background:var(--accent);padding:4px 10px;border-radius:40px;font-size:0.8rem;">${echapperHTML(u.id||'ID inconnu')}</span></div><button class="btn btn-warning" style="font-size: 0.8rem; padding: 6px 12px; height: 32px; border:none; border-radius:40px; cursor:pointer;" onclick="reinitialiserMotDePasseUtilisateur('${echapperHTML(u.email)}')"><i class="fas fa-key"></i> Réinitialiser MDP</button></div><div class="user-email"><i class="fas fa-envelope"></i> ${echapperHTML(u.email||'Email non renseigné')}</div><div class="user-detail"><span style="margin-right:15px;"><i class="fas fa-calendar"></i> ${echapperHTML(new Date(u.dateInscription).toLocaleDateString())}</span><span><i class="fas fa-phone"></i> ${Object.keys(u.numeros||{}).length} numéro(s)</span></div><div class="user-stats"><span><i class="fas fa-users"></i> Filleuls: ${u.filleulsCount || 0}</span><span><i class="fas fa-ticket-alt"></i> Tours gratuits: ${u.toursGratuits || 0}</span>${u.parrainId ? `<span><i class="fas fa-link"></i> Parrain: ${utilisateurs[u.parrainId]?.nom || 'Inconnu'}</span>` : ''}</div></div>`).join(''); 
         }
         
         function reinitialiserMotDePasseUtilisateur(email) {
@@ -724,13 +836,18 @@
         
         function mettreAJourStats() { 
             let numerosAttente = 0; 
-            Object.values(utilisateurs).forEach(user => { if(user.numeros) numerosAttente += Object.values(user.numeros).filter(n => n.statut === 'en_attente').length; }); 
+            let totalParrainages = 0;
+            Object.values(utilisateurs).forEach(user => { 
+                if(user.numeros) numerosAttente += Object.values(user.numeros).filter(n => n.statut === 'en_attente').length;
+                if(user.filleulsCount) totalParrainages += user.filleulsCount;
+            }); 
             const demandesArray = getDemandesTableau();
             document.getElementById('stats-utilisateurs').textContent = Object.keys(utilisateurs).length; 
             document.getElementById('stats-numeros-attente').textContent = numerosAttente; 
             document.getElementById('stats-demandes').textContent = demandesArray.length; 
             document.getElementById('stats-transactions').textContent = demandesArray.filter(d => d.statut === 'confirme').length; 
-            document.getElementById('stats-transactions-attente').textContent = demandesArray.filter(d => d.statut === 'en_attente').length; 
+            document.getElementById('stats-transactions-attente').textContent = demandesArray.filter(d => d.statut === 'en_attente').length;
+            document.getElementById('stats-parrainages').textContent = totalParrainages;
         }
         
         function filtrerUtilisateurs(){ rechercheUtilisateurs=document.getElementById('recherche-utilisateur')?.value.toLowerCase()||''; afficherUtilisateurs(); }
@@ -778,6 +895,7 @@
             afficherNews(); 
             afficherTransactions();
             afficherRoue(); 
+            afficherParrainages();
             if(donnees.frais){ 
                 document.getElementById('frais-achat-display').textContent=donnees.frais.achat+'%'; 
                 document.getElementById('frais-vente-display').textContent=donnees.frais.vente+'%'; 
@@ -799,7 +917,7 @@
         function fermerModal(){ document.getElementById('modal-admin').classList.remove('active'); }
         function sauvegarderModal(){ const nom=document.getElementById('modal-nom')?.value; switch(modalType){ case 'portefeuille': if(!nom){ alert('Nom requis'); return; } const reponse=document.getElementById('modal-reponse')?.value||''; const message=document.getElementById('modal-message')?.value||''; const reseau=document.getElementById('modal-reseau')?.value||''; const liaisonRequise = document.getElementById('modal-liaison-requise')?.checked || false; if(modalMode==='ajout') donnees.portefeuilles.push({nom,reponse,messageConfirmation:message,reseau,liaisonRequise}); else donnees.portefeuilles[modalIndex]={...donnees.portefeuilles[modalIndex],nom,reponse,messageConfirmation:message,reseau,liaisonRequise}; database.ref('donnees/portefeuilles').set(donnees.portefeuilles); break; case 'operateur': if(!nom){ alert('Nom requis'); return; } const msg=document.getElementById('modal-message')?.value||''; if(modalMode==='ajout') donnees.operateurs.push({nom,messageConfirmation:msg}); else donnees.operateurs[modalIndex]={...donnees.operateurs[modalIndex],nom,messageConfirmation:msg}; database.ref('donnees/operateurs').set(donnees.operateurs); break; case 'reseau': if(!nom){ alert('Nom requis'); return; } const crypto=document.getElementById('modal-crypto')?.value; const frais=parseFloat(document.getElementById('modal-frais-reseau')?.value)||0; if(modalMode==='ajout'){ if(!donnees.reseaux) donnees.reseaux=[]; donnees.reseaux.push({nom,crypto,fraisReseau:frais}); } else donnees.reseaux[modalIndex]={...donnees.reseaux[modalIndex],nom,crypto,fraisReseau:frais}; database.ref('donnees/reseaux').set(donnees.reseaux); break; case 'crypto': if(!nom){ alert('Nom requis'); return; } if(modalMode==='ajout'){ if(!donnees.cryptos.includes(nom)){ donnees.cryptos.push(nom); if(!donnees.taux[nom]) donnees.taux[nom]={prixUSD:nom==='USDT'?1:0,prixMGA:nom==='USDT'?donnees.usdMGA:0,variation:"0",couleur:"positive",source:'manual'}; } } else{ const ancien=donnees.cryptos[modalIndex]; if(ancien!==nom&&donnees.taux[ancien]){ donnees.taux[nom]=donnees.taux[ancien]; delete donnees.taux[ancien]; } donnees.cryptos[modalIndex]=nom; } database.ref('donnees/cryptos').set(donnees.cryptos); database.ref('donnees/taux').set(donnees.taux); cacheTaux.set(donnees.taux); break; case 'taux': const c=document.getElementById('modal-crypto')?.value; if(c){ const pu=parseFloat(document.getElementById('modal-prix-usd')?.value)||0; const pm=parseFloat(document.getElementById('modal-prix-mga')?.value)||0; donnees.taux[c]={prixUSD:pu,prixMGA:pm,variation:document.getElementById('modal-variation')?.value||"0",couleur:document.getElementById('modal-couleur')?.value||"positive",lastUpdate:new Date().toISOString(),source:'manual'}; if(donnees.tauxMode==='auto') setTauxMode('manual'); database.ref('donnees/taux').set(donnees.taux); cacheTaux.set(donnees.taux); } break; case 'roue': const nomR=document.getElementById('modal-roue-nom')?.value; if(!nomR){ alert('Nom du lot requis'); return; } const typeR=document.getElementById('modal-roue-type')?.value; const probR=parseFloat(document.getElementById('modal-roue-prob')?.value)||0; if(probR < 0 || probR > 100){ alert('La probabilité doit être entre 0 et 100'); return; } let trRoue = Array.isArray(donnees.roue) ? donnees.roue : (typeof donnees.roue === 'object' && donnees.roue !== null ? Object.values(donnees.roue) : []); donnees.roue = trRoue.filter(item => item !== null); if(!donnees.roue) donnees.roue=[]; if(modalMode==='ajout') donnees.roue.push({id:'ROUE-'+Date.now()+'-'+Math.random().toString(36).substr(2,4), nom:nomR, type:typeR, probabilite:probR}); else donnees.roue[modalIndex]={...donnees.roue[modalIndex], nom:nomR, type:typeR, probabilite:probR}; database.ref('donnees/roue').set(donnees.roue); break; } fermerModal(); afficherTout(); }
         
-        function switchTab(tab){ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); ['gestion','taux','pause','utilisateurs','numeros','demandes','news','transactions','config', 'roue'].forEach(t=>document.getElementById(t+'-tab').style.display='none'); if(tab==='gestion'){ document.querySelectorAll('.tab')[0].classList.add('active'); document.getElementById('gestion-tab').style.display='block'; } else if(tab==='taux'){ document.querySelectorAll('.tab')[1].classList.add('active'); document.getElementById('taux-tab').style.display='block'; afficherTauxSimplifies(); } else if(tab==='pause'){ document.querySelectorAll('.tab')[2].classList.add('active'); document.getElementById('pause-tab').style.display='block'; mettreAJourPauseUI(); } else if(tab==='utilisateurs'){ document.querySelectorAll('.tab')[3].classList.add('active'); document.getElementById('utilisateurs-tab').style.display='block'; afficherUtilisateurs(); } else if(tab==='numeros'){ document.querySelectorAll('.tab')[4].classList.add('active'); document.getElementById('numeros-tab').style.display='block'; afficherNumeros(); } else if(tab==='demandes'){ document.querySelectorAll('.tab')[5].classList.add('active'); document.getElementById('demandes-tab').style.display='block'; afficherDemandes(); } else if(tab==='news'){ document.querySelectorAll('.tab')[6].classList.add('active'); document.getElementById('news-tab').style.display='block'; afficherNews(); annulerEditionNews(); } else if(tab==='transactions'){ document.querySelectorAll('.tab')[7].classList.add('active'); document.getElementById('transactions-tab').style.display='block'; afficherTransactions(); calculerStatsTransactions(); if(document.getElementById('notif-transactions')) document.getElementById('notif-transactions').style.background='var(--warning)'; } else if(tab==='config'){ document.querySelectorAll('.tab')[8].classList.add('active'); document.getElementById('config-tab').style.display='block'; mettreAJourAffichageLimites(); } else if(tab==='roue'){ document.querySelectorAll('.tab')[9].classList.add('active'); document.getElementById('roue-tab').style.display='block'; afficherRoue(); } }
+        function switchTab(tab){ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); ['gestion','taux','pause','utilisateurs','numeros','demandes','news','transactions','config','roue','parrainage'].forEach(t=>document.getElementById(t+'-tab').style.display='none'); if(tab==='gestion'){ document.querySelectorAll('.tab')[0].classList.add('active'); document.getElementById('gestion-tab').style.display='block'; } else if(tab==='taux'){ document.querySelectorAll('.tab')[1].classList.add('active'); document.getElementById('taux-tab').style.display='block'; afficherTauxSimplifies(); } else if(tab==='pause'){ document.querySelectorAll('.tab')[2].classList.add('active'); document.getElementById('pause-tab').style.display='block'; mettreAJourPauseUI(); } else if(tab==='utilisateurs'){ document.querySelectorAll('.tab')[3].classList.add('active'); document.getElementById('utilisateurs-tab').style.display='block'; afficherUtilisateurs(); } else if(tab==='numeros'){ document.querySelectorAll('.tab')[4].classList.add('active'); document.getElementById('numeros-tab').style.display='block'; afficherNumeros(); } else if(tab==='demandes'){ document.querySelectorAll('.tab')[5].classList.add('active'); document.getElementById('demandes-tab').style.display='block'; afficherDemandes(); } else if(tab==='news'){ document.querySelectorAll('.tab')[6].classList.add('active'); document.getElementById('news-tab').style.display='block'; afficherNews(); annulerEditionNews(); } else if(tab==='transactions'){ document.querySelectorAll('.tab')[7].classList.add('active'); document.getElementById('transactions-tab').style.display='block'; afficherTransactions(); calculerStatsTransactions(); if(document.getElementById('notif-transactions')) document.getElementById('notif-transactions').style.background='var(--warning)'; } else if(tab==='config'){ document.querySelectorAll('.tab')[8].classList.add('active'); document.getElementById('config-tab').style.display='block'; mettreAJourAffichageLimites(); } else if(tab==='roue'){ document.querySelectorAll('.tab')[9].classList.add('active'); document.getElementById('roue-tab').style.display='block'; afficherRoue(); } else if(tab==='parrainage'){ document.querySelectorAll('.tab')[10].classList.add('active'); document.getElementById('parrainage-tab').style.display='block'; afficherParrainages(); } }
         
         function mettreAJourPauseUI(){ const a=document.getElementById('achat-status-text'); const v=document.getElementById('vente-status-text'); const ba=document.getElementById('btn-pause-achat'); const bv=document.getElementById('btn-pause-vente'); if(a){ if(donnees.pause?.achat){ a.innerHTML='Actuellement: <span style="color: var(--danger);">EN PAUSE</span>'; ba.innerHTML='<i class="fas fa-play"></i> ACTIVER'; ba.className='btn btn-play'; } else{ a.innerHTML='Actuellement: <span style="color: var(--success);">Actif</span>'; ba.innerHTML='<i class="fas fa-pause"></i> Mettre en PAUSE'; ba.className='btn btn-pause'; } } if(v){ if(donnees.pause?.vente){ v.innerHTML='Actuellement: <span style="color: var(--danger);">EN PAUSE</span>'; bv.innerHTML='<i class="fas fa-play"></i> ACTIVER'; bv.className='btn btn-play'; } else{ v.innerHTML='Actuellement: <span style="color: var(--success);">Actif</span>'; bv.innerHTML='<i class="fas fa-pause"></i> Mettre en PAUSE'; bv.className='btn btn-pause'; } } }
         function togglePause(type){ if(!donnees.pause) donnees.pause={achat:false,vente:false}; donnees.pause[type]=!donnees.pause[type]; database.ref('donnees/pause').set(donnees.pause); mettreAJourPauseUI(); alert(`✅ Section ${type.toUpperCase()} ${donnees.pause[type]?'EN PAUSE':'ACTIVÉE'}`); }
@@ -882,7 +1000,7 @@
             if(tx.type==='ACHAT'){ beneficiaire = `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Adresse:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.adresse||'Non spécifiée')}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Numéro débité:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${tx.nomNumero?echapperHTML(tx.nomNumero)+' ('+echapperHTML(tx.numero)+')':echapperHTML(tx.numero||'Non spécifié')}</td></tr>`; }
             else if(tx.type==='VENTE'){ beneficiaire = `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Bénéficiaire:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.nomNumero||tx.utilisateur)}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Numéro crédité:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.numero||'Non spécifié')}</td></tr>${adresseLieeHtml}`; }
             else if(tx.type==='BONUS'){ beneficiaire = `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Info Réception:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.adresse || tx.numero || 'N/A')}</td></tr>`; }
-            let montantEnvoyeHtml = tx.type !== 'BONUS' ? `<td><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Montant envoyé:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.montant)} ${tx.type==='ACHAT'?'Ar':tx.crypto}</td></tr>` : '';
+            let montantEnvoyeHtml = tx.type !== 'BONUS' ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Montant envoyé:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.montant)} ${tx.type==='ACHAT'?'Ar':tx.crypto}</td></tr>` : '';
             let reseauHtml = tx.type !== 'BONUS' ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Réseau:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.reseau||'N/A')}</td></tr>` : '';
             recu.innerHTML=`<table style="width:100%;border-collapse:collapse;margin:20px 0;"><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>ID Transaction:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.id)}</td></tr>
                     <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>ID Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.userID||'Non attribué')}</td></tr>
@@ -1008,7 +1126,7 @@
             dernierCompteTransactions = enAttente; 
         }
 
-        window.addEventListener('load',function(){ console.log('🚀 Page admin chargée - Roue de la Fortune configurée et fonctionnelle'); });
+        window.addEventListener('load',function(){ console.log('🚀 Page admin chargée - Système de parrainage et tours gratuits configuré'); });
     </script>
 </body>
 </html>

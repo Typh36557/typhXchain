@@ -28,6 +28,8 @@
             --gray-200: #1E2A3A; --gray-300: #2D3A4A; --white: #FFFFFF;
             --shadow: 0 8px 20px rgba(0,0,0,0.3); --radius-lg: 20px; --radius-xl: 28px;
             --transition: all 0.2s ease; --binance: #F0B90B; --news-bg: #0F172A; --news-border: #3B82F6;
+            --affiliate-green: #059669; --affiliate-green-light: #10B981; --affiliate-border: #34D399;
+            --bonus-red: #DC2626; --bonus-red-dark: #B91C1C;
         }
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-dark); color: var(--text-primary); line-height: 1.5; min-height: 100vh; display: flex; flex-direction: column; }
         .app-header { background: rgba(19, 27, 47, 0.95); backdrop-filter: blur(10px); padding: 16px 20px; border-bottom: 1px solid rgba(59,130,246,0.2); position: sticky; top: 0; z-index: 100; }
@@ -130,7 +132,7 @@
         .activity-icon { width: 44px; height: 44px; border-radius: 44px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
         .activity-icon.ACHAT { background: rgba(16,185,129,0.2); color: var(--success); }
         .activity-icon.VENTE { background: rgba(245,158,11,0.2); color: var(--warning); }
-        .activity-icon.BONUS { background: rgba(139,92,246,0.2); color: #c4b5fd; }
+        .activity-icon.BONUS { background: rgba(220,38,38,0.2); color: #f87171; }
         .activity-info h4 { font-weight: 600; margin-bottom: 4px; color: var(--white); font-size: 0.95rem; }
         .activity-date { font-size: 0.7rem; color: var(--text-secondary); }
         .activity-status { font-size: 0.7rem; padding: 4px 12px; border-radius: 40px; font-weight: 600; }
@@ -204,16 +206,28 @@
         .adresse-details { font-size: 0.75rem; color: var(--accent); display: flex; gap: 15px; margin-top: 8px; }
         .btn-delete-adresse { background: var(--danger); padding: 6px 12px; font-size: 0.75rem; width: auto; margin-top: 8px; }
         
-        /* Styles Roue Bonus Simple */
-        .wheel-container { position: relative; width: 280px; height: 280px; margin: 20px auto; border-radius: 50%; overflow: hidden; box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); }
+        /* Cadre vert pour le lien d'affiliation */
+        .affiliate-card { background: linear-gradient(135deg, #064E3B, #059669); border-radius: 24px; padding: 20px; margin-bottom: 20px; border: 2px solid #34D399; box-shadow: 0 4px 15px rgba(16,185,129,0.3); }
+        .affiliate-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; color: white; }
+        .affiliate-link-container { background: rgba(0,0,0,0.3); border-radius: 16px; padding: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+        .affiliate-link { font-size: 0.85rem; color: #D1FAE5; word-break: break-all; flex: 1; font-family: monospace; }
+        .btn-copy-affiliate { background: white; color: #059669; border: none; padding: 8px 16px; border-radius: 40px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-copy-affiliate:hover { background: #D1FAE5; transform: scale(1.02); }
+        .affiliate-stats { margin-top: 12px; display: flex; justify-content: space-between; font-size: 0.75rem; color: #D1FAE5; }
+        .free-spins-badge { background: #F59E0B; color: #1F2937; padding: 4px 12px; border-radius: 40px; font-size: 0.75rem; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
+        
+        /* Styles Roue Bonus - Version ROUGE */
+        .card-bonus-rouge { text-align: center; background: linear-gradient(135deg, var(--bg-card), #7F1D1D); border: 2px solid #EF4444; box-shadow: 0 0 20px rgba(239,68,68,0.3); }
+        .card-bonus-rouge .card-title i { color: #F87171; }
+        
+        .wheel-container { position: relative; width: 280px; height: 280px; margin: 20px auto; border-radius: 50%; overflow: hidden; box-shadow: 0 0 20px rgba(239,68,68,0.5); }
         .wheel { width: 100%; height: 100%; border-radius: 50%; transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99); position: relative; }
         .wheel-pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid white; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
-        .wheel-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; background: var(--bg-dark); border-radius: 50%; z-index: 5; border: 3px solid var(--accent); }
+        .wheel-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; background: var(--bg-dark); border-radius: 50%; z-index: 5; border: 3px solid var(--danger); }
         .btn-wheel-disabled { background: var(--gray-300) !important; cursor: not-allowed !important; opacity: 0.5 !important; transform: none !important; }
-        .btn-wheel-active { background: linear-gradient(135deg, #8b5cf6, #6d28d9) !important; cursor: pointer !important; opacity: 1 !important; }
-        .roue-lots { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 15px 0; }
-        .roue-lot-badge { background: var(--primary); padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; color: var(--text-secondary); }
-        .roue-lot-badge.winner { background: var(--success); color: white; }
+        .btn-wheel-active { background: linear-gradient(135deg, #DC2626, #991B1B) !important; cursor: pointer !important; opacity: 1 !important; }
+        /* Suppression de l'affichage des badges sous la roue */
+        .roue-lots { display: none; }
 
         @media (max-width: 768px) { .hero-title { font-size: 2rem; } .rates-grid { grid-template-columns: repeat(2, 1fr); } .pin-digit { width: 45px; height: 45px; font-size: 1.3rem; } .modal-content { padding: 20px; } }
     </style>
@@ -261,12 +275,28 @@
         <div id="profil-section" class="platform-section">
             <div class="card"><h2 class="card-title"><i class="fas fa-user-circle"></i> Profil</h2><div class="profile-info" id="profil-infos"></div></div>
             
-            <div class="card" id="card-bonus" style="text-align:center; background: linear-gradient(135deg, var(--bg-card), #1e1b4b); border-color: #8b5cf6;">
-                <h2 class="card-title" style="justify-content:center;"><i class="fas fa-gift" style="color:#c4b5fd;"></i> Bonus Journalier - Roue de la Fortune</h2>
-                <div id="bonus-lots-preview" class="roue-lots"></div>
+            <!-- CADRE VERT - Lien d'affiliation -->
+            <div id="affiliate-card" class="affiliate-card" style="display: none;">
+                <div class="affiliate-title"><i class="fas fa-link"></i> Votre lien de parrainage</div>
+                <div class="affiliate-link-container">
+                    <span class="affiliate-link" id="affiliate-link">typh-xchain/ref-...</span>
+                    <button class="btn-copy-affiliate" onclick="copierLienAffiliation()"><i class="fas fa-copy"></i> Copier</button>
+                </div>
+                <div class="affiliate-stats">
+                    <span><i class="fas fa-users"></i> <span id="affiliate-count">0</span> filleul(s)</span>
+                    <span><i class="fas fa-ticket-alt"></i> <span id="free-spins-count">0</span> tour(s) gratuit(s)</span>
+                </div>
+                <div style="margin-top: 10px; font-size: 0.7rem; color: #A7F3D0; text-align: center;">
+                    <i class="fas fa-info-circle"></i> Pour chaque filleul qui valide son numéro, vous gagnez 1 tour gratuit !
+                </div>
+            </div>
+
+            <!-- Carte Bonus - Version ROUGE -->
+            <div class="card card-bonus-rouge" id="card-bonus" style="text-align:center; background: linear-gradient(135deg, var(--bg-card), #7F1D1D); border: 2px solid #EF4444; box-shadow: 0 0 20px rgba(239,68,68,0.3);">
+                <h2 class="card-title" style="justify-content:center;"><i class="fas fa-gift" style="color:#F87171;"></i> Bonus Journalier - Roue de la Fortune</h2>
                 <p id="bonus-message" style="color:var(--text-secondary); margin:10px 0; font-size:0.9rem;">🎰 Tournez la roue et gagnez des lots !</p>
                 <button id="btn-roue-action" class="btn btn-wheel-disabled" onclick="ouvrirModalRoue()" disabled><i class="fas fa-dharmachakra"></i> Tourner la Roue</button>
-                <p id="bonus-restriction" style="color:var(--warning); font-size:0.8rem; margin-top:8px;">🔒 Une transaction confirmée aujourd'hui est requise pour jouer</p>
+                <p id="bonus-restriction" style="color:var(--warning); font-size:0.8rem; margin-top:8px;">🔒 Une transaction confirmée aujourd'hui ou un tour gratuit est requis</p>
             </div>
 
             <div class="card"><h2 class="card-title"><i class="fas fa-key"></i> Code PIN de sécurité</h2><div id="pin-management"></div><button class="btn btn-success" onclick="gererPIN()" id="btn-gerer-pin"><i class="fas fa-key"></i> Configurer mon code PIN</button></div>
@@ -274,7 +304,27 @@
     </div>
     <div class="bottom-nav" id="bottom-nav"><div class="nav-menu"><div class="nav-item" onclick="switchPlatformSection('accueil')" id="nav-accueil"><i class="fas fa-home"></i><span>Accueil</span></div><div class="nav-item" onclick="verifierAvantAcces('achat')" id="nav-achat"><i class="fas fa-arrow-down"></i><span>Dépôt</span></div><div class="nav-item" onclick="verifierAvantAcces('vente')" id="nav-vente"><i class="fas fa-arrow-up"></i><span>Retrait</span></div><div class="nav-item" onclick="verifierAvantAcces('demandes')" id="nav-demandes"><i class="fas fa-clipboard-list"></i><span>Demandes</span></div><div class="nav-item" onclick="switchPlatformSection('profil')" id="nav-profil"><i class="fas fa-user-circle"></i><span>Profil</span></div></div></div>
 
-    <div id="modal-auth" class="modal"><div class="modal-content"><div class="modal-title"><i class="fas fa-sign-in-alt"></i> Bienvenue</div><div style="display:flex;gap:10px;margin-bottom:20px;"><button class="btn btn-success" style="flex:1;" onclick="switchAuthMode('connexion')" id="btn-connexion-mode">Connexion</button><button class="btn" style="flex:1;background:var(--gray-300);" onclick="switchAuthMode('inscription')" id="btn-inscription-mode">Inscription</button></div><div id="connexion-form"><input type="email" id="email-connexion" class="modal-input" placeholder="Email"><input type="password" id="password-connexion" class="modal-input" placeholder="Mot de passe"><div style="display:flex;align-items:center;gap:8px;margin:15px 0;"><input type="checkbox" id="check-rester-connecte" style="width:18px;height:18px;accent-color:var(--accent);" checked><label style="color:var(--text-secondary);font-size:0.85rem;"><i class="fas fa-lock"></i> Rester connecté</label></div><div style="text-align:right;margin:10px 0 20px;"><span onclick="ouvrirModalMotDePasseOublie()" style="color:var(--accent);cursor:pointer;font-size:0.85rem;"><i class="fas fa-question-circle"></i> Mot de passe oublié ?</span></div></div><div id="inscription-form" style="display:none;"><input type="text" id="nom-inscription" class="modal-input" placeholder="Nom complet"><input type="email" id="email-inscription" class="modal-input" placeholder="Email"><input type="password" id="password-inscription" class="modal-input" placeholder="Mot de passe"></div><div class="error-message" id="erreur-auth"><i class="fas fa-exclamation-triangle"></i> <span id="erreur-texte"></span></div><button class="btn btn-success" onclick="authentifier()" id="btn-auth"><i class="fas fa-check"></i> Se connecter</button></div></div>
+    <div id="modal-auth" class="modal"><div class="modal-content"><div class="modal-title"><i class="fas fa-sign-in-alt"></i> Bienvenue</div><div style="display:flex;gap:10px;margin-bottom:20px;"><button class="btn btn-success" style="flex:1;" onclick="switchAuthMode('connexion')" id="btn-connexion-mode">Connexion</button><button class="btn" style="flex:1;background:var(--gray-300);" onclick="switchAuthMode('inscription')" id="btn-inscription-mode">Inscription</button></div>
+        <div id="connexion-form"><input type="email" id="email-connexion" class="modal-input" placeholder="Email"><input type="password" id="password-connexion" class="modal-input" placeholder="Mot de passe"><div style="display:flex;align-items:center;gap:8px;margin:15px 0;"><input type="checkbox" id="check-rester-connecte" style="width:18px;height:18px;accent-color:var(--accent);" checked><label style="color:var(--text-secondary);font-size:0.85rem;"><i class="fas fa-lock"></i> Rester connecté</label></div><div style="text-align:right;margin:10px 0 20px;"><span onclick="ouvrirModalMotDePasseOublie()" style="color:var(--accent);cursor:pointer;font-size:0.85rem;"><i class="fas fa-question-circle"></i> Mot de passe oublié ?</span></div></div>
+        <div id="inscription-form" style="display:none;">
+            <input type="text" id="nom-inscription" class="modal-input" placeholder="Nom complet">
+            <input type="email" id="email-inscription" class="modal-input" placeholder="Email">
+            <input type="password" id="password-inscription" class="modal-input" placeholder="Mot de passe">
+            
+            <!-- Champ parrain visible avec explication -->
+            <div style="margin: 10px 0; background: rgba(16,185,129,0.1); border-radius: 20px; padding: 12px;">
+                <label style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-bottom: 5px;">
+                    <i class="fas fa-link"></i> Code de parrainage (optionnel)
+                </label>
+                <input type="text" id="parrain-id" class="modal-input" placeholder="Ex: TX-abc12345" style="margin-top: 0;">
+                <p style="color: var(--text-secondary); font-size: 0.7rem; margin-top: 5px;">
+                    <i class="fas fa-info-circle"></i> Entrer le code de parrainage et gagner 0% des frais au premier envoi.
+                </p>
+            </div>
+        </div>
+        <div class="error-message" id="erreur-auth"><i class="fas fa-exclamation-triangle"></i> <span id="erreur-texte"></span></div>
+        <button class="btn btn-success" onclick="authentifier()" id="btn-auth"><i class="fas fa-check"></i> Se connecter</button>
+    </div></div>
     
     <div id="modal-motdepasse-oublie" class="modal"><div class="modal-content"><div class="modal-title"><i class="fas fa-shield-alt"></i> Récupération sécurisée</div><div id="etape-1-mdp" style="display:block;"><p style="color:var(--text-secondary);margin-bottom:20px;"><i class="fas fa-info-circle"></i> Vérification en 2 étapes</p><input type="email" id="email-recuperation" class="modal-input" placeholder="Votre email"><input type="tel" id="numero-recuperation" class="modal-input" placeholder="Votre numéro enregistré" style="margin-top:10px;"><div class="error-message" id="erreur-recuperation"></div><div class="modal-buttons" style="margin-top:20px;"><button class="btn btn-cancel" onclick="fermerModalMotDePasseOublie()">Annuler</button><button class="btn btn-confirm" onclick="verifierEmailEtNumero()">Vérifier</button></div></div><div id="etape-2-mdp" style="display:none;"><p style="color:var(--success);margin-bottom:10px;"><i class="fas fa-check-circle"></i> Identité vérifiée pour <span id="email-affiche"></span></p><input type="password" id="nouveau-motdepasse" class="modal-input" placeholder="Nouveau mot de passe (6+ caractères)"><input type="password" id="confirmer-motdepasse" class="modal-input" placeholder="Confirmer mot de passe"><div class="error-message" id="erreur-nouveau-mdp"></div><div class="modal-buttons" style="margin-top:20px;"><button class="btn btn-cancel" onclick="retourEtape1()">Retour</button><button class="btn btn-confirm" onclick="reinitialiserMotDePasse()">Réinitialiser</button></div></div></div></div>
     
@@ -298,7 +348,7 @@
     <div id="modal-ajout-adresse" class="modal"><div class="modal-content"><div class="modal-title"><i class="fas fa-link"></i> Ajouter une adresse de portefeuille</div><div class="form-group"><label class="form-label">Label (nom de l'adresse)</label><div class="input-wrapper"><input type="text" id="nouvelle-adresse-label" placeholder="Ex: Mon wallet Binance"></div></div><div class="form-group"><label class="form-label">Adresse</label><div class="input-wrapper"><input type="text" id="nouvelle-adresse-valeur" placeholder="0x... ou T9y... ou 1A..."></div></div><div class="form-group"><label class="form-label">Cryptomonnaie</label><div class="input-wrapper"><select id="nouvelle-adresse-crypto" onchange="mettreAJourReseauxParCrypto()"></select></div></div><div class="form-group"><label class="form-label">Réseau</label><div class="input-wrapper"><select id="nouvelle-adresse-reseau"></select></div></div><div class="error-message" id="erreur-adresse"></div><div class="modal-buttons"><button class="btn btn-cancel" onclick="fermerModalAjoutAdresse()"><i class="fas fa-times"></i> Annuler</button><button class="btn btn-confirm" onclick="enregistrerAdresse()"><i class="fas fa-save"></i> Enregistrer</button></div></div></div>
 
     <div id="modal-roue" class="modal">
-        <div class="modal-content" style="text-align:center; background: linear-gradient(135deg, var(--bg-card), #1e1b4b); border-color: #8b5cf6;">
+        <div class="modal-content" style="text-align:center; background: linear-gradient(135deg, var(--bg-card), #7F1D1D); border-color: #EF4444;">
             <div class="modal-title" style="justify-content:center;"><i class="fas fa-dharmachakra"></i> Roue de la Fortune</div>
             
             <div id="roue-jeu">
@@ -309,8 +359,7 @@
                     </div>
                     <div class="wheel-center"></div>
                 </div>
-                <div id="roue-lots-display" class="roue-lots" style="margin:15px 0; font-size:0.8rem;"></div>
-                <button class="btn btn-success" id="btn-tourner-roue" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); font-size:1.2rem; margin-top:10px;" onclick="tournerRoue()"><i class="fas fa-gift"></i> TOURNER !</button>
+                <button class="btn btn-success" id="btn-tourner-roue" style="background: linear-gradient(135deg, #DC2626, #991B1B); font-size:1.2rem; margin-top:10px;" onclick="tournerRoue()"><i class="fas fa-gift"></i> TOURNER !</button>
             </div>
 
             <div id="roue-resultat" style="display:none; margin-top:20px;">
@@ -375,6 +424,9 @@
         let tauxCourantCrypto = '';
         let adresseLieeSelectionnee = null;
         let adressesUtilisateur = {};
+        let toursGratuits = 0;
+        let filleulsCount = 0;
+        let urlParrainage = '';
         
         const pairesBinance = { 'USDT':'USDTUSDT','BTC':'BTCUSDT','ETH':'ETHUSDT','BNB':'BNBUSDT','LTC':'LTCUSDT','SOL':'SOLUSDT','TRX':'TRXUSDT','DOGE':'DOGEUSDT','MATIC':'POLUSDT','SUI':'SUIUSDT','XRP':'XRPUSDT','TON':'TONUSDT','POL':'POLUSDT','USDC':'USDCUSDT' };
         
@@ -461,6 +513,14 @@
             });
         }
 
+        // Fonction pour tronquer le nom aux 4 premiers mots
+        function tronquerNom(nom) {
+            if(!nom) return 'Utilisateur';
+            const mots = nom.trim().split(/\s+/);
+            if(mots.length <= 4) return nom;
+            return mots.slice(0, 4).join(' ');
+        }
+
         function chargerDonnees() {
             if(cacheTaux.chargerLocal() && cacheTaux.donnees) {
                 donnees.taux = cacheTaux.donnees;
@@ -514,7 +574,6 @@
                         donnees.roue = lotsParDefaut;
                     }
                     if(!donnees.roue || donnees.roue.length === 0) donnees.roue = lotsParDefaut;
-                    afficherApercuLots();
                 });
 
                 database.ref('donnees/demandes').on('value', snap => {
@@ -534,11 +593,13 @@
                             utilisateurCourant.uid = monUid;
                             sessionValide = true;
                             adressesUtilisateur = utilisateurCourant.adressesLiees || {};
+                            toursGratuits = utilisateurCourant.toursGratuits || 0;
+                            filleulsCount = utilisateurCourant.filleulsCount || 0;
                             mettreAJourAffichage();
                             demarrerEcouteNumeros();
                             demarrerEcouteAdresses();
                             verifierAccesBonus();
-                            afficherApercuLots();
+                            mettreAJourAffichageAffiliation();
                             if(document.getElementById('landing-page').style.display !== 'none') showPlatform();
                         }
                     });
@@ -548,31 +609,87 @@
                 afficherNews();
                 afficherTauxSimplifies();
                 demarrerSyncBinance();
-                afficherApercuLots();
             }).catch(e => { console.error(e); donnees = obtenirDonneesParDefaut(); mettreAJourAffichage(); });
         }
 
-        function afficherApercuLots() {
-            const container = document.getElementById('bonus-lots-preview');
-            if(!container) return;
-            let tr = Array.isArray(donnees.roue) ? donnees.roue : (typeof donnees.roue === 'object' ? Object.values(donnees.roue) : []);
-            tr = tr.filter(item => item !== null);
-            const lots = (tr && tr.length > 0) ? tr : lotsParDefaut;
-            container.innerHTML = lots.map(lot => `<span class="roue-lot-badge">${echapperHTML(lot.nom)}</span>`).join('');
+        function mettreAJourAffichageAffiliation() {
+            const affiliateCard = document.getElementById('affiliate-card');
+            if(!utilisateurCourant || !monUid) {
+                if(affiliateCard) affiliateCard.style.display = 'none';
+                return;
+            }
+            if(affiliateCard) affiliateCard.style.display = 'block';
+            urlParrainage = `typh-xchain/ref-${utilisateurCourant.id || monUid.substring(0,8)}`;
+            const linkSpan = document.getElementById('affiliate-link');
+            if(linkSpan) linkSpan.textContent = urlParrainage;
+            const countSpan = document.getElementById('affiliate-count');
+            if(countSpan) countSpan.textContent = filleulsCount;
+            const spinsSpan = document.getElementById('free-spins-count');
+            if(spinsSpan) spinsSpan.textContent = toursGratuits;
         }
 
-        async function demarrerSyncBinance() {
-            if(binanceInterval) clearInterval(binanceInterval);
-            if(cacheTaux.chargerLocal() && cacheTaux.donnees) {
-                donnees.taux = cacheTaux.donnees;
-                afficherTauxSimplifies();
+        function copierLienAffiliation() {
+            const lien = document.getElementById('affiliate-link')?.textContent;
+            if(lien) {
+                navigator.clipboard.writeText(lien).then(() => {
+                    alert('✅ Lien d\'affiliation copié !');
+                }).catch(() => {
+                    alert('❌ Impossible de copier');
+                });
             }
-            await syncBinance();
-            binanceInterval = setInterval(syncBinance, 1800000);
-            afficherAgeTaux();
-            setInterval(afficherAgeTaux, 60000);
         }
-        
+
+        async function ajouterTourGratuit(parrainId) {
+            if(!parrainId) return;
+            const parrainRef = database.ref(`donnees/utilisateurs/${parrainId}`);
+            const snapshot = await parrainRef.once('value');
+            const parrainData = snapshot.val();
+            if(parrainData) {
+                const nouveauxTours = (parrainData.toursGratuits || 0) + 1;
+                const nouveauxFilleuls = (parrainData.filleulsCount || 0) + 1;
+                await parrainRef.update({ toursGratuits: nouveauxTours, filleulsCount: nouveauxFilleuls });
+                if(monUid === parrainId) {
+                    toursGratuits = nouveauxTours;
+                    filleulsCount = nouveauxFilleuls;
+                    mettreAJourAffichageAffiliation();
+                    verifierAccesBonus();
+                }
+                console.log(`✅ 1 tour gratuit ajouté au parrain ${parrainId}`);
+            }
+        }
+
+        async function verifierParrainageEtAjouterTour(uid) {
+            const userRef = database.ref(`donnees/utilisateurs/${uid}`);
+            const snapshot = await userRef.once('value');
+            const userData = snapshot.val();
+            if(userData && userData.parrainId && userData.parrainId !== '') {
+                const parrainId = userData.parrainId;
+                const numeros = userData.numeros || {};
+                const aNumeroApprouve = Object.values(numeros).some(n => n.statut === 'approuve');
+                if(aNumeroApprouve && !userData.bonusParrainageDonne) {
+                    await ajouterTourGratuit(parrainId);
+                    await userRef.update({ bonusParrainageDonne: true });
+                    console.log(`✅ Bonus parrainage donné à ${parrainId} pour le filleul ${uid}`);
+                }
+            }
+        }
+
+        function demarrerEcouteNumerosPourParrainage() {
+            if(!monUid) return;
+            database.ref('donnees/utilisateurs').on('child_changed', (snapshot) => {
+                const uid = snapshot.key;
+                const userData = snapshot.val();
+                if(userData && userData.parrainId && userData.parrainId !== '') {
+                    const numeros = userData.numeros || {};
+                    const aNumeroApprouve = Object.values(numeros).some(n => n.statut === 'approuve');
+                    if(aNumeroApprouve && !userData.bonusParrainageDonne) {
+                        ajouterTourGratuit(userData.parrainId);
+                        database.ref(`donnees/utilisateurs/${uid}`).update({ bonusParrainageDonne: true });
+                    }
+                }
+            });
+        }
+
         async function syncBinanceManuel() {
             if(!rateLimiter.peutExecuter()) { alert('Veuillez attendre un moment avant de rafraîchir à nouveau'); return; }
             alert('🔄 Synchronisation manuelle des taux en cours...');
@@ -708,7 +825,7 @@
         function mettreAJourProfil(){ 
             const p=document.getElementById('profil-infos'); 
             if(!p) return; 
-            if(utilisateurCourant) p.innerHTML=`<div class="profile-row"><span class="profile-label">ID</span><span class="profile-value" style="color:var(--accent);font-weight:700;">${echapperHTML(utilisateurCourant.id||'Non attribué')}</span></div><div class="profile-row"><span class="profile-label">Nom</span><span class="profile-value">${echapperHTML(utilisateurCourant.nom)}</span></div><div class="profile-row"><span class="profile-label">Email</span><span class="profile-value">${echapperHTML(utilisateurCourant.email||'Non renseigné')}</span></div><div class="profile-row"><span class="profile-label">Membre depuis</span><span class="profile-value">${echapperHTML(new Date(utilisateurCourant.dateInscription).toLocaleDateString())}</span></div><div class="profile-row"><span class="profile-label">Numéros</span><span class="profile-value">${Object.keys(utilisateurCourant.numeros||{}).length} enregistré(s)</span></div><div class="profile-row"><span class="profile-label">Adresses liées</span><span class="profile-value">${Object.keys(adressesUtilisateur).length} enregistrée(s)</span></div><div class="profile-row"><span class="profile-label">Code PIN</span><span class="profile-value">${utilisateurCourant.codePIN?.actif ? '✅ Configuré' : '❌ Non configuré'}</span></div>`; 
+            if(utilisateurCourant) p.innerHTML=`<div class="profile-row"><span class="profile-label">ID</span><span class="profile-value" style="color:var(--accent);font-weight:700;">${echapperHTML(utilisateurCourant.id||'Non attribué')}</span></div><div class="profile-row"><span class="profile-label">Nom</span><span class="profile-value">${echapperHTML(utilisateurCourant.nom)}</span></div><div class="profile-row"><span class="profile-label">Email</span><span class="profile-value">${echapperHTML(utilisateurCourant.email||'Non renseigné')}</span></div><div class="profile-row"><span class="profile-label">Membre depuis</span><span class="profile-value">${echapperHTML(new Date(utilisateurCourant.dateInscription).toLocaleDateString())}</span></div><div class="profile-row"><span class="profile-label">Numéros</span><span class="profile-value">${Object.keys(utilisateurCourant.numeros||{}).length} enregistré(s)</span></div><div class="profile-row"><span class="profile-label">Adresses liées</span><span class="profile-value">${Object.keys(adressesUtilisateur).length} enregistrée(s)</span></div><div class="profile-row"><span class="profile-label">Code PIN</span><span class="profile-value">${utilisateurCourant.codePIN?.actif ? '✅ Configuré' : '❌ Non configuré'}</span></div><div class="profile-row"><span class="profile-label">Tours gratuits</span><span class="profile-value">🎟️ ${toursGratuits} tour(s)</span></div><div class="profile-row"><span class="profile-label">Filleuls</span><span class="profile-value">👥 ${filleulsCount} personne(s)</span></div>`; 
             else p.innerHTML='<div class="profile-row">Connectez-vous</div>'; 
         }
 
@@ -726,9 +843,10 @@
             mettreAJourLimiteAchat();
             mettreAJourChampAdresseVente();
             verifierAccesBonus();
-            afficherApercuLots();
+            mettreAJourAffichageAffiliation();
             if(utilisateurCourant){
-                document.getElementById('userBadge').innerHTML=`<i class="fas fa-user-check"></i> ${echapperHTML(utilisateurCourant.nom)}`;
+                const nomTronque = tronquerNom(utilisateurCourant.nom);
+                document.getElementById('userBadge').innerHTML=`<i class="fas fa-user-check"></i> ${echapperHTML(nomTronque)}`;
                 document.getElementById('carte-deconnexion').style.display='block';
             }else{
                 document.getElementById('userBadge').innerHTML='<i class="fas fa-user-circle"></i> Connexion';
@@ -768,25 +886,37 @@
                 new Date(d.date).toLocaleDateString('fr-FR') === aujourdhui
             );
 
-            if(aTransactionAujourdhui && !aJoueAujourdhui) {
+            const aTourGratuit = toursGratuits > 0;
+
+            if((aTransactionAujourdhui || aTourGratuit) && !aJoueAujourdhui) {
                 btnRoue.disabled = false;
                 btnRoue.classList.remove('btn-wheel-disabled');
                 btnRoue.classList.add('btn-wheel-active');
                 if(msgRestriction) msgRestriction.style.display = 'none';
-                if(msgNormal) msgNormal.textContent = '🎉 Félicitations ! Vous avez une transaction confirmée aujourd\'hui. Tournez la roue !';
-            } else if(aJoueAujourdhui) {
+                if(aTourGratuit && !aTransactionAujourdhui) {
+                    if(msgNormal) msgNormal.innerHTML = '🎉 Vous avez un tour gratuit ! Profitez-en maintenant !';
+                } else {
+                    if(msgNormal) msgNormal.textContent = '🎉 Félicitations ! Vous pouvez jouer maintenant !';
+                }
+            } else if(aJoueAujourdhui && !aTourGratuit) {
                 btnRoue.disabled = true;
                 btnRoue.classList.add('btn-wheel-disabled');
                 btnRoue.classList.remove('btn-wheel-active');
                 if(msgRestriction) msgRestriction.style.display = 'block';
                 if(msgRestriction) msgRestriction.innerHTML = '⏰ Vous avez déjà joué aujourd\'hui. Revenez demain !';
                 if(msgNormal) msgNormal.textContent = '💰 Roue de la Fortune';
+            } else if(aTourGratuit && aJoueAujourdhui) {
+                btnRoue.disabled = false;
+                btnRoue.classList.remove('btn-wheel-disabled');
+                btnRoue.classList.add('btn-wheel-active');
+                if(msgRestriction) msgRestriction.style.display = 'none';
+                if(msgNormal) msgNormal.innerHTML = '🎉 Vous avez un tour gratuit ! Profitez-en maintenant !';
             } else {
                 btnRoue.disabled = true;
                 btnRoue.classList.add('btn-wheel-disabled');
                 btnRoue.classList.remove('btn-wheel-active');
                 if(msgRestriction) msgRestriction.style.display = 'block';
-                if(msgRestriction) msgRestriction.innerHTML = '🔒 Une transaction confirmée aujourd\'hui est requise pour jouer';
+                if(msgRestriction) msgRestriction.innerHTML = '🔒 Une transaction confirmée aujourd\'hui ou un tour gratuit est requis pour jouer';
                 if(msgNormal) msgNormal.textContent = '💰 Roue de la Fortune';
             }
         }
@@ -834,11 +964,6 @@
                 ctx.fillText(nomCourt, radius - 20, 0);
                 ctx.restore();
             }
-            
-            const lotsDisplay = document.getElementById('roue-lots-display');
-            if(lotsDisplay) {
-                lotsDisplay.innerHTML = lotsRoue.map(lot => `<span class="roue-lot-badge">${echapperHTML(lot.nom)}</span>`).join('');
-            }
         }
 
         function ouvrirModalRoue() {
@@ -860,11 +985,13 @@
                 new Date(d.date).toLocaleDateString('fr-FR') === aujourdhui
             );
 
-            if(!aTransactionAujourdhui) {
-                alert('Vous devez avoir une transaction confirmée aujourd\'hui pour jouer à la roue !');
+            const aTourGratuit = toursGratuits > 0;
+
+            if(!aTransactionAujourdhui && !aTourGratuit) {
+                alert('Vous devez avoir une transaction confirmée aujourd\'hui ou un tour gratuit pour jouer à la roue !');
                 return;
             }
-            if(aJoueAujourdhui) {
+            if(aJoueAujourdhui && !aTourGratuit) {
                 alert('Vous avez déjà joué aujourd\'hui. Revenez demain !');
                 return;
             }
@@ -943,6 +1070,13 @@
         
         async function enregistrerTentativeBonusPerdue() {
             if(!utilisateurCourant || !lotGagneInfo) return;
+            
+            if(toursGratuits > 0) {
+                toursGratuits--;
+                await database.ref(`donnees/utilisateurs/${monUid}/toursGratuits`).set(toursGratuits);
+                mettreAJourAffichageAffiliation();
+            }
+            
             const demande = { 
                 id: genererIDStable(utilisateurCourant.email, 'LOSE-'+Date.now()), 
                 type: 'BONUS', 
@@ -968,6 +1102,12 @@
                 errDiv.textContent = "Veuillez fournir votre information de réception."; 
                 errDiv.classList.add('show'); 
                 return; 
+            }
+            
+            if(toursGratuits > 0) {
+                toursGratuits--;
+                await database.ref(`donnees/utilisateurs/${monUid}/toursGratuits`).set(toursGratuits);
+                mettreAJourAffichageAffiliation();
             }
             
             const demande = { 
@@ -1257,13 +1397,29 @@
             const n = document.getElementById('nom-inscription').value.trim();
             const e = document.getElementById('email-inscription').value.trim();
             const p = document.getElementById('password-inscription').value.trim();
+            const parrainId = document.getElementById('parrain-id')?.value.trim() || '';
+            
             if(!n||!e||!p){ afficherErreur('Tous les champs sont requis'); return; }
             if(p.length<6){ afficherErreur('Mot de passe trop court (6 caractères minimum)'); return; }
             try{
                 const uc = await auth.createUserWithEmailAndPassword(e,p);
                 await uc.user.updateProfile({displayName:n});
+                
+                let parrainValide = false;
+                if(parrainId) {
+                    const usersSnap = await database.ref('donnees/utilisateurs').once('value');
+                    const users = usersSnap.val() || {};
+                    for(const [uid, userData] of Object.entries(users)) {
+                        if(userData.id === parrainId || uid === parrainId) {
+                            parrainValide = true;
+                            await database.ref(`donnees/utilisateurs/${uc.user.uid}`).update({ parrainId: uid });
+                            break;
+                        }
+                    }
+                }
+                
                 hideAuthModal();
-                alert('Inscription réussie ! Ajoutez vos numéros dans votre profil pour commencer à échanger.');
+                alert('Inscription réussie ! ' + (parrainValide ? 'Code parrain enregistré.' : '') + '\n\nAjoutez vos numéros dans votre profil pour commencer à échanger.');
             } catch(error){ afficherErreur(error.message); }
         }
 
@@ -1274,6 +1430,8 @@
                     sessionValide = false;
                     monUid = null;
                     adressesUtilisateur = {};
+                    toursGratuits = 0;
+                    filleulsCount = 0;
                     localStorage.removeItem('typhSession');
                     sessionStorage.removeItem('typhSession');
                     showLandingPage();
@@ -1282,7 +1440,31 @@
             }
         }
 
-        function showAuthModal(){ document.getElementById('modal-auth').classList.add('active'); switchAuthMode('connexion'); }
+        function showAuthModal(){ 
+            // Vérifier si un ID de parrain est présent dans l'URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const refId = urlParams.get('ref');
+            const parrainInput = document.getElementById('parrain-id');
+            if(refId && parrainInput) {
+                parrainInput.value = refId;
+                // Afficher un message de confirmation
+                setTimeout(() => {
+                    const msgDiv = document.createElement('div');
+                    msgDiv.style.cssText = 'background:rgba(16,185,129,0.2); color:#10B981; padding:10px; border-radius:16px; margin-top:10px; font-size:0.8rem; text-align:center;';
+                    msgDiv.innerHTML = '<i class="fas fa-check-circle"></i> Code parrain détecté automatiquement !';
+                    const parent = parrainInput.parentElement;
+                    if(parent && !parent.querySelector('.parrain-msg')) {
+                        msgDiv.classList.add('parrain-msg');
+                        parent.appendChild(msgDiv);
+                        setTimeout(() => msgDiv.remove(), 3000);
+                    }
+                }, 500);
+            } else if(parrainInput) {
+                parrainInput.value = '';
+            }
+            document.getElementById('modal-auth').classList.add('active'); 
+            switchAuthMode('inscription');
+        }
         function hideAuthModal(){ document.getElementById('modal-auth').classList.remove('active'); document.getElementById('erreur-auth').classList.remove('show'); }
         function switchAuthMode(m){ modeAuth=m; document.getElementById('connexion-form').style.display=m==='connexion'?'block':'none'; document.getElementById('inscription-form').style.display=m==='inscription'?'block':'none'; const bc=document.getElementById('btn-connexion-mode'); const bi=document.getElementById('btn-inscription-mode'); const ba=document.getElementById('btn-auth'); if(m==='connexion'){ bc.className='btn btn-success'; bi.className='btn'; ba.innerHTML='<i class="fas fa-check"></i> Se connecter'; }else{ bc.className='btn'; bi.className='btn btn-success'; ba.innerHTML='<i class="fas fa-user-plus"></i> S\'inscrire'; } }
         function authentifier(){ if(modeAuth==='connexion') connexion(); else inscription(); }
@@ -1515,7 +1697,11 @@
                     utilisateurCourant = snapshot.val();
                     utilisateurCourant.uid = monUid;
                     adressesUtilisateur = utilisateurCourant.adressesLiees || {};
+                    toursGratuits = utilisateurCourant.toursGratuits || 0;
+                    filleulsCount = utilisateurCourant.filleulsCount || 0;
                 } else {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const refId = urlParams.get('ref');
                     const nouvelUtilisateur = {
                         id: genererIDStable(fbUser.email, fbUser.displayName || 'Utilisateur'),
                         nom: fbUser.displayName || fbUser.email.split('@')[0],
@@ -1523,12 +1709,22 @@
                         dateInscription: new Date().toISOString(),
                         numeros: {},
                         adressesLiees: {},
-                        codePIN: { hash: null, salt: null, actif: false, tentativeEchouees: 0, bloque: false }
+                        codePIN: { hash: null, salt: null, actif: false, tentativeEchouees: 0, bloque: false },
+                        toursGratuits: 0,
+                        filleulsCount: 0,
+                        parrainId: refId || '',
+                        bonusParrainageDonne: false
                     };
                     await userRef.set(nouvelUtilisateur);
                     utilisateurCourant = nouvelUtilisateur;
                     utilisateurCourant.uid = monUid;
                     adressesUtilisateur = {};
+                    toursGratuits = 0;
+                    filleulsCount = 0;
+                    
+                    if(refId) {
+                        setTimeout(() => verifierParrainageEtAjouterTour(monUid), 5000);
+                    }
                 }
                 sessionValide = true;
                 const sessionData = { email: fbUser.email, nom: utilisateurCourant.nom, uid: monUid };
@@ -1537,13 +1733,17 @@
                 mettreAJourAffichage();
                 demarrerEcouteNumeros();
                 demarrerEcouteAdresses();
+                demarrerEcouteNumerosPourParrainage();
                 verifierAccesBonus();
+                mettreAJourAffichageAffiliation();
                 if(document.getElementById('landing-page').style.display !== 'none') showPlatform();
             } else {
                 utilisateurCourant = null;
                 sessionValide = false;
                 monUid = null;
                 adressesUtilisateur = {};
+                toursGratuits = 0;
+                filleulsCount = 0;
                 ecouteNumerosActive = false;
                 ecouteAdressesActive = false;
             }
@@ -1925,12 +2125,24 @@
             if(s==='vente'){ afficherReponseVente(); estimerVente(); afficherFraisReseauVente(); verifierLimitesVente(); mettreAJourListeNumerosVente(); mettreAJourChampAdresseVente(); } 
             if(s==='achat'){ estimerAchat(); afficherFraisReseauAchat(); verifierLimitesAchat(); mettreAJourListeNumerosAchat(); mettreAJourLimiteAchat(); } 
             if(s==='demandes'&&utilisateurCourant) mettreAJourMesDemandes(); 
-            if(s==='profil') { mettreAJourNumerosUtilisateur(); verifierAccesBonus(); afficherApercuLots(); }
+            if(s==='profil') { mettreAJourNumerosUtilisateur(); verifierAccesBonus(); mettreAJourAffichageAffiliation(); }
             if(s==='accueil') afficherNews(); 
         }
 
+        function demarrerSyncBinance() {
+            if(binanceInterval) clearInterval(binanceInterval);
+            if(cacheTaux.chargerLocal() && cacheTaux.donnees) {
+                donnees.taux = cacheTaux.donnees;
+                afficherTauxSimplifies();
+            }
+            syncBinance();
+            binanceInterval = setInterval(syncBinance, 1800000);
+            afficherAgeTaux();
+            setInterval(afficherAgeTaux, 60000);
+        }
+
         document.querySelector('.logo').addEventListener('dblclick',()=>window.open('admin.html','_blank'));
-        window.addEventListener('load',function(){ chargerDonnees(); console.log('🚀 Page index chargée - Roue Simple fonctionnelle'); });
+        window.addEventListener('load',function(){ chargerDonnees(); console.log('🚀 Page index chargée - Système d\'affiliation et roue gratuite fonctionnels'); });
     </script>
 </body>
 </html>
