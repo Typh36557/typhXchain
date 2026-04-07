@@ -279,7 +279,7 @@
             <div id="affiliate-card" class="affiliate-card" style="display: none;">
                 <div class="affiliate-title"><i class="fas fa-link"></i> Votre lien de parrainage</div>
                 <div class="affiliate-link-container">
-                    <span class="affiliate-link" id="affiliate-link">typh-xchain/ref-...</span>
+                    <span class="affiliate-link" id="affiliate-link">https://typh-xchain.site/?ref=...</span>
                     <button class="btn-copy-affiliate" onclick="copierLienAffiliation()"><i class="fas fa-copy"></i> Copier</button>
                 </div>
                 <div class="affiliate-stats">
@@ -316,9 +316,9 @@
                 <label style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-bottom: 5px;">
                     <i class="fas fa-link"></i> Code de parrainage (optionnel)
                 </label>
-                <input type="text" id="parrain-id" class="modal-input" placeholder="Ex: TX-abc12345" style="margin-top: 0;">
+                <input type="text" id="parrain-id" class="modal-input" placeholder="Ex: TX-abc1234" style="margin-top: 0;">
                 <p style="color: var(--text-secondary); font-size: 0.7rem; margin-top: 5px;">
-                    <i class="fas fa-info-circle"></i> Entrer le code de parrainage et gagner 0% des frais au premier envoi.
+                    <i class="fas fa-info-circle"></i> Entrer le code parrainage et gagner 0% des frais au premier envoi
                 </p>
             </div>
         </div>
@@ -516,8 +516,10 @@
         // Fonction pour tronquer le nom aux 4 premiers mots
         function tronquerNom(nom) {
             if(!nom) return 'Utilisateur';
-            const mots = nom.trim().split(/\s+/);
-            if(mots.length <= 4) return nom;
+            // Nettoyer le nom (enlever les espaces multiples)
+            const nomPropre = nom.trim().replace(/\s+/g, ' ');
+            const mots = nomPropre.split(' ');
+            if(mots.length <= 4) return nomPropre;
             return mots.slice(0, 4).join(' ');
         }
 
@@ -619,7 +621,9 @@
                 return;
             }
             if(affiliateCard) affiliateCard.style.display = 'block';
-            urlParrainage = `typh-xchain/ref-${utilisateurCourant.id || monUid.substring(0,8)}`;
+            // Correction du lien d'affiliation avec l'URL complète
+            const refCode = utilisateurCourant.id || monUid.substring(0,8);
+            urlParrainage = `https://typh-xchain.site/?ref=${refCode}`;
             const linkSpan = document.getElementById('affiliate-link');
             if(linkSpan) linkSpan.textContent = urlParrainage;
             const countSpan = document.getElementById('affiliate-count');
@@ -846,7 +850,7 @@
             mettreAJourAffichageAffiliation();
             if(utilisateurCourant){
                 const nomTronque = tronquerNom(utilisateurCourant.nom);
-                document.getElementById('userBadge').innerHTML=`<i class="fas fa-user-check"></i> ${echapperHTML(nomTronque)}`;
+                document.getElementById('userBadge').innerHTML = `<i class="fas fa-user-check"></i> ${echapperHTML(nomTronque)}`;
                 document.getElementById('carte-deconnexion').style.display='block';
             }else{
                 document.getElementById('userBadge').innerHTML='<i class="fas fa-user-circle"></i> Connexion';
