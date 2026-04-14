@@ -286,20 +286,30 @@
 
         // Son de notification
         function jouerSonNotification() {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function jouerBip(frequence, delaiMs, duree) {
+            setTimeout(() => {
                 const oscillator = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
                 oscillator.connect(gainNode);
                 gainNode.connect(audioCtx.destination);
-                oscillator.frequency.value = 880;
-                gainNode.gain.value = 0.3;
+                oscillator.frequency.value = frequence;
+                oscillator.type = 'sine';
+                gainNode.gain.value = 1.0;
                 oscillator.start();
-                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
-                oscillator.stop(audioCtx.currentTime + 0.5);
-                setTimeout(() => audioCtx.close(), 600);
-            } catch(e) { console.warn("Son non disponible", e); }
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duree);
+                oscillator.stop(audioCtx.currentTime + duree);
+            }, delaiMs);
         }
+        
+        jouerBip(880, 0, 0.2);
+        jouerBip(1046, 200, 0.2);
+        
+        setTimeout(() => audioCtx.close(), 600);
+    } catch(e) { console.warn("Son non disponible", e); }
+}
 
         let donnees = {
             portefeuilles: [], operateurs: [], cryptos: ["USDT","BTC","ETH","BNB","LTC","SOL","TRX","DOGE","MATIC","SUI","XRP","TON","USDC"],
