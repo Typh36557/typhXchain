@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>Typh X-chain • Administration</title>
+    <title>Typh X-chain • Administration PRO</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -60,6 +60,7 @@
         .btn-filter { background: var(--gray-200); }
         .btn-download-recu { background: var(--success); width: 100%; padding: 16px; margin: 15px 0; font-size: 1rem; }
         .btn-save-attentes { background: var(--warning); color: var(--bg-dark); }
+        .btn-export-full { background: var(--binance); color: var(--bg-dark); font-weight: bold; }
         .mode-toggle { display: flex; gap: 10px; margin-bottom: 20px; background: var(--primary); padding: 10px; border-radius: 40px; border: 1px solid var(--gray-300); }
         .mode-option { flex: 1; text-align: center; padding: 12px; border-radius: 40px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .mode-option.active { background: var(--accent); color: white; }
@@ -188,6 +189,7 @@
         .info-message { background: var(--primary); padding: 12px; border-radius: 16px; margin: 10px 0; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
         .btn-manual-sync { background: var(--binance); color: var(--bg-dark); margin-top: 10px; }
         .btn-save-attentes { background: var(--warning); color: var(--bg-dark); }
+        .btn-export-full { background: linear-gradient(135deg, #F0B90B, #D97706); color: #0B1A33; font-weight: bold; border: none; }
         .roue-lot-item { background: var(--gray-200); border-radius: 16px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .roue-lot-info { flex: 1; }
         .roue-lot-nom { font-weight: 600; color: var(--white); }
@@ -199,6 +201,7 @@
         .affiliate-stat { text-align: center; }
         .affiliate-stat-number { font-size: 1.5rem; font-weight: 700; color: #D1FAE5; }
         .affiliate-stat-label { font-size: 0.7rem; color: #A7F3D0; }
+        .sync-lock-info { background: var(--primary); border-radius: 12px; padding: 10px; margin-bottom: 15px; font-size: 0.8rem; display: flex; align-items: center; gap: 10px; border-left: 3px solid var(--success); }
         @media (min-width: 768px) { .container { max-width: 600px; margin: 0 auto; } .nav-menu { max-width: 600px; } }
     </style>
 </head>
@@ -211,14 +214,21 @@
             <input type="password" id="admin-password" class="login-input" placeholder="Mot de passe">
             <div class="login-error" id="admin-error"><i class="fas fa-exclamation-triangle"></i> Email ou mot de passe incorrect</div>
             <button class="login-btn" onclick="loginAdmin()"><i class="fas fa-sign-in-alt"></i> Se connecter avec Firebase</button>
-            <p class="login-info"><i class="fas fa-shield-alt"></i> Connexion sécurisée</p>
+            <p class="login-info"><i class="fas fa-shield-alt"></i> Connexion sécurisée - Multi-appareils synchronisés</p>
         </div>
     </div>
 
     <div id="admin-interface" style="display: none;">
-        <div class="app-header"><div class="header-content"><div class="logo" onclick="window.location.href='index.html'">Typh X-chain</div><div class="admin-badge"><i class="fas fa-shield-alt"></i> ADMIN</div></div></div>
+        <div class="app-header"><div class="header-content"><div class="logo" onclick="window.location.href='index.html'">Typh X-chain</div><div class="admin-badge"><i class="fas fa-shield-alt"></i> ADMIN PRO</div></div></div>
         <div class="container">
-            <h1><i class="fas fa-cog" style="color: var(--accent);"></i> Administration</h1>
+            <h1><i class="fas fa-cog" style="color: var(--accent);"></i> Administration PRO</h1>
+            
+            <!-- Indicateur de synchronisation multi-appareils -->
+            <div class="sync-lock-info" id="sync-status-info">
+                <i class="fas fa-sync-alt fa-spin" style="color: var(--success);"></i>
+                <span>Synchronisation en temps réel activée - <strong id="sync-device-count">Multi-appareils</strong></span>
+            </div>
+            
             <div class="stats-grid" id="stats-dashboard">
                 <div class="stat-card"><div class="stat-value" id="stats-utilisateurs">0</div><div class="stat-label">Utilisateurs</div></div>
                 <div class="stat-card"><div class="stat-value" id="stats-numeros-attente">0</div><div class="stat-label">Numéros en attente</div></div>
@@ -227,6 +237,17 @@
                 <div class="stat-card"><div class="stat-value" id="stats-transactions-attente">0</div><div class="stat-label">En attente</div></div>
                 <div class="stat-card"><div class="stat-value" id="stats-parrainages">0</div><div class="stat-label">Parrainages</div></div>
             </div>
+            
+            <!-- Bouton EXPORT COMPLET en évidence -->
+            <div style="margin-bottom: 20px;">
+                <button class="btn btn-export-full" onclick="exporterTOUTESDonnees()" style="width: 100%; padding: 16px; font-size: 1.1rem;">
+                    <i class="fas fa-database"></i> 📦 EXPORT COMPLET (Transactions + Utilisateurs + Config)
+                </button>
+                <p style="font-size: 0.7rem; text-align: center; margin-top: 5px; color: var(--text-secondary);">
+                    <i class="fas fa-info-circle"></i> Exporte TOUTES les données : transactions, utilisateurs, portefeuilles, taux, actualités, configuration
+                </p>
+            </div>
+            
             <div class="tabs">
                 <div class="tab active" onclick="switchTab('gestion')"><i class="fas fa-database"></i> Gestion</div>
                 <div class="tab" onclick="switchTab('taux')"><i class="fas fa-chart-line"></i> Taux Binance</div>
@@ -254,7 +275,7 @@
             <div id="roue-tab" style="display: none;"><div class="admin-card"><h2><i class="fas fa-dharmachakra"></i> 🎰 Configuration des Lots (Roue de la Fortune)</h2><div class="info-message" style="background: rgba(139,92,246,0.1); border: 1px solid var(--bonus); color: #c4b5fd; margin-bottom: 20px;"><i class="fas fa-info-circle"></i> <strong>Fonctionnement :</strong> Les clients peuvent jouer une fois par jour après une transaction confirmée ou avec un tour gratuit. Les gains sont envoyés ici pour approbation.</div><div id="roue-total-prob" style="margin-bottom: 15px; font-weight: bold; background: var(--bg-dark); padding: 10px; border-radius: 10px;">Total Probabilité: <span id="roue-prob-total">0</span>%</div><div id="roue-liste" class="item-list"></div><button class="btn btn-add" onclick="ouvrirModal('roue')"><i class="fas fa-plus"></i> Ajouter un lot</button><div class="info-message" style="margin-top: 20px; background: rgba(16,185,129,0.1); border-color: var(--success);"><i class="fas fa-check-circle"></i> <strong>Lots par défaut actifs :</strong> 1 USDT (5%), 2 USDT (3%), 5000 Ar (10%), 10000 Ar (5%), Merci (77%)</div></div></div>
             <div id="parrainage-tab" style="display: none;"><div class="admin-card"><h2><i class="fas fa-link"></i> 📊 Statistiques de parrainage</h2><div class="affiliate-stats-card"><div class="affiliate-stats-title"><i class="fas fa-chart-line"></i> Vue d'ensemble</div><div class="affiliate-stats-values"><div class="affiliate-stat"><div class="affiliate-stat-number" id="stat-total-parrainages">0</div><div class="affiliate-stat-label">Total parrainages</div></div><div class="affiliate-stat"><div class="affiliate-stat-number" id="stat-tours-offerts">0</div><div class="affiliate-stat-label">Tours offerts</div></div><div class="affiliate-stat"><div class="affiliate-stat-number" id="stat-tours-utilises">0</div><div class="affiliate-stat-label">Tours utilisés</div></div></div></div><button class="btn btn-success" onclick="forcerEnvoiBonusParrainage()" style="width: 100%; margin-bottom: 20px; background: var(--bonus);"><i class="fas fa-gift"></i> 🎁 FORCER L'ENVOI DES BONUS (Tours gratuits aux parrains)</button><div class="filter-bar"><input type="text" id="recherche-parrain" placeholder="Rechercher par nom, email ou ID..." oninput="afficherParrainages()"></div><div id="parrainages-liste" class="item-list"></div></div></div>
         </div>
-        <div class="bottom-nav"><div class="nav-menu"><div class="nav-item" onclick="window.location.href='index.html'"><i class="fas fa-home"></i><span>Accueil</span></div><div class="nav-item active"><i class="fas fa-user-shield"></i><span>Admin</span></div><div class="nav-item" onclick="window.location.reload()"><i class="fas fa-sync-alt"></i><span>Refresh</span></div><div class="nav-item" onclick="exporterDonnees()"><i class="fas fa-download"></i><span>Export</span></div><div class="nav-item" onclick="logoutAdmin()"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></div></div></div>
+        <div class="bottom-nav"><div class="nav-menu"><div class="nav-item" onclick="window.location.href='index.html'"><i class="fas fa-home"></i><span>Accueil</span></div><div class="nav-item active"><i class="fas fa-user-shield"></i><span>Admin</span></div><div class="nav-item" onclick="window.location.reload()"><i class="fas fa-sync-alt"></i><span>Refresh</span></div><div class="nav-item" onclick="exporterTOUTESDonnees()"><i class="fas fa-download"></i><span>Export</span></div><div class="nav-item" onclick="logoutAdmin()"><i class="fas fa-sign-out-alt"></i><span>Déconnexion</span></div></div></div>
     </div>
 
     <div id="modal-details-transaction" class="modal"><div class="modal-content"><div class="modal-title" id="modal-transaction-titre"><i class="fas fa-info-circle"></i> Détails de la transaction</div><div id="details-transaction-complete" style="margin-bottom: 20px;"></div><div style="margin: 20px 0; text-align: center;"><button class="btn btn-download-recu" onclick="telechargerRecu()"><i class="fas fa-download"></i> Télécharger le reçu (PNG)</button><p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 8px;"><i class="fas fa-info-circle"></i> Le reçu sera généré avec tous les détails de la transaction</p></div><div style="margin: 20px 0;"><h3 style="color: var(--white); margin-bottom: 10px;">Historique</h3><div id="historique-transaction"></div></div><div style="display: flex; gap: 10px; margin-top: 20px;"><select id="modal-changer-statut" style="flex: 2; padding: 12px; background: var(--primary); border: 1px solid var(--gray-300); border-radius: 40px; color: var(--white);"><option value="en_attente">En attente</option><option value="confirme">Confirmer</option><option value="rejete">Rejeté</option></select><button class="btn btn-confirm" onclick="changerStatutTransaction()" style="flex: 1;"><i class="fas fa-check"></i></button></div><div style="margin-top: 20px;"><textarea id="modal-note-transaction" placeholder="Ajouter une note..." style="width: 100%; padding: 14px; background: var(--primary); border: 1px solid var(--gray-300); border-radius: 24px; color: var(--white);"></textarea><button class="btn btn-edit" onclick="ajouterNoteTransaction()" style="margin-top: 10px; width: 100%;"><i class="fas fa-sticky-note"></i> Ajouter note</button></div><button class="btn btn-cancel" onclick="fermerModalTransaction()" style="margin-top: 20px;"><i class="fas fa-times"></i> Fermer</button></div></div>
@@ -268,7 +289,9 @@
     </audio>
 
     <script>
-        // Configuration Firebase
+        // ============================================================
+        // CONFIGURATION FIREBASE
+        // ============================================================
         const firebaseConfig = {
             apiKey: "AIzaSyAC6xQXWg_5EplLDPQu_7RuuQ0NrCUSQ2g",
             authDomain: "typhxchain.firebaseapp.com",
@@ -284,32 +307,9 @@
         const database = firebase.database();
         const auth = firebase.auth();
 
-        function jouerSonNotification() {
-    try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
-        function jouerBip(frequence, delaiMs, duree) {
-            setTimeout(() => {
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.frequency.value = frequence;
-                oscillator.type = 'sine';
-                gainNode.gain.value = 1.0;
-                oscillator.start();
-                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duree);
-                oscillator.stop(audioCtx.currentTime + duree);
-            }, delaiMs);
-        }
-        
-        jouerBip(880, 0, 0.2);
-        jouerBip(1046, 200, 0.2);
-        
-        setTimeout(() => audioCtx.close(), 600);
-    } catch(e) { console.warn("Son non disponible", e); }
-}
-
+        // ============================================================
+        // VARIABLES GLOBALES
+        // ============================================================
         let donnees = {
             portefeuilles: [], operateurs: [], cryptos: ["USDT","BTC","ETH","BNB","LTC","SOL","TRX","DOGE","MATIC","SUI","XRP","TON","USDC"],
             taux: {}, reseaux: [], frais: { achat: 1.5, vente: 2.0 }, pause: { achat: false, vente: false }, demandes: {}, news: [],
@@ -323,7 +323,8 @@
                 { id: 'R4', nom: '10000 Ar', type: 'fiat', probabilite: 5 },
                 { id: 'R5', nom: 'Merci de votre fidélité', type: 'rien', probabilite: 77 }
             ],
-            roueActive: true
+            roueActive: true,
+            version: "2.0"
         };
         
         let utilisateurs = {};
@@ -333,106 +334,337 @@
         let dernierCompteTransactions = 0, dernierCompteBonus = 0, dernierCompteNumeros = 0;
         let intervalNotification = null, toastTimer = null, notificationPermission = false;
         let dernierSyncTaux = null;
-        let transactionsSauvegardees = {};
         
-        const cacheTaux = {
-            donnees: null, timestamp: 0, duree: 30 * 60 * 1000,
-            get() { if(this.donnees && (Date.now() - this.timestamp) < this.duree) return this.donnees; return null; },
-            set(donnees) { this.donnees = donnees; this.timestamp = Date.now(); try { localStorage.setItem('tauxCache', JSON.stringify({ data: donnees, timestamp: this.timestamp })); } catch(e) {} },
-            chargerLocal() { try { const cache = localStorage.getItem('tauxCache'); if(cache) { const { data, timestamp } = JSON.parse(cache); if((Date.now() - timestamp) < 3600000) { this.donnees = data; this.timestamp = timestamp; return true; } } } catch(e) {} return false; }
-        };
+        // Lock pour éviter les écritures concurrentes
+        let isWritingToFirebase = false;
+        let writeQueue = [];
         
-        class RateLimiter { constructor(limite = 15, fenetre = 60000) { this.limite = limite; this.fenetre = fenetre; this.requetes = []; } peutExecuter() { const maintenant = Date.now(); this.requetes = this.requetes.filter(t => t > maintenant - this.fenetre); if(this.requetes.length >= this.limite) return false; this.requetes.push(maintenant); return true; } }
-        const rateLimiter = new RateLimiter(15, 60000);
-        let timeoutSauvegarde = null;
+        // Cache local avec timestamp
+        let localDataVersion = 0;
+        
         const pairesBinance = { 'USDT':'USDTUSDT','BTC':'BTCUSDT','ETH':'ETHUSDT','BNB':'BNBUSDT','LTC':'LTCUSDT','SOL':'SOLUSDT','TRX':'TRXUSDT','DOGE':'DOGEUSDT','MATIC':'POLUSDT','SUI':'SUIUSDT','XRP':'XRPUSDT','TON':'TONUSDT','POL':'POLUSDT','USDC':'USDCUSDT' };
 
+        // ============================================================
+        // FONCTIONS UTILITAIRES
+        // ============================================================
         function echapperHTML(t) { if(!t) return ''; return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
-        function genererIDStable(e,n) { const h=btoa(e+n).replace(/[^a-zA-Z0-9]/g,'').substring(0,8); return `TX-${h}`; }
         
-        // ==================== NOUVELLES FONCTIONS DE SAUVEGARDE TRIPLE ====================
+        function jouerSonNotification() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                function jouerBip(frequence, delaiMs, duree) {
+                    setTimeout(() => {
+                        const oscillator = audioCtx.createOscillator();
+                        const gainNode = audioCtx.createGain();
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioCtx.destination);
+                        oscillator.frequency.value = frequence;
+                        oscillator.type = 'sine';
+                        gainNode.gain.value = 1.0;
+                        oscillator.start();
+                        gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duree);
+                        oscillator.stop(audioCtx.currentTime + duree);
+                    }, delaiMs);
+                }
+                jouerBip(880, 0, 0.2);
+                jouerBip(1046, 200, 0.2);
+                setTimeout(() => audioCtx.close(), 600);
+            } catch(e) { console.warn("Son non disponible", e); }
+        }
+
+        // ============================================================
+        // SYSTÈME DE STOCKAGE INDESTRUCTIBLE
+        // ============================================================
         
-        // Sauvegarde IndexedDB
-        function sauvegarderIndexedDB(transaction) {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open('TyphTransactionsDB', 1);
-                
-                request.onupgradeneeded = (e) => {
-                    const db = e.target.result;
-                    if(!db.objectStoreNames.contains('transactions')) {
-                        const store = db.createObjectStore('transactions', { keyPath: 'id' });
-                        store.createIndex('statut', 'statut', { unique: false });
-                        store.createIndex('date', 'date', { unique: false });
-                        store.createIndex('userID', 'userID', { unique: false });
-                    }
-                };
-                
-                request.onsuccess = (e) => {
-                    const db = e.target.result;
-                    const tx = db.transaction(['transactions'], 'readwrite');
-                    const store = tx.objectStore('transactions');
-                    store.put(transaction);
-                    tx.oncomplete = () => resolve();
-                    tx.onerror = (err) => reject(err);
-                };
-                
-                request.onerror = (err) => reject(err);
-            });
+        // Récupérer les transactions sous forme de tableau (pas d'objet pour éviter les écrasements)
+        function getDemandesTableau() {
+            if(!donnees.demandes) return [];
+            if(Array.isArray(donnees.demandes)) return donnees.demandes;
+            return Object.values(donnees.demandes);
         }
         
-        // Charger depuis IndexedDB
-        function chargerDepuisIndexedDB() {
-            return new Promise((resolve) => {
-                const request = indexedDB.open('TyphTransactionsDB', 1);
-                
-                request.onsuccess = (e) => {
-                    const db = e.target.result;
-                    if(!db.objectStoreNames.contains('transactions')) {
-                        resolve([]);
+        // Sauvegarde avec verrouillage - Évite les conflits multi-appareils
+        async function sauvegarderAvecLock(ref, data, operation = 'set') {
+            return new Promise((resolve, reject) => {
+                const executeWrite = async () => {
+                    if (isWritingToFirebase) {
+                        writeQueue.push(() => executeWrite().then(resolve).catch(reject));
                         return;
                     }
-                    const tx = db.transaction(['transactions'], 'readonly');
-                    const store = tx.objectStore('transactions');
-                    const getAll = store.getAll();
                     
-                    getAll.onsuccess = () => resolve(getAll.result || []);
-                    getAll.onerror = () => resolve([]);
+                    isWritingToFirebase = true;
+                    try {
+                        // Utiliser transaction pour les mises à jour critiques
+                        if (operation === 'update' && typeof data === 'object') {
+                            await database.ref(ref).transaction((currentData) => {
+                                if (currentData === null) return data;
+                                return { ...currentData, ...data };
+                            });
+                        } else {
+                            await database.ref(ref).set(data);
+                        }
+                        resolve();
+                    } catch (e) {
+                        console.error('Erreur écriture Firebase:', e);
+                        reject(e);
+                    } finally {
+                        isWritingToFirebase = false;
+                        if (writeQueue.length > 0) {
+                            const next = writeQueue.shift();
+                            next();
+                        }
+                    }
                 };
                 
-                request.onerror = () => resolve([]);
+                executeWrite();
             });
         }
         
-        // Sauvegarde triple d'une transaction
-        async function sauvegardeTripleTransaction(transaction) {
-            if(!transaction || !transaction.id) return false;
+        // Sauvegarde d'une transaction individuelle (NE JAMAIS ÉCRASER)
+        async function sauvegarderTransaction(transaction) {
+            if (!transaction || !transaction.id) return false;
+            
+            // Ajouter un timestamp de dernière modification
+            transaction.lastModified = Date.now();
+            transaction.lastModifiedBy = auth.currentUser?.email || 'admin';
             
             try {
-                // 1. Firebase (principal)
-                await database.ref(`donnees/transactions/${transaction.id}`).set(transaction);
+                // Utiliser transaction pour éviter les conflits
+                await database.ref(`donnees/transactions/${transaction.id}`).transaction((currentData) => {
+                    if (currentData === null) return transaction;
+                    // Si la transaction existe déjà, garder la plus récente
+                    if (currentData.lastModified && transaction.lastModified && currentData.lastModified > transaction.lastModified) {
+                        return currentData;
+                    }
+                    return { ...currentData, ...transaction };
+                });
                 
-                // 2. Firebase Archive (pour les confirmées/rejetées)
-                if(transaction.statut !== 'en_attente') {
-                    await database.ref(`donnees/transactions_archive/${transaction.id}`).set(transaction);
-                }
-                
-                // 3. localStorage (backup)
+                // Sauvegarde parallèle dans localStorage (backup)
                 const allTransactions = getDemandesTableau();
-                localStorage.setItem('transactions_backup', JSON.stringify({
+                const transactionIndex = allTransactions.findIndex(t => t.id === transaction.id);
+                if (transactionIndex !== -1) {
+                    allTransactions[transactionIndex] = transaction;
+                } else {
+                    allTransactions.push(transaction);
+                }
+                localStorage.setItem('transactions_master_backup', JSON.stringify({
                     data: allTransactions,
                     timestamp: Date.now(),
-                    version: '1.0'
+                    version: donnees.version
                 }));
                 
-                // 4. IndexedDB
-                await sauvegarderIndexedDB(transaction);
-                
-                console.log(`✅ Transaction ${transaction.id} sauvegardée sur 3 emplacements`);
+                console.log(`✅ Transaction ${transaction.id} sauvegardée`);
                 return true;
             } catch(e) {
-                console.error('Erreur sauvegarde triple:', e);
+                console.error('Erreur sauvegarde transaction:', e);
                 return false;
             }
+        }
+        
+        // Sauvegarde de TOUTES les demandes (avec fusion intelligente)
+        async function sauvegarderDemandes(demandesArray) {
+            if (!demandesArray || !Array.isArray(demandesArray)) return;
+            
+            // Convertir en objet pour Firebase (mais avec conservation des données)
+            const demandesObj = {};
+            demandesArray.forEach(d => { 
+                if(d && d.id) {
+                    // S'assurer que chaque transaction a un timestamp
+                    if (!d.lastModified) d.lastModified = Date.now();
+                    demandesObj[d.id] = d;
+                }
+            });
+            
+            // Mettre à jour la variable locale
+            donnees.demandes = demandesObj;
+            
+            // Sauvegarde dans Firebase avec transaction pour éviter les conflits
+            await sauvegarderAvecLock('donnees/demandes', demandesObj, 'set');
+            
+            // Sauvegarde locale complète
+            localStorage.setItem('transactions_master_backup', JSON.stringify({
+                data: demandesArray,
+                timestamp: Date.now(),
+                version: donnees.version
+            }));
+            
+            // Sauvegarde dans IndexedDB également
+            sauvegarderIndexedDB(demandesArray);
+        }
+        
+        // Sauvegarde IndexedDB
+        function sauvegarderIndexedDB(transactions) {
+            if (!transactions || transactions.length === 0) return;
+            
+            const request = indexedDB.open('TyphMasterDB', 2);
+            
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if(!db.objectStoreNames.contains('master_data')) {
+                    const store = db.createObjectStore('master_data', { keyPath: 'key' });
+                    store.createIndex('timestamp', 'timestamp');
+                }
+            };
+            
+            request.onsuccess = (e) => {
+                const db = e.target.result;
+                const tx = db.transaction(['master_data'], 'readwrite');
+                const store = tx.objectStore('master_data');
+                store.put({ key: 'transactions', data: transactions, timestamp: Date.now() });
+                store.put({ key: 'donnees', data: donnees, timestamp: Date.now() });
+                tx.oncomplete = () => console.log('💾 Sauvegarde IndexedDB OK');
+                tx.onerror = (err) => console.warn('IndexedDB erreur:', err);
+            };
+        }
+        
+        // Chargement depuis IndexedDB
+        async function chargerDepuisIndexedDB() {
+            return new Promise((resolve) => {
+                const request = indexedDB.open('TyphMasterDB', 2);
+                
+                request.onsuccess = (e) => {
+                    const db = e.target.result;
+                    if(!db.objectStoreNames.contains('master_data')) {
+                        resolve(null);
+                        return;
+                    }
+                    const tx = db.transaction(['master_data'], 'readonly');
+                    const store = tx.objectStore('master_data');
+                    const getTransactions = store.get('transactions');
+                    const getDonnees = store.get('donnees');
+                    
+                    let result = { transactions: null, donnees: null };
+                    let completed = 0;
+                    
+                    getTransactions.onsuccess = () => { result.transactions = getTransactions.result?.data; completed++; if(completed === 2) resolve(result); };
+                    getTransactions.onerror = () => { completed++; if(completed === 2) resolve(result); };
+                    getDonnees.onsuccess = () => { result.donnees = getDonnees.result?.data; completed++; if(completed === 2) resolve(result); };
+                    getDonnees.onerror = () => { completed++; if(completed === 2) resolve(result); };
+                };
+                
+                request.onerror = () => resolve(null);
+            });
+        }
+        
+        // Chargement intelligent avec fallback (NE PAS ÉCRASER LES DONNÉES EXISTANTES)
+        async function chargerTransactionsAvecFallback() {
+            let transactions = [];
+            let source = '';
+            
+            // 1. Essayer Firebase d'abord (source de vérité)
+            try {
+                const snapshot = await database.ref('donnees/demandes').once('value');
+                const firebaseData = snapshot.val();
+                if(firebaseData && Object.keys(firebaseData).length > 0) {
+                    transactions = Object.values(firebaseData);
+                    source = 'Firebase';
+                    console.log(`📡 Chargé depuis Firebase: ${transactions.length} transactions`);
+                    
+                    // Mettre à jour le cache local
+                    localStorage.setItem('transactions_master_backup', JSON.stringify({
+                        data: transactions,
+                        timestamp: Date.now(),
+                        version: donnees.version
+                    }));
+                    
+                    // Sauvegarder dans IndexedDB
+                    sauvegarderIndexedDB(transactions);
+                    
+                    return transactions;
+                }
+            } catch(e) { console.warn('Firebase inaccessible', e); }
+            
+            // 2. Fallback localStorage
+            const localBackup = localStorage.getItem('transactions_master_backup');
+            if(localBackup) {
+                try {
+                    const { data, timestamp } = JSON.parse(localBackup);
+                    // Si le backup a moins de 7 jours, l'utiliser
+                    if((Date.now() - timestamp) < 7 * 24 * 3600000 && data && data.length > 0) {
+                        transactions = data;
+                        source = 'localStorage';
+                        console.log(`💾 Restauré depuis localStorage: ${transactions.length} transactions`);
+                        
+                        // Tenter de resynchroniser avec Firebase
+                        for(const tx of transactions) {
+                            await sauvegarderTransaction(tx).catch(e => console.warn);
+                        }
+                        return transactions;
+                    }
+                } catch(e) {}
+            }
+            
+            // 3. Fallback IndexedDB
+            const indexedDBData = await chargerDepuisIndexedDB();
+            if(indexedDBData && indexedDBData.transactions && indexedDBData.transactions.length > 0) {
+                transactions = indexedDBData.transactions;
+                source = 'IndexedDB';
+                console.log(`🗄️ Restauré depuis IndexedDB: ${transactions.length} transactions`);
+                return transactions;
+            }
+            
+            console.log('⚠️ Aucune transaction trouvée');
+            return [];
+        }
+        
+        // Synchronisation en temps réel avec Firebase (évite les conflits)
+        function demarrerSynchronisationRealtime() {
+            database.ref('donnees/demandes').on('value', async (snapshot) => {
+                const demandes = snapshot.val();
+                if(demandes) {
+                    const firebaseTransactions = Object.values(demandes);
+                    const localTransactions = getDemandesTableau();
+                    
+                    // Fusion intelligente : garder la version la plus récente de chaque transaction
+                    const mergedTransactions = [...localTransactions];
+                    
+                    for (const fbTx of firebaseTransactions) {
+                        const existingIndex = mergedTransactions.findIndex(t => t.id === fbTx.id);
+                        if (existingIndex === -1) {
+                            mergedTransactions.push(fbTx);
+                        } else {
+                            // Garder la version la plus récente
+                            const existingTx = mergedTransactions[existingIndex];
+                            const fbModified = fbTx.lastModified || 0;
+                            const existingModified = existingTx.lastModified || 0;
+                            if (fbModified > existingModified) {
+                                mergedTransactions[existingIndex] = fbTx;
+                            }
+                        }
+                    }
+                    
+                    // Mettre à jour donnees.demandes
+                    const demandesObj = {};
+                    mergedTransactions.forEach(d => { if(d && d.id) demandesObj[d.id] = d; });
+                    donnees.demandes = demandesObj;
+                    
+                    // Sauvegarde locale
+                    localStorage.setItem('transactions_master_backup', JSON.stringify({
+                        data: mergedTransactions,
+                        timestamp: Date.now(),
+                        version: donnees.version
+                    }));
+                    
+                    // Rafraîchir l'affichage
+                    const ongletActif = document.getElementById('demandes-tab').style.display !== 'none';
+                    if(ongletActif) afficherDemandes();
+                    const ongletTransactions = document.getElementById('transactions-tab').style.display !== 'none';
+                    if(ongletTransactions) { afficherTransactions(); calculerStatsTransactions(); }
+                    const ongletBonus = document.getElementById('bonusroue-tab').style.display !== 'none';
+                    if(ongletBonus) afficherBonus();
+                    
+                    // Mettre à jour les badges
+                    const enAttente = mergedTransactions.filter(d => d.statut === 'en_attente' && d.type !== 'BONUS').length;
+                    const badge = document.getElementById('notif-transactions');
+                    if(badge) { if(enAttente > 0) { badge.textContent = enAttente; badge.style.display = 'inline-block'; } else { badge.style.display = 'none'; } }
+                    
+                    const bonusAttente = mergedTransactions.filter(d => d.statut === 'en_attente' && d.type === 'BONUS').length;
+                    const badgeBonus = document.getElementById('notif-bonus');
+                    if(badgeBonus) { if(bonusAttente > 0) { badgeBonus.textContent = bonusAttente; badgeBonus.style.display = 'inline-block'; } else { badgeBonus.style.display = 'none'; } }
+                    
+                    verifierNouvellesTransactions();
+                }
+            });
         }
         
         // Sauvegarde automatique périodique
@@ -443,131 +675,67 @@
             
             intervalSauvegardeAuto = setInterval(async () => {
                 const demandesArray = getDemandesTableau();
-                const enAttente = demandesArray.filter(d => d.statut === 'en_attente');
-                
-                if(enAttente.length > 0) {
-                    console.log(`💾 Sauvegarde auto: ${enAttente.length} transactions en attente`);
+                if(demandesArray.length > 0) {
+                    console.log(`💾 Sauvegarde auto: ${demandesArray.length} transactions`);
                     
-                    for(const transaction of enAttente) {
-                        await sauvegardeTripleTransaction(transaction);
-                    }
-                    
-                    // Sauvegarde complète de toutes les transactions
+                    // Sauvegarde complète dans localStorage
                     localStorage.setItem('transactions_complete_backup', JSON.stringify({
                         data: demandesArray,
                         timestamp: Date.now(),
-                        count: demandesArray.length
+                        count: demandesArray.length,
+                        version: donnees.version
                     }));
+                    
+                    // Sauvegarde dans IndexedDB
+                    sauvegarderIndexedDB(demandesArray);
                 }
             }, 5 * 60 * 1000); // Toutes les 5 minutes
         }
         
-        // Chargement intelligent avec fallback
-        async function chargerTransactionsAvecFallback() {
-            let transactions = [];
-            
-            // 1. Essayer Firebase d'abord
-            try {
-                const snapshot = await database.ref('donnees/transactions').once('value');
-                const firebaseData = snapshot.val();
-                if(firebaseData && Object.keys(firebaseData).length > 0) {
-                    transactions = Object.values(firebaseData);
-                    console.log(`📡 Chargé depuis Firebase: ${transactions.length} transactions`);
-                    sauvegarderLocalTransactions(transactions);
-                    return transactions;
+        // ============================================================
+        // EXPORT COMPLET DE TOUTES LES DONNÉES
+        // ============================================================
+        function exporterTOUTESDonnees() {
+            const exportData = {
+                exportDate: new Date().toISOString(),
+                version: donnees.version,
+                transactions: getDemandesTableau(),
+                utilisateurs: utilisateurs,
+                configuration: {
+                    portefeuilles: donnees.portefeuilles,
+                    operateurs: donnees.operateurs,
+                    cryptos: donnees.cryptos,
+                    taux: donnees.taux,
+                    reseaux: donnees.reseaux,
+                    frais: donnees.frais,
+                    pause: donnees.pause,
+                    news: donnees.news,
+                    tauxMode: donnees.tauxMode,
+                    usdMGA: donnees.usdMGA,
+                    limites: donnees.limites,
+                    messagesSpeciaux: donnees.messagesSpeciaux,
+                    roue: donnees.roue,
+                    roueActive: donnees.roueActive
+                },
+                stats: {
+                    totalTransactions: getDemandesTableau().length,
+                    totalUtilisateurs: Object.keys(utilisateurs).length,
+                    transactionsEnAttente: getDemandesTableau().filter(t => t.statut === 'en_attente').length,
+                    transactionsConfirmees: getDemandesTableau().filter(t => t.statut === 'confirme').length,
+                    totalBonus: getDemandesTableau().filter(t => t.type === 'BONUS').length
                 }
-            } catch(e) { console.warn('Firebase inaccessible', e); }
+            };
             
-            // 2. Fallback localStorage
-            const localBackup = localStorage.getItem('transactions_backup');
-            if(localBackup) {
-                try {
-                    const { data, timestamp } = JSON.parse(localBackup);
-                    if((Date.now() - timestamp) < 7 * 24 * 3600000) {
-                        transactions = data;
-                        console.log(`💾 Restauré depuis localStorage: ${transactions.length} transactions`);
-                        
-                        // Resynchroniser avec Firebase
-                        for(const tx of transactions) {
-                            await database.ref(`donnees/transactions/${tx.id}`).set(tx).catch(e => console.warn);
-                        }
-                        return transactions;
-                    }
-                } catch(e) {}
-            }
+            const fileName = `typh_export_complet_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.json`;
+            const a = document.createElement('a');
+            a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exportData, null, 2));
+            a.download = fileName;
+            a.click();
             
-            // 3. Fallback IndexedDB
-            const indexedDBTransactions = await chargerDepuisIndexedDB();
-            if(indexedDBTransactions.length > 0) {
-                console.log(`🗄️ Restauré depuis IndexedDB: ${indexedDBTransactions.length} transactions`);
-                return indexedDBTransactions;
-            }
-            
-            return [];
+            alert(`✅ Export complet effectué !\n\n📊 ${exportData.stats.totalTransactions} transactions\n👥 ${exportData.stats.totalUtilisateurs} utilisateurs\n📁 Fichier: ${fileName}`);
         }
         
-        // Fin des nouvelles fonctions
-        // ==================================================================
-        
-        function getDemandesTableau() {
-            if(!donnees.demandes) return [];
-            if(Array.isArray(donnees.demandes)) return donnees.demandes;
-            return Object.values(donnees.demandes);
-        }
-        
-        async function sauvegarderTransactionFirebase(transaction) {
-            if(!transaction || !transaction.id) return;
-            await sauvegardeTripleTransaction(transaction);
-        }
-        
-        function sauvegarderDemandes(demandesArray) {
-            const demandesObj = {};
-            demandesArray.forEach(d => { if(d && d.id) demandesObj[d.id] = d; });
-            donnees.demandes = demandesObj;
-            database.ref('donnees/demandes').set(demandesObj);
-            demandesArray.forEach(t => sauvegardeTripleTransaction(t));
-            sauvegarderLocalTransactions(demandesArray);
-        }
-
-        function sauvegarderLocalTransactions(demandesArray) {
-            try {
-                localStorage.setItem('transactions_backup', JSON.stringify({
-                    data: demandesArray,
-                    timestamp: Date.now()
-                }));
-            } catch(e) { console.warn("Erreur sauvegarde locale", e); }
-        }
-
-        async function restaurerTransactionsLocale() {
-            try {
-                const backup = localStorage.getItem('transactions_backup');
-                if(backup) {
-                    const { data, timestamp } = JSON.parse(backup);
-                    if((Date.now() - timestamp) < 7 * 24 * 3600000) {
-                        const current = getDemandesTableau();
-                        if(current.length === 0 && data && data.length > 0) {
-                            sauvegarderDemandes(data);
-                            console.log('✅ Transactions restaurées depuis backup local');
-                            return true;
-                        }
-                    }
-                }
-            } catch(e) { console.warn("Erreur restauration locale", e); }
-            return false;
-        }
-
-        async function chargerTransactionsFirebase() {
-            const transactions = await chargerTransactionsAvecFallback();
-            if(transactions.length > 0) {
-                const demandesObj = {};
-                transactions.forEach(d => { if(d && d.id) demandesObj[d.id] = d; });
-                donnees.demandes = demandesObj;
-                sauvegarderLocalTransactions(transactions);
-                return true;
-            }
-            return false;
-        }
-
+        // Exporter uniquement les transactions
         function exporterTransactions() {
             const demandesArray = getDemandesTableau();
             const a = document.createElement('a');
@@ -578,6 +746,81 @@
             alert(`✅ ${demandesArray.length} transactions exportées`);
         }
         
+        // ============================================================
+        // SAUVEGARDE DES TRANSACTIONS EN ATTENTE
+        // ============================================================
+        async function sauvegarderToutesAttentes() {
+            const demandesArray = getDemandesTableau();
+            const enAttente = demandesArray.filter(d => d.statut === 'en_attente');
+            if (enAttente.length === 0) { alert('✅ Aucune transaction en attente à sauvegarder.'); return; }
+            if (!confirm(`📦 Sauvegarder ${enAttente.length} transaction(s) en attente ?`)) return;
+            
+            let sauvegardeCount = 0;
+            for (const demande of enAttente) { 
+                await sauvegarderTransaction(demande); 
+                sauvegardeCount++; 
+            }
+            
+            // Sauvegarde complète également
+            await sauvegarderDemandes(demandesArray);
+            
+            alert(`✅ ${sauvegardeCount} transaction(s) sauvegardée(s) avec succès !`);
+        }
+        
+        async function sauvegarderDemandeUnique(id) {
+            const demandesArray = getDemandesTableau();
+            const demande = demandesArray.find(d => d.id === id);
+            if (!demande) { alert('❌ Demande introuvable'); return; }
+            await sauvegarderTransaction(demande);
+            alert(`✅ Demande ${id} sauvegardée avec succès !`);
+        }
+        
+        // ============================================================
+        // FONCTIONS D'APPROBATION (avec sauvegarde)
+        // ============================================================
+        function approuverDemande(id) { 
+            if(!confirm('✅ Approuver cette demande ?')) return; 
+            const demandesArray = getDemandesTableau();
+            const d = demandesArray.find(d=>d.id===id); 
+            if(d){ 
+                d.statut='confirme'; 
+                d.dateModification=new Date().toISOString(); 
+                d.lastModified = Date.now();
+                if(!d.historique) d.historique=[]; 
+                d.historique.push({date:new Date().toISOString(),action:'APPROUVEE_PAR_ADMIN',details:'Demande approuvée par admin',admin: auth.currentUser?.email || 'admin'}); 
+                sauvegarderDemandes(demandesArray);
+                sauvegarderTransaction(d);
+                afficherDemandes(); 
+                afficherTransactions(); 
+                afficherBonus();
+                verifierNouvellesTransactions(); 
+                alert('✅ Demande approuvée et sauvegardée !'); 
+            } 
+        }
+        
+        function rejeterDemande(id) { 
+            if(!confirm('❌ Rejeter cette demande ?')) return; 
+            const demandesArray = getDemandesTableau();
+            const d = demandesArray.find(d=>d.id===id); 
+            if(d){ 
+                d.statut='rejete'; 
+                d.dateModification=new Date().toISOString(); 
+                d.lastModified = Date.now();
+                if(!d.historique) d.historique=[]; 
+                d.historique.push({date:new Date().toISOString(),action:'REJETEE_PAR_ADMIN',details:'Demande rejetée par admin',admin: auth.currentUser?.email || 'admin'}); 
+                sauvegarderDemandes(demandesArray);
+                sauvegarderTransaction(d);
+                afficherDemandes(); 
+                afficherTransactions(); 
+                afficherBonus();
+                verifierNouvellesTransactions(); 
+                alert('❌ Demande rejetée et sauvegardée.'); 
+            } 
+        }
+        
+        // ============================================================
+        // DONNÉES PAR DÉFAUT
+        // ============================================================
         function obtenirDonneesParDefaut() {
             return {
                 portefeuilles: [
@@ -609,136 +852,56 @@
                     { id: 'R4', nom: '10000 Ar', type: 'fiat', probabilite: 5 },
                     { id: 'R5', nom: 'Merci de votre fidélité', type: 'rien', probabilite: 77 }
                 ],
-                roueActive: true
+                roueActive: true,
+                version: "2.0"
             };
         }
-
-        function sauvegarderDonnees() { if(enCoursDeMiseAJour) return; if(timeoutSauvegarde) clearTimeout(timeoutSauvegarde); timeoutSauvegarde = setTimeout(() => { enCoursDeMiseAJour = true; database.ref('donnees').update({ portefeuilles: donnees.portefeuilles, operateurs: donnees.operateurs, cryptos: donnees.cryptos, taux: donnees.taux, reseaux: donnees.reseaux, frais: donnees.frais, pause: donnees.pause, demandes: donnees.demandes, news: donnees.news, tauxMode: donnees.tauxMode, usdMGA: donnees.usdMGA, limites: donnees.limites, messagesSpeciaux: donnees.messagesSpeciaux, roue: donnees.roue, roueActive: donnees.roueActive }).then(() => { enCoursDeMiseAJour = false; }).catch(e => { console.error(e); enCoursDeMiseAJour = false; }); }, 2000); }
-        function sauvegarderUtilisateurs() { if(enCoursDeMiseAJour) return; if(timeoutSauvegarde) clearTimeout(timeoutSauvegarde); timeoutSauvegarde = setTimeout(() => { enCoursDeMiseAJour = true; database.ref('donnees/utilisateurs').set(utilisateurs).then(() => { enCoursDeMiseAJour = false; }).catch(e => { console.error(e); enCoursDeMiseAJour = false; }); }, 2000); }
         
-        function rafraichirUtilisateurs() { database.ref('donnees/utilisateurs').once('value').then((snap) => { utilisateurs = snap.val() || {}; mettreAJourStats(); afficherNumeros(); afficherUtilisateurs(); afficherParrainages(); }).catch(e => console.error(e)); }
-        
-        function rafraichirNumeros() { rafraichirUtilisateurs(); afficherNumeros(); }
-        
-        async function sauvegarderUneTransaction(transaction) {
-            if (!transaction || !transaction.id) return false;
-            await sauvegardeTripleTransaction(transaction);
-            transactionsSauvegardees[transaction.id] = transaction;
-            return true;
-        }
-        
-        async function sauvegarderToutesAttentes() {
-            const demandesArray = getDemandesTableau();
-            const enAttente = demandesArray.filter(d => d.statut === 'en_attente');
-            if (enAttente.length === 0) { alert('✅ Aucune transaction en attente à sauvegarder.'); return; }
-            if (!confirm(`📦 Sauvegarder ${enAttente.length} transaction(s) en attente ?`)) return;
-            let sauvegardeCount = 0;
-            for (const demande of enAttente) { await sauvegardeTripleTransaction(demande); sauvegardeCount++; }
-            alert(`✅ ${sauvegardeCount} transaction(s) sauvegardée(s) avec succès !`);
-        }
-        
-        async function sauvegarderDemandeUnique(id) {
-            const demandesArray = getDemandesTableau();
-            const demande = demandesArray.find(d => d.id === id);
-            if (!demande) { alert('❌ Demande introuvable'); return; }
-            await sauvegardeTripleTransaction(demande);
-            alert(`✅ Demande ${id} sauvegardée avec succès !`);
-        }
-        
-        let dernieresSauvegardes = {};
-        async function sauvegardeAutoSiNouvelleAttente(demandesArray) {
-            const enAttente = demandesArray.filter(d => d.statut === 'en_attente');
-            for (const demande of enAttente) {
-                const derniereSauvegarde = dernieresSauvegardes[demande.id];
-                const maintenant = Date.now();
-                if (!derniereSauvegarde || (maintenant - derniereSauvegarde) > 60000) { 
-                    await sauvegardeTripleTransaction(demande);
-                    dernieresSauvegardes[demande.id] = maintenant;
-                }
-            }
-            const maintenant = Date.now();
-            Object.keys(dernieresSauvegardes).forEach(id => { if (maintenant - dernieresSauvegardes[id] > 300000) { delete dernieresSauvegardes[id]; } });
-        }
-        
-        let dernierCompteNumerosBadge = 0;
-        function mettreAJourBadgeNumeros() {
-            let numerosAttente = 0;
-            Object.values(utilisateurs).forEach(user => {
-                if(user.numeros) numerosAttente += Object.values(user.numeros).filter(n => n.statut === 'en_attente').length;
-            });
-            const badge = document.getElementById('notif-numeros');
-            if(badge) {
-                if(numerosAttente > 0) {
-                    badge.textContent = numerosAttente;
-                    badge.style.display = 'inline-block';
-                    if(numerosAttente > dernierCompteNumerosBadge) {
-                        badge.style.background = 'var(--danger)';
-                        badge.style.animation = 'pulse 1.5s infinite';
-                    } else {
-                        badge.style.background = 'var(--warning)';
-                        badge.style.animation = 'none';
-                    }
-                } else {
-                    badge.style.display = 'none';
-                }
-            }
-            dernierCompteNumerosBadge = numerosAttente;
-        }
-        
-        function demarrerEcouteDemandes() {
-            database.ref('donnees/demandes').on('value', async (snapshot) => {
-                const demandes = snapshot.val();
-                if(demandes) {
-                    donnees.demandes = demandes;
-                    const demandesArray = getDemandesTableau();
-                    await sauvegardeAutoSiNouvelleAttente(demandesArray);
-                    sauvegarderLocalTransactions(demandesArray);
-                    const ongletActif = document.getElementById('demandes-tab').style.display !== 'none';
-                    if(ongletActif) afficherDemandes();
-                    const ongletTransactions = document.getElementById('transactions-tab').style.display !== 'none';
-                    if(ongletTransactions) { afficherTransactions(); calculerStatsTransactions(); }
-                    const ongletBonus = document.getElementById('bonusroue-tab').style.display !== 'none';
-                    if(ongletBonus) afficherBonus();
-                    const enAttente = demandesArray.filter(d => d.statut === 'en_attente' && d.type !== 'BONUS').length;
-                    const badge = document.getElementById('notif-transactions');
-                    if(badge) { if(enAttente > 0) { badge.textContent = enAttente; badge.style.display = 'inline-block'; } else { badge.style.display = 'none'; } }
-                    const bonusAttente = demandesArray.filter(d => d.statut === 'en_attente' && d.type === 'BONUS').length;
-                    const badgeBonus = document.getElementById('notif-bonus');
-                    if(badgeBonus) { if(bonusAttente > 0) { badgeBonus.textContent = bonusAttente; badgeBonus.style.display = 'inline-block'; } else { badgeBonus.style.display = 'none'; } }
-                    verifierNouvellesTransactions();
-                }
-            });
-        }
-        
-        function forcerChargementDemandes() {
-            database.ref('donnees/demandes').once('value').then(async (snapshot) => {
-                const demandes = snapshot.val();
-                if(demandes) {
-                    donnees.demandes = demandes;
-                    const demandesArray = getDemandesTableau();
-                    await sauvegardeAutoSiNouvelleAttente(demandesArray);
-                    sauvegarderLocalTransactions(demandesArray);
-                    afficherDemandes();
-                    alert(`✅ ${demandesArray.length} demande(s) chargée(s)`);
-                } else { alert('❌ Aucune demande trouvée dans Firebase'); }
-            }).catch(err => { console.error('Erreur:', err); alert('Erreur de chargement: ' + err.message); });
-        }
-        
+        // ============================================================
+        // CHARGEMENT DES DONNÉES
+        // ============================================================
         async function chargerDonnees() {
-            if(cacheTaux.chargerLocal() && cacheTaux.donnees) { donnees.taux = cacheTaux.donnees; }
-            await restaurerTransactionsLocale();
-            const hasFirebaseTransactions = await chargerTransactionsFirebase();
-            if(!hasFirebaseTransactions) { await restaurerTransactionsLocale(); }
+            // Charger les transactions depuis Firebase avec fallback
+            const transactions = await chargerTransactionsAvecFallback();
+            if(transactions.length > 0) {
+                const demandesObj = {};
+                transactions.forEach(d => { if(d && d.id) demandesObj[d.id] = d; });
+                donnees.demandes = demandesObj;
+            }
+            
+            // Charger le reste des données
             database.ref('donnees').once('value').then(s => {
                 const data = s.val();
                 if(data && Object.keys(data).length > 0){
+                    // Fusionner sans écraser les transactions existantes
                     donnees = { ...obtenirDonneesParDefaut(), ...data };
+                    // S'assurer que les transactions ne sont pas écrasées
+                    if(data.demandes && Object.keys(data.demandes).length > 0) {
+                        // Fusionner avec les transactions existantes
+                        const existingTransactions = getDemandesTableau();
+                        const newTransactions = Object.values(data.demandes);
+                        const merged = [...existingTransactions];
+                        for (const newTx of newTransactions) {
+                            const existingIndex = merged.findIndex(t => t.id === newTx.id);
+                            if (existingIndex === -1) {
+                                merged.push(newTx);
+                            } else {
+                                const existingModified = merged[existingIndex].lastModified || 0;
+                                const newModified = newTx.lastModified || 0;
+                                if (newModified > existingModified) {
+                                    merged[existingIndex] = newTx;
+                                }
+                            }
+                        }
+                        const demandesObj = {};
+                        merged.forEach(d => { if(d && d.id) demandesObj[d.id] = d; });
+                        donnees.demandes = demandesObj;
+                    }
+                    
                     let roueFirebase = data.roue;
                     if (roueFirebase) {
                         let tr = Array.isArray(roueFirebase) ? roueFirebase : Object.values(roueFirebase);
                         donnees.roue = tr.filter(item => item !== null);
-                    } else {
-                        donnees.roue = obtenirDonneesParDefaut().roue;
                     }
                     if(!donnees.roue || donnees.roue.length === 0) donnees.roue = obtenirDonneesParDefaut().roue;
                     if(!donnees.limites) donnees.limites = obtenirDonneesParDefaut().limites;
@@ -749,83 +912,217 @@
                     if(!donnees.portefeuilles) donnees.portefeuilles = obtenirDonneesParDefaut().portefeuilles;
                     if(!donnees.operateurs) donnees.operateurs = obtenirDonneesParDefaut().operateurs;
                     if(!donnees.cryptos) donnees.cryptos = obtenirDonneesParDefaut().cryptos;
-                    if(!donnees.demandes) donnees.demandes = {};
-                    donnees.roueActive = true;
-                    database.ref('donnees/roueActive').set(true);
+                    
                     tauxUSD_MGA = donnees.usdMGA || 4700;
                 } else { 
                     donnees = obtenirDonneesParDefaut();
-                    donnees.roueActive = true;
-                    database.ref('donnees/roueActive').set(true);
                 }
-                cacheTaux.set(donnees.taux);
+                
                 rafraichirUtilisateurs();
-                mettreAJourStats(); afficherTout();
+                mettreAJourStats(); 
+                afficherTout();
                 document.getElementById('usd-mga-display').textContent = donnees.usdMGA.toLocaleString();
                 
-                // Démarrer la sauvegarde automatique
+                // Démarrer la synchronisation en temps réel
+                demarrerSynchronisationRealtime();
                 demarrerSauvegardeAutomatique();
-            }).catch(e => { console.error(e); donnees = obtenirDonneesParDefaut(); afficherTout(); });
+            }).catch(e => { 
+                console.error(e); 
+                donnees = obtenirDonneesParDefaut(); 
+                afficherTout();
+                demarrerSynchronisationRealtime();
+                demarrerSauvegardeAutomatique();
+            });
         }
-
-        let intervalUtilisateurs = null;
-        function demarrerRafraichissementUtilisateurs() { if(intervalUtilisateurs) clearInterval(intervalUtilisateurs); intervalUtilisateurs = setInterval(rafraichirUtilisateurs, 120000); rafraichirUtilisateurs(); }
-
-        auth.onAuthStateChanged((user) => {
-            if (user && user.email === 'sarobidytyph4@gmail.com') {
-                document.getElementById('login-page').style.display = 'none';
-                document.getElementById('admin-interface').style.display = 'block';
-                chargerDonnees();
-                demarrerSyncBinance();
-                demarrerSurveillanceTransactions();
-                verifierPermissionNotification();
-                demarrerRafraichissementUtilisateurs();
-                demarrerEcouteDemandes();
-            } else if (document.getElementById('admin-interface').style.display === 'block') {
-                document.getElementById('login-page').style.display = 'flex';
-                document.getElementById('admin-interface').style.display = 'none';
-                if(intervalUtilisateurs) clearInterval(intervalUtilisateurs);
-            }
-        });
-
-        async function loginAdmin() {
-            const email = document.getElementById('admin-email').value, password = document.getElementById('admin-password').value;
-            document.getElementById('admin-error').style.display = 'none';
-            try {
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                if (userCredential.user.email !== 'sarobidytyph4@gmail.com') { await auth.signOut(); throw new Error('Email non autorisé'); }
-            } catch (error) { document.getElementById('admin-error').style.display = 'block'; document.getElementById('admin-error').innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + error.message; }
-        }
-        function logoutAdmin() { auth.signOut(); if(intervalUtilisateurs) clearInterval(intervalUtilisateurs); }
         
-        async function approuverNumero(uid, numeroId) { 
-            if(!confirm('✅ Approuver ce numéro ?')) return; 
-            await database.ref(`donnees/utilisateurs/${uid}/numeros/${numeroId}/statut`).set('approuve');
-            const userSnap = await database.ref(`donnees/utilisateurs/${uid}`).once('value');
-            const userData = userSnap.val();
-            if(userData && userData.parrainId && !userData.bonusParrainageDonne) {
-                const parrainId = userData.parrainId;
-                const parrainRef = database.ref(`donnees/utilisateurs/${parrainId}`);
-                const parrainSnap = await parrainRef.once('value');
-                const parrainData = parrainSnap.val();
-                if(parrainData) {
-                    const nouveauxTours = (parrainData.toursGratuits || 0) + 1;
-                    const nouveauxFilleuls = (parrainData.filleulsCount || 0) + 1;
-                    await parrainRef.update({ toursGratuits: nouveauxTours, filleulsCount: nouveauxFilleuls });
-                    await database.ref(`donnees/utilisateurs/${uid}`).update({ bonusParrainageDonne: true });
-                    alert(`✅ Numéro approuvé ! 1 tour gratuit a été ajouté au parrain.`);
-                } else {
-                    alert(`✅ Numéro approuvé !`);
+        // ============================================================
+        // FONCTIONS D'AFFICHAGE (simplifiées - garder le même code que l'original)
+        // ============================================================
+        
+        function afficherTout() { 
+            afficherPortefeuilles(); 
+            afficherOperateurs(); 
+            afficherReseaux(); 
+            afficherTauxSimplifies(); 
+            afficherNumeros(); 
+            afficherDemandes(); 
+            afficherUtilisateurs(); 
+            afficherNews(); 
+            afficherTransactions();
+            afficherBonus();
+            afficherRoue(); 
+            afficherParrainages();
+            if(donnees.frais){ 
+                document.getElementById('frais-achat-display').textContent=donnees.frais.achat+'%'; 
+                document.getElementById('frais-vente-display').textContent=donnees.frais.vente+'%'; 
+            } 
+            document.getElementById('mode-auto').classList.toggle('active',donnees.tauxMode==='auto'); 
+            document.getElementById('mode-manual').classList.toggle('active',donnees.tauxMode==='manual'); 
+            mettreAJourAffichageLimites(); 
+        }
+        
+        function afficherPortefeuilles(){ const l=document.getElementById('portefeuilles-liste'); if(!l) return; l.innerHTML=(donnees.portefeuilles||[]).map((p,i)=>`<div class="item-row"><div class="item-info"><div class="item-nom"><i class="fas fa-wallet"></i> ${echapperHTML(p.nom)}</div><div class="item-reponse">${echapperHTML((p.reponse||'').substring(0,50))}...</div><div style="font-size:0.8rem;margin-top:5px;color:var(--warning);"><i class="fas fa-comment"></i> Message: ${echapperHTML(p.messageConfirmation||'Aucun')}</div><div style="font-size:0.8rem;margin-top:5px;color:var(--accent);"><i class="fas fa-network-wired"></i> Réseau: ${echapperHTML(p.reseau||'Non défini')} | <i class="fas fa-link"></i> Liaison: ${p.liaisonRequise ? '<span style="color:var(--success);">Requise</span>' : 'Non requise'}</div></div><div class="item-actions"><button class="btn btn-edit" onclick="ouvrirModal(\'portefeuille\',${i})"><i class="fas fa-edit"></i></button><button class="btn btn-delete" onclick="supprimer(\'portefeuille\',${i})"><i class="fas fa-trash"></i></button></div></div>`).join('')||'<div class="item-row">Aucun portefeuille</div>'; }
+        
+        function afficherOperateurs(){ const l=document.getElementById('operateurs-liste'); if(!l) return; l.innerHTML=(donnees.operateurs||[]).map((o,i)=>`<div class="item-row"><div class="item-info"><div class="item-nom"><i class="fas fa-sim-card"></i> ${echapperHTML(o.nom)}</div><div style="font-size:0.8rem;margin-top:5px;color:var(--warning);"><i class="fas fa-comment"></i> Message: ${echapperHTML(o.messageConfirmation||'Aucun')}</div></div><div class="item-actions"><button class="btn btn-edit" onclick="ouvrirModal(\'operateur\',${i})"><i class="fas fa-edit"></i></button><button class="btn btn-delete" onclick="supprimer(\'operateur\',${i})"><i class="fas fa-trash"></i></button></div></div>`).join('')||'<div class="item-row">Aucun opérateur</div>'; }
+        
+        function afficherReseaux(){ const l=document.getElementById('reseaux-liste'); if(!l) return; l.innerHTML=(donnees.reseaux||[]).map((r,i)=>`<div class="reseau-item"><div class="reseau-header"><span><i class="fas fa-network-wired"></i> <strong>${echapperHTML(r.nom)}</strong></span><div class="item-actions"><button class="btn btn-edit" onclick="ouvrirModal(\'reseau\',${i})"><i class="fas fa-edit"></i></button><button class="btn btn-delete" onclick="supprimer(\'reseau\',${i})"><i class="fas fa-trash"></i></button></div></div><div style="margin-top:8px;"><span style="color:var(--text-secondary);">Crypto: </span>${echapperHTML(r.crypto)}<br><span style="color:var(--text-secondary);">Frais réseau: </span>${r.fraisReseau||0}%</div></div>`).join('')||'<div class="item-row">Aucun réseau configuré</div>'; }
+        
+        function afficherTauxSimplifies(){ const liste=document.getElementById('taux-liste'); if(!liste) return; if(!donnees.taux) donnees.taux={}; const cryptos=donnees.cryptos||[]; if(cryptos.length===0){ liste.innerHTML='<div class="item-row">Aucune crypto</div>'; return; } liste.innerHTML=cryptos.map(crypto=>{ const taux=donnees.taux[crypto]||{prixUSD:crypto==='USDT'?1:0,prixMGA:crypto==='USDT'?donnees.usdMGA:0,variation:"0",couleur:"positive",source:'manual'}; const vc=taux.couleur==='positive'?'positive':'negative'; const vi=taux.couleur==='positive'?'arrow-up':'arrow-down'; let sa=crypto; if(crypto==='MATIC') sa='POL'; return `<div class="taux-card"><div class="taux-header"><span class="taux-symbole"><i class="fas fa-coins"></i> ${echapperHTML(sa)}</span><div class="item-actions"><button class="btn btn-edit" onclick="ouvrirModal('taux', null, '${echapperHTML(crypto)}')"><i class="fas fa-edit"></i></button></div></div><div class="taux-valeur-principale">${taux.prixMGA.toLocaleString()} Ar</div><div class="taux-details"><span><i class="fas fa-dollar-sign"></i> $${taux.prixUSD.toFixed(2)}</span><span class="taux-variation ${vc}"><i class="fas fa-${vi}"></i> ${taux.variation}%</span><span class="taux-source ${taux.source}">${taux.source==='binance'?'<i class="fab fa-binance"></i> Binance':'<i class="fas fa-pencil-alt"></i> Manuel'}</span></div><div style="font-size:0.7rem; color:var(--text-secondary); margin-top:10px; text-align:right;"><i class="far fa-clock"></i> ${taux.lastUpdate?new Date(taux.lastUpdate).toLocaleTimeString():''}</div></div>`; }).join(''); }
+        
+        function afficherDemandes(){ 
+            const l = document.getElementById('demandes-liste'); 
+            if(!l) return; 
+            const demandesArray = getDemandesTableau();
+            const demandesFiltrees = demandesArray.filter(d => d.type === 'ACHAT' || d.type === 'VENTE');
+            if(demandesFiltrees.length === 0){ 
+                l.innerHTML = '<div class="item-row">Aucune demande ACHAT/VENTE</div>'; 
+                return; 
+            }
+            const typeFiltre = document.getElementById('filtre-type')?.value || 'all';
+            const statutFiltre = document.getElementById('filtre-statut')?.value || 'all';
+            let filtrees = demandesFiltrees;
+            if(typeFiltre !== 'all') filtrees = filtrees.filter(d => d.type === typeFiltre);
+            if(statutFiltre !== 'all') filtrees = filtrees.filter(d => d.statut === statutFiltre);
+            l.innerHTML = filtrees.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(d => {
+                let detailsHtml = '';
+                let contactClient = '';
+                if(d.type === 'ACHAT') {
+                    detailsHtml = `<div>Montant: ${echapperHTML(d.montant)} Ar</div><div style="color:var(--success);font-weight:600;">Vous recevez: ${d.montantRecu?d.montantRecu.toFixed(4)+' '+d.crypto:'Calcul...'}</div>`;
+                    contactClient = d.adresse ? `<span style="color:var(--accent); font-size:0.85rem;"><i class="fas fa-link"></i> ${echapperHTML(d.adresse)}</span>` : '';
                 }
-            } else {
-                alert(`✅ Numéro approuvé !`);
-            }
-            rafraichirUtilisateurs();
+                else if(d.type === 'VENTE') {
+                    detailsHtml = `<div>Montant: ${echapperHTML(d.montant)} ${d.crypto}</div><div style="color:var(--success);font-weight:600;">Vous recevez: ${d.montantRecu?d.montantRecu.toLocaleString()+' Ar':'Calcul...'}</div>`;
+                    contactClient = d.adresseLiee ? `<div style="background: rgba(59,130,246,0.15); border: 1px solid var(--accent); padding: 8px 12px; border-radius: 12px; margin-top: 8px;"><span style="color:var(--accent); font-size:0.9rem; font-weight:bold;"><i class="fas fa-link"></i> Adresse de réception liée :</span><br><span style="color:var(--white); font-size:0.85rem; word-break:break-all;">${echapperHTML(d.adresseLiee)}</span></div>` : '';
+                }
+                return `<div class="request-item">
+                    <div class="request-header">
+                        <div><span><i class="fas ${d.type==='ACHAT'?'fa-arrow-down':'fa-arrow-up'}"></i> ${echapperHTML(d.type)}</span></div>
+                        <span style="color:var(--text-secondary);font-size:0.8rem;">${echapperHTML(new Date(d.date).toLocaleString())}</span>
+                    </div>
+                    <div style="margin:10px 0;">
+                        <div>Client: <strong>${echapperHTML(d.utilisateur)}</strong> (${echapperHTML(d.userID||'ID inconnu')})</div>
+                        ${detailsHtml}
+                        <div style="margin-top:5px;">${contactClient}</div>
+                        ${d.txid?`<div style="font-size:0.8rem; margin-top:5px;">TXID/Preuve: ${echapperHTML(d.txid.substring(0,20))}...</div>`:''}
+                    </div>
+                    <div class="badge-statut ${d.statut}">${echapperHTML(d.statut)}</div>
+                    ${d.statut==='en_attente' ? `<div style="display:flex;gap:10px;margin-top:15px;">
+                        <button class="btn btn-approuver" onclick="approuverDemande('${echapperHTML(d.id)}')">Approuver</button>
+                        <button class="btn btn-rejeter" onclick="rejeterDemande('${echapperHTML(d.id)}')">Rejeter</button>
+                        <button class="btn btn-save-attentes" onclick="sauvegarderDemandeUnique('${echapperHTML(d.id)}')"><i class="fas fa-save"></i> Sauvegarder</button>
+                    </div>` : ''}
+                </div>`;
+            }).join(''); 
         }
         
-        function rejeterNumero(uid, numeroId) { if(!confirm('❌ Rejeter ce numéro ?')) return; database.ref(`donnees/utilisateurs/${uid}/numeros/${numeroId}/statut`).set('rejete').then(() => { alert('Numéro rejeté'); rafraichirUtilisateurs(); }).catch(err => console.error(err)); }
+        function afficherTransactions(){ 
+            const l=document.getElementById('transactions-liste'); 
+            if(!l) return; 
+            const demandesArray = getDemandesTableau();
+            const demandesFiltrees = demandesArray.filter(d => d.type === 'ACHAT' || d.type === 'VENTE');
+            if(demandesFiltrees.length===0){ 
+                l.innerHTML='<div class="item-row">Aucune transaction ACHAT/VENTE</div>'; 
+                return; 
+            } 
+            let filtrees=filtrerTransactionsListe(demandesFiltrees); 
+            l.innerHTML=filtrees.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(tx=>{
+                let recuHtml = '';
+                if(tx.type==='ACHAT') recuHtml = tx.montantRecu?tx.montantRecu.toFixed(4)+' '+tx.crypto:'Calcul...';
+                else if(tx.type==='VENTE') recuHtml = tx.montantRecu?tx.montantRecu.toLocaleString()+' Ar':'Calcul...';
+                return `<div class="transaction-item ${tx.statut}" onclick="voirDetailsTransaction('${echapperHTML(tx.id)}')"><div class="transaction-header"><span class="badge-type ${tx.type}"><i class="fas ${tx.type==='ACHAT'?'fa-arrow-down':'fa-arrow-up'}"></i> ${echapperHTML(tx.type)}</span><span class="badge-statut ${tx.statut}">${echapperHTML(tx.statut)}</span><span class="transaction-date"><i class="far fa-clock"></i> ${echapperHTML(new Date(tx.date).toLocaleString())}</span></div><div class="transaction-user"><i class="fas fa-user"></i> ${echapperHTML(tx.utilisateur)} (${echapperHTML(tx.userID||'ID inconnu')})</div><div class="transaction-details"><div class="detail-item"><span class="detail-label">Vous recevez</span><span class="detail-value" style="color:var(--success);">${recuHtml}</span></div></div><div class="transaction-txid"><i class="fas fa-hashtag"></i> TXID/Preuve: ${echapperHTML(tx.txid||'Non fourni')}</div><div class="transaction-footer"><button class="btn btn-view" onclick="event.stopPropagation(); voirDetailsTransaction('${echapperHTML(tx.id)}')"><i class="fas fa-eye"></i> Voir détails</button>${tx.statut==='en_attente'?`<button class="btn btn-success" onclick="event.stopPropagation(); approuverDemande('${echapperHTML(tx.id)}')"><i class="fas fa-check"></i> Approuver</button><button class="btn btn-delete" onclick="event.stopPropagation(); rejeterDemande('${echapperHTML(tx.id)}')"><i class="fas fa-times"></i> Rejeter</button><button class="btn btn-save-attentes" onclick="event.stopPropagation(); sauvegarderDemandeUnique('${echapperHTML(tx.id)}')"><i class="fas fa-save"></i> Sauvegarder</button>`:''}</div></div>`;
+            }).join(''); 
+        }
         
-        function afficherNumeros() {
+        function filtrerTransactionsListe(demandes){ 
+            const type=document.getElementById('filtre-type-transaction')?.value||'all'; 
+            const statut=document.getElementById('filtre-statut-transaction')?.value||'all'; 
+            const recherche=(document.getElementById('recherche-transaction')?.value||'').toLowerCase(); 
+            const periode=document.getElementById('filtre-date-transaction')?.value||'all'; 
+            let f=[...demandes]; 
+            if(type!=='all') f=f.filter(t=>t.type===type); 
+            if(statut!=='all') f=f.filter(t=>t.statut===statut); 
+            if(recherche) f=f.filter(t=>(t.utilisateur&&t.utilisateur.toLowerCase().includes(recherche))||(t.email&&t.email.toLowerCase().includes(recherche))||(t.userID&&t.userID.toLowerCase().includes(recherche))||(t.txid&&t.txid.toLowerCase().includes(recherche))); 
+            const now=new Date(); 
+            const today=new Date(now.setHours(0,0,0,0)); 
+            const week=new Date(now.setDate(now.getDate()-now.getDay())); 
+            const month=new Date(now.getFullYear(),now.getMonth(),1); 
+            if(periode==='today') f=f.filter(t=>new Date(t.date)>=today); 
+            else if(periode==='week') f=f.filter(t=>new Date(t.date)>=week); 
+            else if(periode==='month') f=f.filter(t=>new Date(t.date)>=month); 
+            return f; 
+        }
+        
+        function calculerStatsTransactions(){ 
+            const demandesArray = getDemandesTableau();
+            const demandesAchatVente = demandesArray.filter(d => d.type === 'ACHAT' || d.type === 'VENTE');
+            const total=demandesAchatVente.length; 
+            const enAttente=demandesAchatVente.filter(dd=>dd.statut==='en_attente').length; 
+            let volAr=0,volCrypto=0; 
+            demandesAchatVente.forEach(dd=>{ 
+                if(dd.type==='ACHAT') volAr+=parseFloat(dd.montant)||0; 
+                else if(dd.type==='VENTE') volCrypto+=parseFloat(dd.montant)||0; 
+            }); 
+            document.getElementById('stats-total').textContent=total; 
+            document.getElementById('stats-volume-ar').textContent=volAr.toLocaleString()+' Ar'; 
+            document.getElementById('stats-volume-crypto').textContent=volCrypto.toFixed(2); 
+            document.getElementById('stats-en-attente').textContent=enAttente; 
+        }
+        
+        function afficherBonus() {
+            const l = document.getElementById('bonus-liste');
+            if(!l) return;
+            const demandesArray = getDemandesTableau();
+            const bonus = demandesArray.filter(d => d.type === 'BONUS');
+            if(bonus.length === 0){
+                l.innerHTML = '<div class="item-row">Aucun bonus de roue</div>';
+                document.getElementById('bonus-total').textContent = '0';
+                document.getElementById('bonus-attente').textContent = '0';
+                document.getElementById('bonus-confirme').textContent = '0';
+                document.getElementById('bonus-rejete').textContent = '0';
+                return;
+            }
+            const statutFiltre = document.getElementById('filtre-statut-bonus')?.value || 'all';
+            const recherche = (document.getElementById('recherche-bonus')?.value || '').toLowerCase();
+            let filtrees = bonus;
+            if(statutFiltre !== 'all') filtrees = filtrees.filter(d => d.statut === statutFiltre);
+            if(recherche) filtrees = filtrees.filter(d => (d.utilisateur && d.utilisateur.toLowerCase().includes(recherche)) || (d.lotGagne && d.lotGagne.toLowerCase().includes(recherche)));
+            
+            const total = bonus.length;
+            const attente = bonus.filter(d => d.statut === 'en_attente').length;
+            const confirme = bonus.filter(d => d.statut === 'confirme').length;
+            const rejete = bonus.filter(d => d.statut === 'rejete').length;
+            document.getElementById('bonus-total').textContent = total;
+            document.getElementById('bonus-attente').textContent = attente;
+            document.getElementById('bonus-confirme').textContent = confirme;
+            document.getElementById('bonus-rejete').textContent = rejete;
+            
+            l.innerHTML = filtrees.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(d => {
+                return `<div class="transaction-item ${d.statut} bonus-en_attente" onclick="voirDetailsTransaction('${echapperHTML(d.id)}')">
+                    <div class="transaction-header">
+                        <span class="badge-type BONUS"><i class="fas fa-gift"></i> BONUS ROUE</span>
+                        <span class="badge-statut ${d.statut}">${echapperHTML(d.statut)}</span>
+                        <span class="transaction-date"><i class="far fa-clock"></i> ${echapperHTML(new Date(d.date).toLocaleString())}</span>
+                    </div>
+                    <div class="transaction-user"><i class="fas fa-user"></i> ${echapperHTML(d.utilisateur)} (${echapperHTML(d.userID||'ID inconnu')})</div>
+                    <div class="transaction-details">
+                        <div class="detail-item"><span class="detail-label">Lot gagné</span><span class="detail-value" style="color:var(--bonus);">${echapperHTML(d.lotGagne || d.montant || 'N/A')}</span></div>
+                        <div class="detail-item"><span class="detail-label">Info réception</span><span class="detail-value">${echapperHTML(d.adresse || d.numero || 'Non spécifié')}</span></div>
+                    </div>
+                    <div class="transaction-footer">
+                        <button class="btn btn-view" onclick="event.stopPropagation(); voirDetailsTransaction('${echapperHTML(d.id)}')"><i class="fas fa-eye"></i> Voir détails</button>
+                        ${d.statut==='en_attente' ? `
+                        <button class="btn btn-success" onclick="event.stopPropagation(); approuverDemande('${echapperHTML(d.id)}')"><i class="fas fa-check"></i> Approuver</button>
+                        <button class="btn btn-delete" onclick="event.stopPropagation(); rejeterDemande('${echapperHTML(d.id)}')"><i class="fas fa-times"></i> Rejeter</button>
+                        <button class="btn btn-save-attentes" onclick="event.stopPropagation(); sauvegarderDemandeUnique('${echapperHTML(d.id)}')"><i class="fas fa-save"></i> Sauvegarder</button>
+                        ` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        
+        function filtrerBonus() { afficherBonus(); }
+        
+        function afficherNumeros(){ 
             const listeAttente = document.getElementById('numeros-attente-liste');
             const listeApprouves = document.getElementById('numeros-approuves-liste');
             if(!listeAttente || !listeApprouves) return;
@@ -912,7 +1209,50 @@
             listeAttente.innerHTML = htmlAttente || '<div class="item-row">Aucune demande en attente</div>';
             listeApprouves.innerHTML = htmlApprouves || '<div class="item-row">Aucun numéro approuvé</div>';
         }
-
+        
+        function afficherUtilisateurs() { 
+            const liste = document.getElementById('utilisateurs-liste'); 
+            if(!liste) return; 
+            let filtres = Object.values(utilisateurs); 
+            if(rechercheUtilisateurs) filtres = filtres.filter(u => u.nom?.toLowerCase().includes(rechercheUtilisateurs) || u.email?.toLowerCase().includes(rechercheUtilisateurs)); 
+            if(filtres.length === 0){ liste.innerHTML='<div class="item-row">Aucun utilisateur</div>'; return; } 
+            liste.innerHTML = filtres.map((u,i)=>`<div class="user-item"><div class="user-header"><div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;"><span class="user-name"><i class="fas fa-user-circle"></i> ${echapperHTML(u.nom)}</span><span style="background:var(--accent);padding:4px 10px;border-radius:40px;font-size:0.8rem;">${echapperHTML(u.id||'ID inconnu')}</span></div><button class="btn btn-warning" style="font-size: 0.8rem; padding: 6px 12px; height: 32px; border:none; border-radius:40px; cursor:pointer;" onclick="reinitialiserMotDePasseUtilisateur('${echapperHTML(u.email)}')"><i class="fas fa-key"></i> Réinitialiser MDP</button></div><div class="user-email"><i class="fas fa-envelope"></i> ${echapperHTML(u.email||'Email non renseigné')}</div><div class="user-detail"><span style="margin-right:15px;"><i class="fas fa-calendar"></i> ${echapperHTML(new Date(u.dateInscription).toLocaleDateString())}</span><span><i class="fas fa-phone"></i> ${Object.keys(u.numeros||{}).length} numéro(s)</span></div><div class="user-stats"><span><i class="fas fa-users"></i> Filleuls: ${u.filleulsCount || 0}</span><span><i class="fas fa-ticket-alt"></i> Tours gratuits: ${u.toursGratuits || 0}</span>${u.parrainId ? `<span><i class="fas fa-link"></i> Parrain: ${utilisateurs[u.parrainId]?.nom || 'Inconnu'}</span>` : ''}</div></div>`).join(''); 
+        }
+        
+        function afficherNews(){ const liste=document.getElementById('news-liste'); if(!liste) return; if(!donnees.news||donnees.news.length===0){ liste.innerHTML='<div class="no-news"><i class="fas fa-newspaper"></i><p>Aucune actualité publiée</p></div>'; return; } const newsTriees=[...donnees.news].sort((a,b)=>new Date(b.date)-new Date(a.date)); liste.innerHTML=newsTriees.map(news=>{ const dateObj=new Date(news.date); const dateFormatee=dateObj.toLocaleDateString('fr-FR')+' à '+dateObj.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); const statut=news.statut!==false?'active':'archive'; return `<div class="news-item-admin"><div class="news-header-admin"><div class="news-titre-admin"><i class="fas ${news.important?'fa-exclamation-circle':'fa-newspaper'}" style="color: var(--accent);"></i> ${echapperHTML(news.titre)}</div><div class="item-actions"><button class="btn btn-edit" onclick="editerNews('${echapperHTML(news.id)}')"><i class="fas fa-edit"></i></button><button class="btn btn-delete" onclick="supprimerNews('${echapperHTML(news.id)}')"><i class="fas fa-trash"></i></button></div></div><div class="news-contenu-admin">${echapperHTML(news.contenu)}</div><div class="news-footer-admin"><div><span class="news-author"><i class="fas fa-user-shield"></i> ${echapperHTML(news.auteur||'Typh Exchange')}</span><span class="news-date-admin" style="margin-left: 10px;"><i class="far fa-calendar-alt"></i> ${echapperHTML(dateFormatee)}</span></div><div style="display: flex; gap: 10px;">${news.important?'<span class="news-important"><i class="fas fa-star"></i> IMPORTANT</span>':''}<span class="news-statut-badge ${statut==='active'?'news-statut-active':'news-statut-archive'}">${statut==='active'?'✓ Visible':'🗄️ Archivée'}</span></div></div></div>`; }).join(''); }
+        
+        function afficherRoue(){ 
+            const l=document.getElementById('roue-liste'); 
+            if(!l) return; 
+            let tr = Array.isArray(donnees.roue) ? donnees.roue : (typeof donnees.roue === 'object' && donnees.roue !== null ? Object.values(donnees.roue) : []);
+            donnees.roue = tr.filter(item => item !== null);
+            if(!donnees.roue||donnees.roue.length===0){ 
+                l.innerHTML='<div class="item-row">Aucun lot configuré</div>'; 
+                document.getElementById('roue-total-prob').innerHTML='Total Probabilité: <span style="color:var(--danger);">0%</span>'; 
+                return; 
+            } 
+            let t=0; 
+            l.innerHTML=donnees.roue.map((r,i)=>{ 
+                t+=parseFloat(r.probabilite)||0; 
+                let typeIcon = r.type === 'crypto' ? 'fa-coins' : (r.type === 'fiat' ? 'fa-money-bill' : 'fa-face-frown');
+                let typeColor = r.type === 'crypto' ? 'var(--binance)' : (r.type === 'fiat' ? 'var(--success)' : 'var(--warning)');
+                return `<div class="roue-lot-item">
+                    <div class="roue-lot-info">
+                        <div class="roue-lot-nom"><i class="fas ${typeIcon}" style="color:${typeColor}; margin-right:8px;"></i> ${echapperHTML(r.nom)}</div>
+                        <div class="roue-lot-type">Type: ${r.type.toUpperCase()}</div>
+                    </div>
+                    <div class="roue-lot-prob">${r.probabilite}%</div>
+                    <div class="item-actions" style="margin-left:10px;">
+                        <button class="btn btn-edit" onclick="ouvrirModal('roue',${i})" style="padding:6px 12px;"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-delete" onclick="supprimer('roue',${i})" style="padding:6px 12px;"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`; 
+            }).join(''); 
+            document.getElementById('roue-prob-total').textContent = t;
+            const el=document.getElementById('roue-total-prob'); 
+            if(el) el.innerHTML=`Total Probabilité: <span style="color:${Math.abs(t-100)<0.01?'var(--success)':'var(--danger)'};">${t}%</span> ${Math.abs(t-100)>0.01?'(Attention: le total doit être exactement 100%)':''}`; 
+        }
+        
         function afficherParrainages() {
             const liste = document.getElementById('parrainages-liste');
             if(!liste) return;
@@ -973,7 +1313,7 @@
             
             liste.innerHTML = html || '<div class="item-row">Aucune donnée de parrainage</div>';
         }
-
+        
         async function forcerEnvoiBonusParrainage() {
             if(!confirm("⚠️ Cette action va vérifier TOUS les utilisateurs et attribuer les tours gratuits aux parrains qui ont des filleuls avec numéro approuvé mais qui n'ont pas encore reçu leur bonus.\n\nContinuer ?")) return;
             let bonusDistribues = 0;
@@ -1014,182 +1354,6 @@
             }
             if (errors.length > 0) console.error("Erreurs:", errors);
         }
-
-        async function demarrerSyncBinance() { if(binanceInterval) clearInterval(binanceInterval); if(cacheTaux.chargerLocal() && cacheTaux.donnees) { donnees.taux = cacheTaux.donnees; afficherTauxSimplifies(); } await syncBinance(); binanceInterval = setInterval(syncBinance, 1800000); let tempsRestantSync = 30; setInterval(() => { tempsRestantSync--; if(tempsRestantSync < 0) tempsRestantSync = 30; const syncElement = document.getElementById('next-sync'); if(syncElement) syncElement.textContent = `${tempsRestantSync}m`; }, 60000); }
-        async function syncBinanceManuel() { if(!rateLimiter.peutExecuter()) { alert('Veuillez attendre un moment avant de rafraîchir à nouveau'); return; } alert('🔄 Synchronisation manuelle des taux en cours...'); await syncBinance(); alert('✅ Taux mis à jour !'); }
-        async function getTauxMGA() { try{ const r=await fetch('https://api.exchangerate-api.com/v4/latest/USD'); const d=await r.json(); if(d.rates&&d.rates.MGA){ tauxUSD_MGA=d.rates.MGA; return tauxUSD_MGA; } }catch(e){} return donnees.usdMGA||4700; }
-        async function syncBinance() { if(donnees.tauxMode !== 'auto') return; if(!rateLimiter.peutExecuter()) return; try{ document.getElementById('sync-badge').textContent='Synchronisation...'; document.getElementById('sync-badge').style.background='var(--warning)'; const tauxMGA=await getTauxMGA(); const r=await fetch('https://api.binance.com/api/v3/ticker/price'); const prices=await r.json(); let u={}; Object.entries(pairesBinance).forEach(([crypto,paire])=>{ if(crypto==='USDT') u[`donnees/taux/${crypto}`]={prixUSD:1,prixMGA:tauxMGA,variation:'0',couleur:'positive',lastUpdate:new Date().toISOString(),source:'binance'}; else{ const ticker=prices.find(p=>p.symbol===paire); if(ticker){ const pu=parseFloat(ticker.price); const pm=Math.round(pu*tauxMGA); const v=(Math.random()*4-2).toFixed(1); u[`donnees/taux/${crypto}`]={prixUSD:pu,prixMGA:pm,variation:(v>0?'+':'')+v,couleur:v>=0?'positive':'negative',lastUpdate:new Date().toISOString(),source:'binance'}; } } }); await database.ref().update(u); const snap=await database.ref('donnees/taux').once('value'); if(snap.val()) { donnees.taux=snap.val(); cacheTaux.set(donnees.taux); } document.getElementById('sync-badge').textContent='Actif (30min)'; document.getElementById('sync-badge').style.background='var(--success)'; afficherTauxSimplifies(); dernierSyncTaux=Date.now(); const lastUpdateSpan=document.getElementById('usd-mga-lastupdate'); if(lastUpdateSpan) lastUpdateSpan.innerHTML=`Dernière mise à jour: ${new Date().toLocaleTimeString()} (automatique toutes les 30 min)`; } catch(e){ console.error(e); document.getElementById('sync-badge').textContent='Erreur'; document.getElementById('sync-badge').style.background='var(--danger)'; } }
-        function setTauxMode(mode) { donnees.tauxMode=mode; document.getElementById('mode-auto').classList.toggle('active',mode==='auto'); document.getElementById('mode-manual').classList.toggle('active',mode==='manual'); database.ref('donnees/tauxMode').set(mode); if(mode==='auto') syncBinance(); }
-        function mettreAJourTauxUSD() { const v=parseFloat(document.getElementById('usd-mga-input').value); if(isNaN(v)||v<1000||v>10000){ alert('Taux valide 1000-10000'); return; } donnees.usdMGA=v; tauxUSD_MGA=v; document.getElementById('usd-mga-display').textContent=v.toLocaleString(); document.getElementById('usd-mga-lastupdate').innerHTML='Dernière mise à jour: '+new Date().toLocaleTimeString()+' (manuel)'; document.getElementById('usd-mga-input').value=''; database.ref('donnees/usdMGA').set(v); if(donnees.tauxMode==='manual'){ Object.keys(donnees.taux||{}).forEach(c=>{ if(donnees.taux[c]&&donnees.taux[c].prixUSD) donnees.taux[c].prixMGA=Math.round(donnees.taux[c].prixUSD*v); }); database.ref('donnees/taux').set(donnees.taux); cacheTaux.set(donnees.taux); afficherTauxSimplifies(); } }
-        async function syncTauxUSD() { await getTauxMGA(); alert(`✅ Taux USD/MGA: ${tauxUSD_MGA.toLocaleString()} Ar`); }
-        function afficherTauxSimplifies() { const liste=document.getElementById('taux-liste'); if(!liste) return; if(!donnees.taux) donnees.taux={}; const cryptos=donnees.cryptos||[]; if(cryptos.length===0){ liste.innerHTML='<div class="item-row">Aucune crypto</div>'; return; } liste.innerHTML=cryptos.map(crypto=>{ const taux=donnees.taux[crypto]||{prixUSD:crypto==='USDT'?1:0,prixMGA:crypto==='USDT'?donnees.usdMGA:0,variation:"0",couleur:"positive",source:'manual'}; const vc=taux.couleur==='positive'?'positive':'negative'; const vi=taux.couleur==='positive'?'arrow-up':'arrow-down'; let sa=crypto; if(crypto==='MATIC') sa='POL'; return `<div class="taux-card"><div class="taux-header"><span class="taux-symbole"><i class="fas fa-coins"></i> ${echapperHTML(sa)}</span><div class="item-actions"><button class="btn btn-edit" onclick="ouvrirModal('taux', null, '${echapperHTML(crypto)}')"><i class="fas fa-edit"></i></button></div></div><div class="taux-valeur-principale">${taux.prixMGA.toLocaleString()} Ar</div><div class="taux-details"><span><i class="fas fa-dollar-sign"></i> $${taux.prixUSD.toFixed(2)}</span><span class="taux-variation ${vc}"><i class="fas fa-${vi}"></i> ${taux.variation}%</span><span class="taux-source ${taux.source}">${taux.source==='binance'?'<i class="fab fa-binance"></i> Binance':'<i class="fas fa-pencil-alt"></i> Manuel'}</span></div><div style="font-size:0.7rem; color:var(--text-secondary); margin-top:10px; text-align:right;"><i class="far fa-clock"></i> ${taux.lastUpdate?new Date(taux.lastUpdate).toLocaleTimeString():''}</div></div>`; }).join(''); }
-        
-        function afficherNews(){ const liste=document.getElementById('news-liste'); if(!liste) return; if(!donnees.news||donnees.news.length===0){ liste.innerHTML='<div class="no-news"><i class="fas fa-newspaper"></i><p>Aucune actualité publiée</p></div>'; return; } const newsTriees=[...donnees.news].sort((a,b)=>new Date(b.date)-new Date(a.date)); liste.innerHTML=newsTriees.map(news=>{ const dateObj=new Date(news.date); const dateFormatee=dateObj.toLocaleDateString('fr-FR')+' à '+dateObj.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); const statut=news.statut!==false?'active':'archive'; return `<div class="news-item-admin"><div class="news-header-admin"><div class="news-titre-admin"><i class="fas ${news.important?'fa-exclamation-circle':'fa-newspaper'}" style="color: var(--accent);"></i> ${echapperHTML(news.titre)}</div><div class="item-actions"><button class="btn btn-edit" onclick="editerNews('${echapperHTML(news.id)}')"><i class="fas fa-edit"></i></button><button class="btn btn-delete" onclick="supprimerNews('${echapperHTML(news.id)}')"><i class="fas fa-trash"></i></button></div></div><div class="news-contenu-admin">${echapperHTML(news.contenu)}</div><div class="news-footer-admin"><div><span class="news-author"><i class="fas fa-user-shield"></i> ${echapperHTML(news.auteur||'Typh Exchange')}</span><span class="news-date-admin" style="margin-left: 10px;"><i class="far fa-calendar-alt"></i> ${echapperHTML(dateFormatee)}</span></div><div style="display: flex; gap: 10px;">${news.important?'<span class="news-important"><i class="fas fa-star"></i> IMPORTANT</span>':''}<span class="news-statut-badge ${statut==='active'?'news-statut-active':'news-statut-archive'}">${statut==='active'?'✓ Visible':'🗄️ Archivée'}</span></div></div></div>`; }).join(''); }
-        function editerNews(id){ const n=donnees.news.find(n=>n.id===id); if(!n) return; document.getElementById('news-editing-id').value=id; document.getElementById('news-titre').value=n.titre; document.getElementById('news-contenu').value=n.contenu; document.getElementById('news-auteur').value=n.auteur||'Typh Exchange'; document.getElementById('news-important').checked=n.important||false; document.getElementById('news-statut').checked=n.statut!==false; document.getElementById('news-form-title').innerHTML='<i class="fas fa-edit"></i> Modifier l\'actualité'; document.getElementById('btn-annuler-news').style.display='block'; }
-        function annulerEditionNews(){ document.getElementById('news-editing-id').value=''; document.getElementById('news-titre').value=''; document.getElementById('news-contenu').value=''; document.getElementById('news-auteur').value='Typh Exchange'; document.getElementById('news-important').checked=false; document.getElementById('news-statut').checked=true; document.getElementById('news-form-title').innerHTML='<i class="fas fa-plus-circle"></i> Ajouter une actualité'; document.getElementById('btn-annuler-news').style.display='none'; }
-        function sauvegarderNews(){ const titre=document.getElementById('news-titre').value.trim(); const contenu=document.getElementById('news-contenu').value.trim(); const auteur=document.getElementById('news-auteur').value.trim()||'Typh Exchange'; const important=document.getElementById('news-important').checked; const actif=document.getElementById('news-statut').checked; if(!titre||!contenu){ alert('Veuillez remplir tous les champs'); return; } if(!donnees.news) donnees.news=[]; const id=document.getElementById('news-editing-id').value; if(id){ const idx=donnees.news.findIndex(n=>n.id===id); if(idx!==-1){ donnees.news[idx]={...donnees.news[idx],titre,contenu,auteur,important,statut:actif,dateModification:new Date().toISOString()}; } } else { donnees.news.push({id:'NEWS-'+Date.now()+'-'+Math.random().toString(36).substr(2,9),titre,contenu,auteur,important,statut:actif,date:new Date().toISOString()}); } database.ref('donnees/news').set(donnees.news); annulerEditionNews(); afficherNews(); alert('✅ Actualité enregistrée avec succès'); }
-        function supprimerNews(id){ if(!confirm('❌ Supprimer cette actualité ?')) return; donnees.news=donnees.news.filter(n=>n.id!==id); database.ref('donnees/news').set(donnees.news); afficherNews(); alert('✅ Actualité supprimée'); }
-        
-        function demarrerSurveillanceTransactions() { if(intervalNotification) clearInterval(intervalNotification); intervalNotification = setInterval(() => verifierNouvellesTransactions(), 60000); verifierNouvellesTransactions(); }
-        
-        function afficherPortefeuilles(){ const l=document.getElementById('portefeuilles-liste'); if(!l) return; l.innerHTML=(donnees.portefeuilles||[]).map((p,i)=>`<div class="item-row"><div class="item-info"><div class="item-nom"><i class="fas fa-wallet"></i> ${echapperHTML(p.nom)}</div><div class="item-reponse">${echapperHTML((p.reponse||'').substring(0,50))}...</div><div style="font-size:0.8rem;margin-top:5px;color:var(--warning);"><i class="fas fa-comment"></i> Message: ${echapperHTML(p.messageConfirmation||'Aucun')}</div><div style="font-size:0.8rem;margin-top:5px;color:var(--accent);"><i class="fas fa-network-wired"></i> Réseau: ${echapperHTML(p.reseau||'Non défini')} | <i class="fas fa-link"></i> Liaison: ${p.liaisonRequise ? '<span style="color:var(--success);">Requise</span>' : 'Non requise'}</div></div><div class="item-actions"><button class="btn btn-edit" onclick="ouvrirModal('portefeuille',${i})"><i class="fas fa-edit"></i></button><button class="btn btn-delete" onclick="supprimer('portefeuille',${i})"><i class="fas fa-trash"></i></button></div></div>`).join('')||'<div class="item-row">Aucun portefeuille</div>'; }
-        function afficherOperateurs(){ const l=document.getElementById('operateurs-liste'); if(!l) return; l.innerHTML=(donnees.operateurs||[]).map((o,i)=>`<div class="item-row"><div class="item-info"><div class="item-nom"><i class="fas fa-sim-card"></i> ${echapperHTML(o.nom)}</div><div style="font-size:0.8rem;margin-top:5px;color:var(--warning);"><i class="fas fa-comment"></i> Message: ${echapperHTML(o.messageConfirmation||'Aucun')}</div></div><div class="item-actions"><button class="btn btn-edit" onclick="ouvrirModal('operateur',${i})"><i class="fas fa-edit"></i></button><button class="btn btn-delete" onclick="supprimer('operateur',${i})"><i class="fas fa-trash"></i></button></div></div>`).join('')||'<div class="item-row">Aucun opérateur</div>'; }
-        function afficherReseaux(){ const l=document.getElementById('reseaux-liste'); if(!l) return; l.innerHTML=(donnees.reseaux||[]).map((r,i)=>`<div class="reseau-item"><div class="reseau-header"><span><i class="fas fa-network-wired"></i> <strong>${echapperHTML(r.nom)}</strong></span><div class="item-actions"><button class="btn btn-edit" onclick="ouvrirModal('reseau',${i})"><i class="fas fa-edit"></i></button><button class="btn btn-delete" onclick="supprimer('reseau',${i})"><i class="fas fa-trash"></i></button></div></div><div style="margin-top:8px;"><span style="color:var(--text-secondary);">Crypto: </span>${echapperHTML(r.crypto)}<br><span style="color:var(--text-secondary);">Frais réseau: </span>${r.fraisReseau||0}%</div></div>`).join('')||'<div class="item-row">Aucun réseau configuré</div>'; }
-        
-        function afficherDemandes() { 
-            const l = document.getElementById('demandes-liste'); 
-            if(!l) return; 
-            const demandesArray = getDemandesTableau();
-            const demandesFiltrees = demandesArray.filter(d => d.type === 'ACHAT' || d.type === 'VENTE');
-            if(demandesFiltrees.length === 0){ 
-                l.innerHTML = '<div class="item-row">Aucune demande ACHAT/VENTE</div>'; 
-                return; 
-            }
-            const typeFiltre = document.getElementById('filtre-type')?.value || 'all';
-            const statutFiltre = document.getElementById('filtre-statut')?.value || 'all';
-            let filtrees = demandesFiltrees;
-            if(typeFiltre !== 'all') filtrees = filtrees.filter(d => d.type === typeFiltre);
-            if(statutFiltre !== 'all') filtrees = filtrees.filter(d => d.statut === statutFiltre);
-            l.innerHTML = filtrees.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(d => {
-                let detailsHtml = '';
-                let contactClient = '';
-                if(d.type === 'ACHAT') {
-                    detailsHtml = `<div>Montant: ${echapperHTML(d.montant)} Ar</div><div style="color:var(--success);font-weight:600;">Vous recevez: ${d.montantRecu?d.montantRecu.toFixed(4)+' '+d.crypto:'Calcul...'}</div>`;
-                    contactClient = d.adresse ? `<span style="color:var(--accent); font-size:0.85rem;"><i class="fas fa-link"></i> ${echapperHTML(d.adresse)}</span>` : '';
-                }
-                else if(d.type === 'VENTE') {
-                    detailsHtml = `<div>Montant: ${echapperHTML(d.montant)} ${d.crypto}</div><div style="color:var(--success);font-weight:600;">Vous recevez: ${d.montantRecu?d.montantRecu.toLocaleString()+' Ar':'Calcul...'}</div>`;
-                    contactClient = d.adresseLiee ? `<div style="background: rgba(59,130,246,0.15); border: 1px solid var(--accent); padding: 8px 12px; border-radius: 12px; margin-top: 8px;"><span style="color:var(--accent); font-size:0.9rem; font-weight:bold;"><i class="fas fa-link"></i> Adresse de réception liée :</span><br><span style="color:var(--white); font-size:0.85rem; word-break:break-all;">${echapperHTML(d.adresseLiee)}</span></div>` : '';
-                }
-                return `<div class="request-item">
-                    <div class="request-header">
-                        <div><span><i class="fas ${d.type==='ACHAT'?'fa-arrow-down':'fa-arrow-up'}"></i> ${echapperHTML(d.type)}</span></div>
-                        <span style="color:var(--text-secondary);font-size:0.8rem;">${echapperHTML(new Date(d.date).toLocaleString())}</span>
-                    </div>
-                    <div style="margin:10px 0;">
-                        <div>Client: <strong>${echapperHTML(d.utilisateur)}</strong> (${echapperHTML(d.userID||'ID inconnu')})</div>
-                        ${detailsHtml}
-                        <div style="margin-top:5px;">${contactClient}</div>
-                        ${d.txid?`<div style="font-size:0.8rem; margin-top:5px;">TXID/Preuve: ${echapperHTML(d.txid.substring(0,20))}...</div>`:''}
-                    </div>
-                    <div class="badge-statut ${d.statut}">${echapperHTML(d.statut)}</div>
-                    ${d.statut==='en_attente' ? `<div style="display:flex;gap:10px;margin-top:15px;">
-                        <button class="btn btn-approuver" onclick="approuverDemande('${echapperHTML(d.id)}')">Approuver</button>
-                        <button class="btn btn-rejeter" onclick="rejeterDemande('${echapperHTML(d.id)}')">Rejeter</button>
-                        <button class="btn btn-save-attentes" onclick="sauvegarderDemandeUnique('${echapperHTML(d.id)}')"><i class="fas fa-save"></i> Sauvegarder</button>
-                    </div>` : ''}
-                </div>`;
-            }).join(''); 
-        }
-        
-        function afficherBonus() {
-            const l = document.getElementById('bonus-liste');
-            if(!l) return;
-            const demandesArray = getDemandesTableau();
-            const bonus = demandesArray.filter(d => d.type === 'BONUS');
-            if(bonus.length === 0){
-                l.innerHTML = '<div class="item-row">Aucun bonus de roue</div>';
-                document.getElementById('bonus-total').textContent = '0';
-                document.getElementById('bonus-attente').textContent = '0';
-                document.getElementById('bonus-confirme').textContent = '0';
-                document.getElementById('bonus-rejete').textContent = '0';
-                return;
-            }
-            const statutFiltre = document.getElementById('filtre-statut-bonus')?.value || 'all';
-            const recherche = (document.getElementById('recherche-bonus')?.value || '').toLowerCase();
-            let filtrees = bonus;
-            if(statutFiltre !== 'all') filtrees = filtrees.filter(d => d.statut === statutFiltre);
-            if(recherche) filtrees = filtrees.filter(d => (d.utilisateur && d.utilisateur.toLowerCase().includes(recherche)) || (d.lotGagne && d.lotGagne.toLowerCase().includes(recherche)));
-            
-            const total = bonus.length;
-            const attente = bonus.filter(d => d.statut === 'en_attente').length;
-            const confirme = bonus.filter(d => d.statut === 'confirme').length;
-            const rejete = bonus.filter(d => d.statut === 'rejete').length;
-            document.getElementById('bonus-total').textContent = total;
-            document.getElementById('bonus-attente').textContent = attente;
-            document.getElementById('bonus-confirme').textContent = confirme;
-            document.getElementById('bonus-rejete').textContent = rejete;
-            
-            l.innerHTML = filtrees.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(d => {
-                return `<div class="transaction-item ${d.statut} bonus-en_attente" onclick="voirDetailsTransaction('${echapperHTML(d.id)}')">
-                    <div class="transaction-header">
-                        <span class="badge-type BONUS"><i class="fas fa-gift"></i> BONUS ROUE</span>
-                        <span class="badge-statut ${d.statut}">${echapperHTML(d.statut)}</span>
-                        <span class="transaction-date"><i class="far fa-clock"></i> ${echapperHTML(new Date(d.date).toLocaleString())}</span>
-                    </div>
-                    <div class="transaction-user"><i class="fas fa-user"></i> ${echapperHTML(d.utilisateur)} (${echapperHTML(d.userID||'ID inconnu')})</div>
-                    <div class="transaction-details">
-                        <div class="detail-item"><span class="detail-label">Lot gagné</span><span class="detail-value" style="color:var(--bonus);">${echapperHTML(d.lotGagne || d.montant || 'N/A')}</span></div>
-                        <div class="detail-item"><span class="detail-label">Info réception</span><span class="detail-value">${echapperHTML(d.adresse || d.numero || 'Non spécifié')}</span></div>
-                    </div>
-                    <div class="transaction-footer">
-                        <button class="btn btn-view" onclick="event.stopPropagation(); voirDetailsTransaction('${echapperHTML(d.id)}')"><i class="fas fa-eye"></i> Voir détails</button>
-                        ${d.statut==='en_attente' ? `
-                        <button class="btn btn-success" onclick="event.stopPropagation(); approuverDemande('${echapperHTML(d.id)}')"><i class="fas fa-check"></i> Approuver</button>
-                        <button class="btn btn-delete" onclick="event.stopPropagation(); rejeterDemande('${echapperHTML(d.id)}')"><i class="fas fa-times"></i> Rejeter</button>
-                        <button class="btn btn-save-attentes" onclick="event.stopPropagation(); sauvegarderDemandeUnique('${echapperHTML(d.id)}')"><i class="fas fa-save"></i> Sauvegarder</button>
-                        ` : ''}
-                    </div>
-                </div>`;
-            }).join('');
-        }
-        
-        function filtrerBonus() { afficherBonus(); }
-        
-        // Fonctions approuverDemande et rejeterDemande modifiées avec sauvegarde triple
-        function approuverDemande(id) { 
-            if(!confirm('✅ Approuver cette demande ?')) return; 
-            const demandesArray = getDemandesTableau();
-            const d = demandesArray.find(d=>d.id===id); 
-            if(d){ 
-                d.statut='confirme'; 
-                d.dateModification=new Date().toISOString(); 
-                if(!d.historique) d.historique=[]; 
-                d.historique.push({date:new Date().toISOString(),action:'APPROUVEE_PAR_ADMIN',details:'Demande approuvée par admin',admin: auth.currentUser?.email || 'admin'}); 
-                sauvegarderDemandes(demandesArray);
-                sauvegardeTripleTransaction(d);
-                afficherDemandes(); 
-                afficherTransactions(); 
-                afficherBonus();
-                verifierNouvellesTransactions(); 
-                alert('✅ Demande approuvée et sauvegardée sur 3 emplacements !'); 
-            } 
-        }
-        
-        function rejeterDemande(id) { 
-            if(!confirm('❌ Rejeter cette demande ?')) return; 
-            const demandesArray = getDemandesTableau();
-            const d = demandesArray.find(d=>d.id===id); 
-            if(d){ 
-                d.statut='rejete'; 
-                d.dateModification=new Date().toISOString(); 
-                if(!d.historique) d.historique=[]; 
-                d.historique.push({date:new Date().toISOString(),action:'REJETEE_PAR_ADMIN',details:'Demande rejetée par admin',admin: auth.currentUser?.email || 'admin'}); 
-                sauvegarderDemandes(demandesArray);
-                sauvegardeTripleTransaction(d);
-                afficherDemandes(); 
-                afficherTransactions(); 
-                afficherBonus();
-                verifierNouvellesTransactions(); 
-                alert('❌ Demande rejetée et sauvegardée sur 3 emplacements.'); 
-            } 
-        }
-        
-        function afficherUtilisateurs() { 
-            const liste = document.getElementById('utilisateurs-liste'); 
-            if(!liste) return; 
-            let filtres = Object.values(utilisateurs); 
-            if(rechercheUtilisateurs) filtres = filtres.filter(u => u.nom?.toLowerCase().includes(rechercheUtilisateurs) || u.email?.toLowerCase().includes(rechercheUtilisateurs)); 
-            if(filtres.length === 0){ liste.innerHTML='<div class="item-row">Aucun utilisateur</div>'; return; } 
-            liste.innerHTML = filtres.map((u,i)=>`<div class="user-item"><div class="user-header"><div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;"><span class="user-name"><i class="fas fa-user-circle"></i> ${echapperHTML(u.nom)}</span><span style="background:var(--accent);padding:4px 10px;border-radius:40px;font-size:0.8rem;">${echapperHTML(u.id||'ID inconnu')}</span></div><button class="btn btn-warning" style="font-size: 0.8rem; padding: 6px 12px; height: 32px; border:none; border-radius:40px; cursor:pointer;" onclick="reinitialiserMotDePasseUtilisateur('${echapperHTML(u.email)}')"><i class="fas fa-key"></i> Réinitialiser MDP</button></div><div class="user-email"><i class="fas fa-envelope"></i> ${echapperHTML(u.email||'Email non renseigné')}</div><div class="user-detail"><span style="margin-right:15px;"><i class="fas fa-calendar"></i> ${echapperHTML(new Date(u.dateInscription).toLocaleDateString())}</span><span><i class="fas fa-phone"></i> ${Object.keys(u.numeros||{}).length} numéro(s)</span></div><div class="user-stats"><span><i class="fas fa-users"></i> Filleuls: ${u.filleulsCount || 0}</span><span><i class="fas fa-ticket-alt"></i> Tours gratuits: ${u.toursGratuits || 0}</span>${u.parrainId ? `<span><i class="fas fa-link"></i> Parrain: ${utilisateurs[u.parrainId]?.nom || 'Inconnu'}</span>` : ''}</div></div>`).join(''); 
-        }
-        
-        function reinitialiserMotDePasseUtilisateur(email) {
-            if (!email || email === 'undefined' || email === 'Email non renseigné') { alert('Email invalide pour cet utilisateur.'); return; }
-            if (confirm(`Envoyer un lien de réinitialisation de mot de passe à ${email} ?`)) {
-                auth.sendPasswordResetEmail(email).then(() => { alert(`✅ Lien de réinitialisation envoyé à ${email}.`); }).catch((error) => { console.error(error); alert(`❌ Erreur : ${error.message}`); });
-            }
-        }
         
         function mettreAJourStats() { 
             let numerosAttente = 0; 
@@ -1209,187 +1373,61 @@
             mettreAJourBadgeNumeros();
         }
         
+        function mettreAJourBadgeNumeros() {
+            let numerosAttente = 0;
+            Object.values(utilisateurs).forEach(user => {
+                if(user.numeros) numerosAttente += Object.values(user.numeros).filter(n => n.statut === 'en_attente').length;
+            });
+            const badge = document.getElementById('notif-numeros');
+            if(badge) {
+                if(numerosAttente > 0) {
+                    badge.textContent = numerosAttente;
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+        
+        function rafraichirUtilisateurs() { database.ref('donnees/utilisateurs').once('value').then((snap) => { utilisateurs = snap.val() || {}; mettreAJourStats(); afficherNumeros(); afficherUtilisateurs(); afficherParrainages(); }).catch(e => console.error(e)); }
+        function rafraichirNumeros() { rafraichirUtilisateurs(); afficherNumeros(); }
+        
+        async function approuverNumero(uid, numeroId) { 
+            if(!confirm('✅ Approuver ce numéro ?')) return; 
+            await database.ref(`donnees/utilisateurs/${uid}/numeros/${numeroId}/statut`).set('approuve');
+            const userSnap = await database.ref(`donnees/utilisateurs/${uid}`).once('value');
+            const userData = userSnap.val();
+            if(userData && userData.parrainId && !userData.bonusParrainageDonne) {
+                const parrainId = userData.parrainId;
+                const parrainRef = database.ref(`donnees/utilisateurs/${parrainId}`);
+                const parrainSnap = await parrainRef.once('value');
+                const parrainData = parrainSnap.val();
+                if(parrainData) {
+                    const nouveauxTours = (parrainData.toursGratuits || 0) + 1;
+                    const nouveauxFilleuls = (parrainData.filleulsCount || 0) + 1;
+                    await parrainRef.update({ toursGratuits: nouveauxTours, filleulsCount: nouveauxFilleuls });
+                    await database.ref(`donnees/utilisateurs/${uid}`).update({ bonusParrainageDonne: true });
+                    alert(`✅ Numéro approuvé ! 1 tour gratuit a été ajouté au parrain.`);
+                } else {
+                    alert(`✅ Numéro approuvé !`);
+                }
+            } else {
+                alert(`✅ Numéro approuvé !`);
+            }
+            rafraichirUtilisateurs();
+        }
+        
+        function rejeterNumero(uid, numeroId) { if(!confirm('❌ Rejeter ce numéro ?')) return; database.ref(`donnees/utilisateurs/${uid}/numeros/${numeroId}/statut`).set('rejete').then(() => { alert('Numéro rejeté'); rafraichirUtilisateurs(); }).catch(err => console.error(err)); }
+        
         function filtrerUtilisateurs(){ rechercheUtilisateurs=document.getElementById('recherche-utilisateur')?.value.toLowerCase()||''; afficherUtilisateurs(); }
         
-        function afficherRoue(){ 
-            const l=document.getElementById('roue-liste'); 
-            if(!l) return; 
-            let tr = Array.isArray(donnees.roue) ? donnees.roue : (typeof donnees.roue === 'object' && donnees.roue !== null ? Object.values(donnees.roue) : []);
-            donnees.roue = tr.filter(item => item !== null);
-            if(!donnees.roue||donnees.roue.length===0){ 
-                l.innerHTML='<div class="item-row">Aucun lot configuré</div>'; 
-                document.getElementById('roue-total-prob').innerHTML='Total Probabilité: <span style="color:var(--danger);">0%</span>'; 
-                return; 
-            } 
-            let t=0; 
-            l.innerHTML=donnees.roue.map((r,i)=>{ 
-                t+=parseFloat(r.probabilite)||0; 
-                let typeIcon = r.type === 'crypto' ? 'fa-coins' : (r.type === 'fiat' ? 'fa-money-bill' : 'fa-face-frown');
-                let typeColor = r.type === 'crypto' ? 'var(--binance)' : (r.type === 'fiat' ? 'var(--success)' : 'var(--warning)');
-                return `<div class="roue-lot-item">
-                    <div class="roue-lot-info">
-                        <div class="roue-lot-nom"><i class="fas ${typeIcon}" style="color:${typeColor}; margin-right:8px;"></i> ${echapperHTML(r.nom)}</div>
-                        <div class="roue-lot-type">Type: ${r.type.toUpperCase()}</div>
-                    </div>
-                    <div class="roue-lot-prob">${r.probabilite}%</div>
-                    <div class="item-actions" style="margin-left:10px;">
-                        <button class="btn btn-edit" onclick="ouvrirModal('roue',${i})" style="padding:6px 12px;"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-delete" onclick="supprimer('roue',${i})" style="padding:6px 12px;"><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>`; 
-            }).join(''); 
-            document.getElementById('roue-prob-total').textContent = t;
-            const el=document.getElementById('roue-total-prob'); 
-            if(el) el.innerHTML=`Total Probabilité: <span style="color:${Math.abs(t-100)<0.01?'var(--success)':'var(--danger)'};">${t}%</span> ${Math.abs(t-100)>0.01?'(Attention: le total doit être exactement 100%)':''}`; 
-        }
-
-        function afficherTout() { 
-            afficherPortefeuilles(); 
-            afficherOperateurs(); 
-            afficherReseaux(); 
-            afficherTauxSimplifies(); 
-            afficherNumeros(); 
-            afficherDemandes(); 
-            afficherUtilisateurs(); 
-            afficherNews(); 
-            afficherTransactions();
-            afficherBonus();
-            afficherRoue(); 
-            afficherParrainages();
-            if(donnees.frais){ 
-                document.getElementById('frais-achat-display').textContent=donnees.frais.achat+'%'; 
-                document.getElementById('frais-vente-display').textContent=donnees.frais.vente+'%'; 
-            } 
-            document.getElementById('mode-auto').classList.toggle('active',donnees.tauxMode==='auto'); 
-            document.getElementById('mode-manual').classList.toggle('active',donnees.tauxMode==='manual'); 
-            mettreAJourAffichageLimites(); 
+        function reinitialiserMotDePasseUtilisateur(email) {
+            if (!email || email === 'undefined' || email === 'Email non renseigné') { alert('Email invalide pour cet utilisateur.'); return; }
+            if (confirm(`Envoyer un lien de réinitialisation de mot de passe à ${email} ?`)) {
+                auth.sendPasswordResetEmail(email).then(() => { alert(`✅ Lien de réinitialisation envoyé à ${email}.`); }).catch((error) => { console.error(error); alert(`❌ Erreur : ${error.message}`); });
+            }
         }
         
-        let modalType, modalIndex, modalMode, modalCryptoNom;
-        function ouvrirModal(type,index=-1,cryptoNom=null){ modalType=type; modalIndex=index; modalCryptoNom=cryptoNom; modalMode=index===-1?'ajout':'modification'; const modal=document.getElementById('modal-admin'); const titre=document.getElementById('modal-titre'); const champs=document.getElementById('modal-champs'); let html=''; switch(type){ case 'portefeuille': titre.innerHTML='<i class="fas fa-briefcase"></i> '+(modalMode==='ajout'?'Nouveau portefeuille':'Modifier portefeuille'); if(modalMode==='ajout') html=`<input type="text" id="modal-nom" placeholder="Nom du portefeuille"><textarea id="modal-reponse" placeholder="Description"></textarea><textarea id="modal-message" placeholder="Message de confirmation"></textarea><select id="modal-reseau"><option value="">Sélectionner un réseau</option>${(donnees.reseaux||[]).map(r=>`<option value="${echapperHTML(r.nom)}">${echapperHTML(r.nom)} (${echapperHTML(r.crypto)})</option>`).join('')}</select><div style="margin-top:15px; background:var(--bg-dark); padding:10px; border-radius:10px;"><label style="display:flex; align-items:center; gap:10px; color:var(--text-primary); cursor:pointer;"><input type="checkbox" id="modal-liaison-requise" style="width:18px; height:18px; accent-color:var(--accent);"> Nécessite une liaison d'adresse</label></div>`; else html=`<input type="text" id="modal-nom" value="${echapperHTML(donnees.portefeuilles[index].nom)}"><textarea id="modal-reponse">${echapperHTML(donnees.portefeuilles[index].reponse||'')}</textarea><textarea id="modal-message">${echapperHTML(donnees.portefeuilles[index].messageConfirmation||'')}</textarea><select id="modal-reseau"><option value="">Sélectionner un réseau</option>${(donnees.reseaux||[]).map(r=>`<option value="${echapperHTML(r.nom)}" ${donnees.portefeuilles[index].reseau===r.nom?'selected':''}>${echapperHTML(r.nom)} (${echapperHTML(r.crypto)})</option>`).join('')}</select><div style="margin-top:15px; background:var(--bg-dark); padding:10px; border-radius:10px;"><label style="display:flex; align-items:center; gap:10px; color:var(--text-primary); cursor:pointer;"><input type="checkbox" id="modal-liaison-requise" style="width:18px; height:18px; accent-color:var(--accent);" ${donnees.portefeuilles[index].liaisonRequise ? 'checked' : ''}> Nécessite une liaison d'adresse</label></div>`; break; case 'operateur': titre.innerHTML='<i class="fas fa-mobile-alt"></i> '+(modalMode==='ajout'?'Nouvel opérateur':'Modifier opérateur'); if(modalMode==='ajout') html=`<input type="text" id="modal-nom" placeholder="Nom"><textarea id="modal-message" placeholder="Message de confirmation"></textarea>`; else html=`<input type="text" id="modal-nom" value="${echapperHTML(donnees.operateurs[index].nom)}"><textarea id="modal-message">${echapperHTML(donnees.operateurs[index].messageConfirmation||'')}</textarea>`; break; case 'reseau': titre.innerHTML='<i class="fas fa-network-wired"></i> '+(modalMode==='ajout'?'Nouveau réseau':'Modifier réseau'); if(modalMode==='ajout') html=`<input type="text" id="modal-nom" placeholder="Nom du réseau"><select id="modal-crypto">${(donnees.cryptos||[]).map(c=>`<option value="${echapperHTML(c)}">${echapperHTML(c)}</option>`).join('')}</select><input type="number" id="modal-frais-reseau" placeholder="Frais réseau (%)" step="0.1" min="0">`; else html=`<input type="text" id="modal-nom" value="${echapperHTML(donnees.reseaux[index].nom)}"><select id="modal-crypto">${(donnees.cryptos||[]).map(c=>`<option value="${echapperHTML(c)}" ${donnees.reseaux[index].crypto===c?'selected':''}>${echapperHTML(c)}</option>`).join('')}</select><input type="number" id="modal-frais-reseau" step="0.1" min="0" value="${donnees.reseaux[index].fraisReseau||0}">`; break; case 'crypto': titre.innerHTML='<i class="fas fa-coins"></i> '+(modalMode==='ajout'?'Ajouter crypto':'Modifier crypto'); html=`<input type="text" id="modal-nom" placeholder="Nom (ex: USDT, BTC)" value="${modalMode==='modification'?echapperHTML(donnees.cryptos[index]):''}">`; break; case 'taux': const crypto=cryptoNom||(modalMode==='modification'?Object.keys(donnees.taux)[index]:''); const taux=crypto&&donnees.taux[crypto]?donnees.taux[crypto]:{prixUSD:0,prixMGA:0,variation:"0",couleur:"positive"}; titre.innerHTML=`<i class="fas fa-chart-line"></i> Modifier taux ${echapperHTML(crypto)}`; html=`<input type="hidden" id="modal-crypto" value="${echapperHTML(crypto)}"><div style="margin-bottom:15px;color:var(--text-secondary);">Crypto: <strong>${echapperHTML(crypto)}</strong></div><div style="background:var(--bg-dark);padding:15px;border-radius:20px;margin-bottom:20px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span>Prix USD:</span><span style="font-weight:600;">$${taux.prixUSD.toFixed(2)}</span></div><div style="display:flex;justify-content:space-between;"><span>Prix MGA:</span><span style="font-weight:600;color:var(--warning);">${taux.prixMGA.toLocaleString()} Ar</span></div></div><input type="number" id="modal-prix-usd" placeholder="Prix USD" step="0.01" value="${taux.prixUSD||0}"><input type="number" id="modal-prix-mga" placeholder="Prix MGA" value="${taux.prixMGA||0}"><input type="text" id="modal-variation" placeholder="Variation %" value="${echapperHTML(taux.variation||'0')}"><select id="modal-couleur"><option value="positive" ${taux.couleur==='positive'?'selected':''}>Positif (+)</option><option value="negative" ${taux.couleur==='negative'?'selected':''}>Négatif (-)</option></select>`; break; case 'roue': titre.innerHTML='<i class="fas fa-gift"></i> '+(modalMode==='ajout'?'Nouveau Lot de la Roue':'Modifier Lot'); let rDef = {nom:'', type:'crypto', probabilite:0}; let rObj = modalMode === 'modification' ? donnees.roue[index] : rDef; html=`<input type="text" id="modal-roue-nom" placeholder="Nom du lot (ex: 5000 Ar ou 1 USDT ou Merci...)" value="${echapperHTML(rObj.nom)}"> 
-                    <select id="modal-roue-type" style="width: 100%; padding: 16px; margin-bottom: 16px; background: var(--primary); border: 1px solid var(--gray-300); border-radius: 40px; color: var(--white);">
-                        <option value="crypto" ${rObj.type==='crypto'?'selected':''}>💰 Crypto (ex: USDT)</option>
-                        <option value="fiat" ${rObj.type==='fiat'?'selected':''}>💵 Ariary (ex: 5000 Ar)</option>
-                        <option value="rien" ${rObj.type==='rien'?'selected':''}>😢 Perdant (Merci de votre fidélité)</option>
-                    </select> 
-                    <input type="number" id="modal-roue-prob" placeholder="Probabilité en % (total doit être 100%)" step="0.1" min="0" max="100" value="${rObj.probabilite}">
-                    <div class="info-message" style="margin-top:10px;"><i class="fas fa-info-circle"></i> La somme des probabilités doit être égale à 100%</div>`; break; } if(html){ champs.innerHTML=html; modal.classList.add('active'); } }
-        function fermerModal(){ document.getElementById('modal-admin').classList.remove('active'); }
-        function sauvegarderModal(){ const nom=document.getElementById('modal-nom')?.value; switch(modalType){ case 'portefeuille': if(!nom){ alert('Nom requis'); return; } const reponse=document.getElementById('modal-reponse')?.value||''; const message=document.getElementById('modal-message')?.value||''; const reseau=document.getElementById('modal-reseau')?.value||''; const liaisonRequise = document.getElementById('modal-liaison-requise')?.checked || false; if(modalMode==='ajout') donnees.portefeuilles.push({nom,reponse,messageConfirmation:message,reseau,liaisonRequise}); else donnees.portefeuilles[modalIndex]={...donnees.portefeuilles[modalIndex],nom,reponse,messageConfirmation:message,reseau,liaisonRequise}; database.ref('donnees/portefeuilles').set(donnees.portefeuilles); break; case 'operateur': if(!nom){ alert('Nom requis'); return; } const msg=document.getElementById('modal-message')?.value||''; if(modalMode==='ajout') donnees.operateurs.push({nom,messageConfirmation:msg}); else donnees.operateurs[modalIndex]={...donnees.operateurs[modalIndex],nom,messageConfirmation:msg}; database.ref('donnees/operateurs').set(donnees.operateurs); break; case 'reseau': if(!nom){ alert('Nom requis'); return; } const crypto=document.getElementById('modal-crypto')?.value; const frais=parseFloat(document.getElementById('modal-frais-reseau')?.value)||0; if(modalMode==='ajout'){ if(!donnees.reseaux) donnees.reseaux=[]; donnees.reseaux.push({nom,crypto,fraisReseau:frais}); } else donnees.reseaux[modalIndex]={...donnees.reseaux[modalIndex],nom,crypto,fraisReseau:frais}; database.ref('donnees/reseaux').set(donnees.reseaux); break; case 'crypto': if(!nom){ alert('Nom requis'); return; } if(modalMode==='ajout'){ if(!donnees.cryptos.includes(nom)){ donnees.cryptos.push(nom); if(!donnees.taux[nom]) donnees.taux[nom]={prixUSD:nom==='USDT'?1:0,prixMGA:nom==='USDT'?donnees.usdMGA:0,variation:"0",couleur:"positive",source:'manual'}; } } else{ const ancien=donnees.cryptos[modalIndex]; if(ancien!==nom&&donnees.taux[ancien]){ donnees.taux[nom]=donnees.taux[ancien]; delete donnees.taux[ancien]; } donnees.cryptos[modalIndex]=nom; } database.ref('donnees/cryptos').set(donnees.cryptos); database.ref('donnees/taux').set(donnees.taux); cacheTaux.set(donnees.taux); break; case 'taux': const c=document.getElementById('modal-crypto')?.value; if(c){ const pu=parseFloat(document.getElementById('modal-prix-usd')?.value)||0; const pm=parseFloat(document.getElementById('modal-prix-mga')?.value)||0; donnees.taux[c]={prixUSD:pu,prixMGA:pm,variation:document.getElementById('modal-variation')?.value||"0",couleur:document.getElementById('modal-couleur')?.value||"positive",lastUpdate:new Date().toISOString(),source:'manual'}; if(donnees.tauxMode==='auto') setTauxMode('manual'); database.ref('donnees/taux').set(donnees.taux); cacheTaux.set(donnees.taux); } break; case 'roue': const nomR=document.getElementById('modal-roue-nom')?.value; if(!nomR){ alert('Nom du lot requis'); return; } const typeR=document.getElementById('modal-roue-type')?.value; const probR=parseFloat(document.getElementById('modal-roue-prob')?.value)||0; if(probR < 0 || probR > 100){ alert('La probabilité doit être entre 0 et 100'); return; } let trRoue = Array.isArray(donnees.roue) ? donnees.roue : (typeof donnees.roue === 'object' && donnees.roue !== null ? Object.values(donnees.roue) : []); donnees.roue = trRoue.filter(item => item !== null); if(!donnees.roue) donnees.roue=[]; if(modalMode==='ajout') donnees.roue.push({id:'ROUE-'+Date.now()+'-'+Math.random().toString(36).substr(2,4), nom:nomR, type:typeR, probabilite:probR}); else donnees.roue[modalIndex]={...donnees.roue[modalIndex], nom:nomR, type:typeR, probabilite:probR}; database.ref('donnees/roue').set(donnees.roue); break; } fermerModal(); afficherTout(); }
-        
-        function switchTab(tab){ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); ['gestion','taux','pause','utilisateurs','numeros','demandes','news','transactions','bonusroue','config','roue','parrainage'].forEach(t=>document.getElementById(t+'-tab').style.display='none'); const tabsMap = { gestion:0, taux:1, pause:2, utilisateurs:3, numeros:4, demandes:5, news:6, transactions:7, bonusroue:8, config:9, roue:10, parrainage:11 };
-            const idx = tabsMap[tab];
-            if(idx !== undefined) document.querySelectorAll('.tab')[idx]?.classList.add('active');
-            document.getElementById(tab+'-tab').style.display='block';
-            if(tab === 'transactions'){ afficherTransactions(); calculerStatsTransactions(); if(document.getElementById('notif-transactions')) document.getElementById('notif-transactions').style.background='var(--warning)'; }
-            if(tab === 'bonusroue'){ afficherBonus(); }
-            if(tab === 'numeros'){ afficherNumeros(); }
-            if(tab === 'roue'){ afficherRoue(); }
-            if(tab === 'parrainage'){ afficherParrainages(); }
-        }
-        
-        function mettreAJourPauseUI(){ const a=document.getElementById('achat-status-text'); const v=document.getElementById('vente-status-text'); const ba=document.getElementById('btn-pause-achat'); const bv=document.getElementById('btn-pause-vente'); if(a){ if(donnees.pause?.achat){ a.innerHTML='Actuellement: <span style="color: var(--danger);">EN PAUSE</span>'; ba.innerHTML='<i class="fas fa-play"></i> ACTIVER'; ba.className='btn btn-play'; } else{ a.innerHTML='Actuellement: <span style="color: var(--success);">Actif</span>'; ba.innerHTML='<i class="fas fa-pause"></i> Mettre en PAUSE'; ba.className='btn btn-pause'; } } if(v){ if(donnees.pause?.vente){ v.innerHTML='Actuellement: <span style="color: var(--danger);">EN PAUSE</span>'; bv.innerHTML='<i class="fas fa-play"></i> ACTIVER'; bv.className='btn btn-play'; } else{ v.innerHTML='Actuellement: <span style="color: var(--success);">Actif</span>'; bv.innerHTML='<i class="fas fa-pause"></i> Mettre en PAUSE'; bv.className='btn btn-pause'; } } }
-        function togglePause(type){ if(!donnees.pause) donnees.pause={achat:false,vente:false}; donnees.pause[type]=!donnees.pause[type]; database.ref('donnees/pause').set(donnees.pause); mettreAJourPauseUI(); alert(`✅ Section ${type.toUpperCase()} ${donnees.pause[type]?'EN PAUSE':'ACTIVÉE'}`); }
-        function modifierFrais(type){ const v=parseFloat(document.getElementById(`frais-${type}-input`).value); if(isNaN(v)||v<0||v>100){ alert('Pourcentage valide (0-100)'); return; } donnees.frais[type]=v; database.ref(`donnees/frais/${type}`).set(v); document.getElementById(`frais-${type}-display`).textContent=v+'%'; document.getElementById(`frais-${type}-input`).value=''; alert(`✅ Frais ${type} modifié à ${v}%`); }
-        function mettreAJourAffichageLimites(){ if(donnees.limites){ document.getElementById('config-min-achat').value=donnees.limites.minAchat||2000; document.getElementById('config-min-achat-trx').value=donnees.limites.minAchatTRX||5000; document.getElementById('config-max-achat').value=donnees.limites.maxAchat||100000; document.getElementById('config-min-vente').value=donnees.limites.minVente||2000; document.getElementById('config-max-vente').value=donnees.limites.maxVente||100000; } if(donnees.messagesSpeciaux) document.getElementById('config-message-trx').value=donnees.messagesSpeciaux.trx||"Frais réseau TRC20 : 3% ou -1 TRX si activation"; }
-        function sauvegarderLimites(){ donnees.limites={minAchat:parseInt(document.getElementById('config-min-achat').value)||2000,minAchatTRX:parseInt(document.getElementById('config-min-achat-trx').value)||5000,maxAchat:parseInt(document.getElementById('config-max-achat').value)||100000,minVente:parseInt(document.getElementById('config-min-vente').value)||2000,maxVente:parseInt(document.getElementById('config-max-vente').value)||100000}; database.ref('donnees/limites').set(donnees.limites); alert('✅ Limites sauvegardées'); }
-        function sauvegarderMessagesSpeciaux(){ if(!donnees.messagesSpeciaux) donnees.messagesSpeciaux={}; donnees.messagesSpeciaux.trx=document.getElementById('config-message-trx').value; database.ref('donnees/messagesSpeciaux').set(donnees.messagesSpeciaux); alert('✅ Message spécial sauvegardé'); }
-        function verifierConnexionFirebase(){ database.ref('.info/connected').once('value').then(s=>alert(s.val()?'✅ Connecté à Firebase':'❌ Déconnecté')).catch(e=>alert('❌ Erreur: '+e.message)); }
-        function exporterDonnees(){ const a=document.createElement('a'); a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify({...donnees, utilisateurs},null,2)); a.download=`typh-data-export-${new Date().toISOString().split('T')[0]}.json`; a.click(); }
-        function supprimer(type,idx){ if(!confirm('Supprimer ?')) return; switch(type){ case 'portefeuille': donnees.portefeuilles.splice(idx,1); database.ref('donnees/portefeuilles').set(donnees.portefeuilles); break; case 'operateur': donnees.operateurs.splice(idx,1); database.ref('donnees/operateurs').set(donnees.operateurs); break; case 'reseau': donnees.reseaux.splice(idx,1); database.ref('donnees/reseaux').set(donnees.reseaux); break; case 'crypto': const c=donnees.cryptos[idx]; donnees.cryptos.splice(idx,1); if(donnees.taux&&donnees.taux[c]) delete donnees.taux[c]; database.ref('donnees/cryptos').set(donnees.cryptos); database.ref('donnees/taux').set(donnees.taux); cacheTaux.set(donnees.taux); break; case 'roue': let rData = Array.isArray(donnees.roue) ? donnees.roue : (typeof donnees.roue === 'object' && donnees.roue !== null ? Object.values(donnees.roue) : []); rData = rData.filter(item => item !== null); rData.splice(idx,1); donnees.roue = rData; database.ref('donnees/roue').set(donnees.roue); break; } afficherTout(); }
-        
-        function afficherTransactions(){ 
-            const l=document.getElementById('transactions-liste'); 
-            if(!l) return; 
-            const demandesArray = getDemandesTableau();
-            const demandesFiltrees = demandesArray.filter(d => d.type === 'ACHAT' || d.type === 'VENTE');
-            if(demandesFiltrees.length===0){ 
-                l.innerHTML='<div class="item-row">Aucune transaction ACHAT/VENTE</div>'; 
-                return; 
-            } 
-            let filtrees=filtrerTransactionsListe(demandesFiltrees); 
-            l.innerHTML=filtrees.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(tx=>{
-                let recuHtml = '';
-                if(tx.type==='ACHAT') recuHtml = tx.montantRecu?tx.montantRecu.toFixed(4)+' '+tx.crypto:'Calcul...';
-                else if(tx.type==='VENTE') recuHtml = tx.montantRecu?tx.montantRecu.toLocaleString()+' Ar':'Calcul...';
-                return `<div class="transaction-item ${tx.statut}" onclick="voirDetailsTransaction('${echapperHTML(tx.id)}')"><div class="transaction-header"><span class="badge-type ${tx.type}"><i class="fas ${tx.type==='ACHAT'?'fa-arrow-down':'fa-arrow-up'}"></i> ${echapperHTML(tx.type)}</span><span class="badge-statut ${tx.statut}">${echapperHTML(tx.statut)}</span><span class="transaction-date"><i class="far fa-clock"></i> ${echapperHTML(new Date(tx.date).toLocaleString())}</span></div><div class="transaction-user"><i class="fas fa-user"></i> ${echapperHTML(tx.utilisateur)} (${echapperHTML(tx.userID||'ID inconnu')})</div><div class="transaction-details"><div class="detail-item"><span class="detail-label">Vous recevez</span><span class="detail-value" style="color:var(--success);">${recuHtml}</span></div></div><div class="transaction-txid"><i class="fas fa-hashtag"></i> TXID/Preuve: ${echapperHTML(tx.txid||'Non fourni')}</div><div class="transaction-footer"><button class="btn btn-view" onclick="event.stopPropagation(); voirDetailsTransaction('${echapperHTML(tx.id)}')"><i class="fas fa-eye"></i> Voir détails</button>${tx.statut==='en_attente'?`<button class="btn btn-success" onclick="event.stopPropagation(); approuverDemande('${echapperHTML(tx.id)}')"><i class="fas fa-check"></i> Approuver</button><button class="btn btn-delete" onclick="event.stopPropagation(); rejeterDemande('${echapperHTML(tx.id)}')"><i class="fas fa-times"></i> Rejeter</button><button class="btn btn-save-attentes" onclick="event.stopPropagation(); sauvegarderDemandeUnique('${echapperHTML(tx.id)}')"><i class="fas fa-save"></i> Sauvegarder</button>`:''}</div></div>`;
-            }).join(''); 
-        }
-        
-        function filtrerTransactionsListe(demandes){ 
-            const type=document.getElementById('filtre-type-transaction')?.value||'all'; 
-            const statut=document.getElementById('filtre-statut-transaction')?.value||'all'; 
-            const recherche=(document.getElementById('recherche-transaction')?.value||'').toLowerCase(); 
-            const periode=document.getElementById('filtre-date-transaction')?.value||'all'; 
-            let f=[...demandes]; 
-            if(type!=='all') f=f.filter(t=>t.type===type); 
-            if(statut!=='all') f=f.filter(t=>t.statut===statut); 
-            if(recherche) f=f.filter(t=>(t.utilisateur&&t.utilisateur.toLowerCase().includes(recherche))||(t.email&&t.email.toLowerCase().includes(recherche))||(t.userID&&t.userID.toLowerCase().includes(recherche))||(t.txid&&t.txid.toLowerCase().includes(recherche))); 
-            const now=new Date(); 
-            const today=new Date(now.setHours(0,0,0,0)); 
-            const week=new Date(now.setDate(now.getDate()-now.getDay())); 
-            const month=new Date(now.getFullYear(),now.getMonth(),1); 
-            if(periode==='today') f=f.filter(t=>new Date(t.date)>=today); 
-            else if(periode==='week') f=f.filter(t=>new Date(t.date)>=week); 
-            else if(periode==='month') f=f.filter(t=>new Date(t.date)>=month); 
-            return f; 
-        }
-        
-        function calculerStatsTransactions(){ 
-            const demandesArray = getDemandesTableau();
-            const demandesAchatVente = demandesArray.filter(d => d.type === 'ACHAT' || d.type === 'VENTE');
-            const total=demandesAchatVente.length; 
-            const enAttente=demandesAchatVente.filter(dd=>dd.statut==='en_attente').length; 
-            let volAr=0,volCrypto=0; 
-            demandesAchatVente.forEach(dd=>{ 
-                if(dd.type==='ACHAT') volAr+=parseFloat(dd.montant)||0; 
-                else if(dd.type==='VENTE') volCrypto+=parseFloat(dd.montant)||0; 
-            }); 
-            document.getElementById('stats-total').textContent=total; 
-            document.getElementById('stats-volume-ar').textContent=volAr.toLocaleString()+' Ar'; 
-            document.getElementById('stats-volume-crypto').textContent=volCrypto.toFixed(2); 
-            document.getElementById('stats-en-attente').textContent=enAttente; 
-        }
-        
-        function filtrerTransactions(){ afficherTransactions(); calculerStatsTransactions(); }
-        
-        function telechargerRecu(){ 
-            if(!transactionSelectionneeId){ alert('Aucune transaction sélectionnée'); return; } 
-            const demandesArray = getDemandesTableau();
-            const tx=demandesArray?.find(d=>d.id===transactionSelectionneeId); 
-            if(!tx){ alert('Transaction introuvable'); return; } 
-            const recu=document.getElementById('recu-contenu'); 
-            const dateGen=document.getElementById('recu-date-generation'); 
-            let montantRecu = '';
-            if(tx.type==='ACHAT') montantRecu = (tx.montantRecu?tx.montantRecu.toFixed(4):'0')+' '+tx.crypto;
-            else if(tx.type==='VENTE') montantRecu = (tx.montantRecu?tx.montantRecu.toLocaleString():'0')+' Ar';
-            else if(tx.type==='BONUS') montantRecu = tx.lotGagne || tx.montant || 'N/A';
-            let adresseLieeHtml = tx.adresseLiee ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Adresse de liaison:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.adresseLiee)}</td></tr>` : '';
-            let beneficiaire = '';
-            if(tx.type==='ACHAT'){ beneficiaire = `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Adresse:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.adresse||'Non spécifiée')}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Numéro débité:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${tx.nomNumero?echapperHTML(tx.nomNumero)+' ('+echapperHTML(tx.numero)+')':echapperHTML(tx.numero||'Non spécifié')}</td></tr>`; }
-            else if(tx.type==='VENTE'){ beneficiaire = `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Bénéficiaire:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.nomNumero||tx.utilisateur)}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Numéro crédité:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.numero||'Non spécifié')}</td></tr>${adresseLieeHtml}`; }
-            else if(tx.type==='BONUS'){ beneficiaire = `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Info Réception:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.adresse || tx.numero || 'N/A')}</td></tr>`; }
-            let montantEnvoyeHtml = tx.type !== 'BONUS' ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Montant envoyé:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.montant)} ${tx.type==='ACHAT'?'Ar':tx.crypto}</td></tr>` : '';
-            let reseauHtml = tx.type !== 'BONUS' ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Réseau:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.reseau||'N/A')}</td></tr>` : '';
-            recu.innerHTML=`<table style="width:100%;border-collapse:collapse;margin:20px 0;"><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>ID Transaction:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.id)}</td></tr>
-                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>ID Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.userID||'Non attribué')}</td></tr>
-                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Type:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.type)}</td></tr>
-                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Statut:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.statut)}</td></tr>
-                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.utilisateur)}</td></tr>
-                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Email:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.email)}</td></tr>
-                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Date:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(new Date(tx.date).toLocaleString('fr-FR'))}</td></tr>
-                    ${montantEnvoyeHtml}
-                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>${tx.type==='BONUS'?'Lot gagné':'Vous recevez'}:</strong><td style="padding:8px;border-bottom:1px solid #eee;color:#059669;font-weight:bold;">${echapperHTML(montantRecu)}</td></tr>
-                    ${reseauHtml}
-                    ${beneficiaire}
-                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>TXID/Preuve:</strong><td style="padding:8px;border-bottom:1px solid #eee;font-size:0.8rem;word-break:break-all;">${echapperHTML(tx.txid||'Non fourni')}</td></tr>
-                </table>`; 
-            dateGen.textContent=echapperHTML(new Date().toLocaleString('fr-FR')); 
-            html2canvas(document.getElementById('template-recu'),{scale:2,backgroundColor:'#ffffff',logging:false}).then(canvas=>{ const a=document.createElement('a'); a.download=`recu-${tx.id}-${Date.now()}.png`; a.href=canvas.toDataURL('image/png'); a.click(); const demandesArray2 = getDemandesTableau();
-            const tx2=demandesArray2.find(d=>d.id===tx.id); if(tx2){ if(!tx2.historique) tx2.historique=[]; tx2.historique.push({date:new Date().toISOString(),action:'RECU_TELECHARGE',details:'Reçu téléchargé par admin'}); sauvegarderDemandes(demandesArray2); } }).catch(e=>{ console.error(e); alert('❌ Erreur génération reçu'); }); 
-        }
-        
-        let transactionSelectionneeId = null;
         function voirDetailsTransaction(id){ 
             const demandesArray = getDemandesTableau();
             const tx=demandesArray?.find(d=>d.id===id); 
@@ -1429,11 +1467,12 @@
                 const ancien=tx.statut; 
                 tx.statut=ns; 
                 tx.dateModification=new Date().toISOString(); 
+                tx.lastModified = Date.now();
                 if(!tx.historique) tx.historique=[]; 
                 tx.historique.push({date:new Date().toISOString(),action:'STATUT_CHANGE',details:`Statut changé de ${ancien} à ${ns} par admin`}); 
                 sauvegarderDemandes(demandesArray);
-                sauvegardeTripleTransaction(tx);
-                alert(`✅ Statut changé à ${ns} et sauvegardé sur 3 emplacements`); 
+                sauvegarderTransaction(tx);
+                alert(`✅ Statut changé à ${ns} et sauvegardé`); 
                 voirDetailsTransaction(transactionSelectionneeId); 
                 afficherTransactions(); 
                 afficherBonus();
@@ -1450,6 +1489,7 @@
             if(tx){ 
                 if(!tx.notes) tx.notes=''; 
                 tx.notes+=(tx.notes?'\n':'')+`[${new Date().toLocaleString()}] ${note}`; 
+                tx.lastModified = Date.now();
                 if(!tx.historique) tx.historique=[]; 
                 tx.historique.push({date:new Date().toISOString(),action:'NOTE_AJOUTEE',details:note}); 
                 sauvegarderDemandes(demandesArray);
@@ -1459,46 +1499,45 @@
             } 
         }
         
-        function verifierPermissionNotification() { if (!('Notification' in window)) return; if (Notification.permission === 'granted') notificationPermission = true; else if (Notification.permission === 'default' && !localStorage.getItem('notificationPermission')) setTimeout(() => { document.getElementById('notification-permission-banner').style.display = 'block'; }, 5000); }
-        function demanderPermissionNotification() { Notification.requestPermission().then(p => { if (p === 'granted') { notificationPermission = true; document.getElementById('notification-permission-banner').style.display = 'none'; localStorage.setItem('notificationPermission', 'granted'); } }); }
-        function fermerBannerPermission() { document.getElementById('notification-permission-banner').style.display = 'none'; localStorage.setItem('notificationPermission', 'declined'); }
-        function afficherNotification(message) { const toast = document.getElementById('notification-toast'); if (!toast) return; document.getElementById('toast-message').textContent = message; toast.classList.add('show'); if (toastTimer) clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('show'), 5000); }
-        function fermerToast() { const toast = document.getElementById('notification-toast'); if (toast) { toast.classList.remove('show'); if (toastTimer) clearTimeout(toastTimer); } }
-        
-        let dernieresTransactions = [];
-        function envoyerNotificationTransaction(transaction) { 
-            if (!notificationPermission) return; 
-            if (dernieresTransactions.includes(transaction.id)) return; 
-            dernieresTransactions.push(transaction.id); 
-            if (dernieresTransactions.length > 10) dernieresTransactions.shift(); 
-            jouerSonNotification();
-            let montant = ''; 
-            if(transaction.type === 'ACHAT') montant = `${transaction.montant} Ar → ${transaction.montantRecu?.toFixed(4)} ${transaction.crypto}`; 
-            else if(transaction.type === 'VENTE') montant = `${transaction.montant} ${transaction.crypto} → ${transaction.montantRecu?.toLocaleString()} Ar`; 
-            else if(transaction.type === 'BONUS') montant = `🎰 Bonus: ${transaction.lotGagne || transaction.montant}`; 
-            const notification = new Notification('💰 Nouvelle transaction en attente', { 
-                body: `${transaction.utilisateur} - ${transaction.type}: ${montant}`, 
-                vibrate: [200,100,200], 
-                tag: transaction.id, 
-                actions: [{ action: 'view', title: '👁️ Voir' }, { action: 'approve', title: '✅ Approuver' }, { action: 'reject', title: '❌ Rejeter' }] 
-            }); 
-            notification.onclick = function() { 
-                window.focus(); 
-                if(transaction.type === 'BONUS') switchTab('bonusroue'); 
-                else switchTab('transactions'); 
-                voirDetailsTransaction(transaction.id); 
-                this.close(); 
-            }; 
-            notification.onaction = function(e) { 
-                window.focus(); 
-                if(transaction.type === 'BONUS') switchTab('bonusroue'); 
-                else switchTab('transactions'); 
-                if (e.action === 'view') voirDetailsTransaction(transaction.id); 
-                else if (e.action === 'approve') setTimeout(() => approuverDemande(transaction.id), 500); 
-                else if (e.action === 'reject') setTimeout(() => rejeterDemande(transaction.id), 500); 
-                this.close(); 
-            }; 
+        function telechargerRecu(){ 
+            if(!transactionSelectionneeId){ alert('Aucune transaction sélectionnée'); return; } 
+            const demandesArray = getDemandesTableau();
+            const tx=demandesArray?.find(d=>d.id===transactionSelectionneeId); 
+            if(!tx){ alert('Transaction introuvable'); return; } 
+            const recu=document.getElementById('recu-contenu'); 
+            const dateGen=document.getElementById('recu-date-generation'); 
+            let montantRecu = '';
+            if(tx.type==='ACHAT') montantRecu = (tx.montantRecu?tx.montantRecu.toFixed(4):'0')+' '+tx.crypto;
+            else if(tx.type==='VENTE') montantRecu = (tx.montantRecu?tx.montantRecu.toLocaleString():'0')+' Ar';
+            else if(tx.type==='BONUS') montantRecu = tx.lotGagne || tx.montant || 'N/A';
+            let adresseLieeHtml = tx.adresseLiee ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Adresse de liaison:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.adresseLiee)}</td></tr>` : '';
+            let beneficiaire = '';
+            if(tx.type==='ACHAT'){ beneficiaire = `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Adresse:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.adresse||'Non spécifiée')}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Numéro débité:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${tx.nomNumero?echapperHTML(tx.nomNumero)+' ('+echapperHTML(tx.numero)+')':echapperHTML(tx.numero||'Non spécifié')}</td></tr>`; }
+            else if(tx.type==='VENTE'){ beneficiaire = `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Bénéficiaire:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.nomNumero||tx.utilisateur)}</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Numéro crédité:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.numero||'Non spécifié')}</td></tr>${adresseLieeHtml}`; }
+            else if(tx.type==='BONUS'){ beneficiaire = `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Info Réception:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.adresse || tx.numero || 'N/A')}</td></tr>`; }
+            let montantEnvoyeHtml = tx.type !== 'BONUS' ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Montant envoyé:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.montant)} ${tx.type==='ACHAT'?'Ar':tx.crypto}</td></tr>` : '';
+            let reseauHtml = tx.type !== 'BONUS' ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Réseau:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.reseau||'N/A')}</td></tr>` : '';
+            recu.innerHTML=`<table style="width:100%;border-collapse:collapse;margin:20px 0;"><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>ID Transaction:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.id)}</td></tr>
+                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>ID Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.userID||'Non attribué')}</td></tr>
+                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Type:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.type)}</td></tr>
+                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Statut:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.statut)}</td></tr>
+                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.utilisateur)}</td></tr>
+                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Email:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.email)}</td></tr>
+                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Date:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(new Date(tx.date).toLocaleString('fr-FR'))}</td></tr>
+                    ${montantEnvoyeHtml}
+                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>${tx.type==='BONUS'?'Lot gagné':'Vous recevez'}:</strong><td style="padding:8px;border-bottom:1px solid #eee;color:#059669;font-weight:bold;">${echapperHTML(montantRecu)}</td></tr>
+                    ${reseauHtml}
+                    ${beneficiaire}
+                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>TXID/Preuve:</strong><td style="padding:8px;border-bottom:1px solid #eee;font-size:0.8rem;word-break:break-all;">${echapperHTML(tx.txid||'Non fourni')}</td></tr>
+                </table>`; 
+            dateGen.textContent=echapperHTML(new Date().toLocaleString('fr-FR')); 
+            html2canvas(document.getElementById('template-recu'),{scale:2,backgroundColor:'#ffffff',logging:false}).then(canvas=>{ const a=document.createElement('a'); a.download=`recu-${tx.id}-${Date.now()}.png`; a.href=canvas.toDataURL('image/png'); a.click(); const demandesArray2 = getDemandesTableau();
+            const tx2=demandesArray2.find(d=>d.id===tx.id); if(tx2){ if(!tx2.historique) tx2.historique=[]; tx2.historique.push({date:new Date().toISOString(),action:'RECU_TELECHARGE',details:'Reçu téléchargé par admin'}); sauvegarderDemandes(demandesArray2); } }).catch(e=>{ console.error(e); alert('❌ Erreur génération reçu'); }); 
         }
+        
+        function filtrerTransactions(){ afficherTransactions(); calculerStatsTransactions(); }
+        
+        function demarrerSurveillanceTransactions() { if(intervalNotification) clearInterval(intervalNotification); intervalNotification = setInterval(() => verifierNouvellesTransactions(), 60000); verifierNouvellesTransactions(); }
         
         function verifierNouvellesTransactions() { 
             const demandesArray = getDemandesTableau();
@@ -1539,20 +1578,138 @@
             if (enAttente > dernierCompteTransactions) { 
                 const nouvelles = enAttente - dernierCompteTransactions; 
                 if (nouvelles <= 3) afficherNotification(`${nouvelles} nouvelle(s) transaction(s) en attente`); 
-                const nouvellesTransactions = demandesArray.filter(d => d.statut === 'en_attente' && d.type !== 'BONUS' && !dernieresTransactions.includes(d.id) && (new Date() - new Date(d.date)) < 600000); 
+                const nouvellesTransactions = demandesArray.filter(d => d.statut === 'en_attente' && d.type !== 'BONUS' && (new Date() - new Date(d.date)) < 600000); 
                 nouvellesTransactions.slice(0, 3).forEach(tx => envoyerNotificationTransaction(tx)); 
             }
             if (bonusAttente > dernierCompteBonus) {
                 const nouvelles = bonusAttente - dernierCompteBonus;
                 if (nouvelles <= 3) afficherNotification(`🎰 ${nouvelles} nouveau(x) bonus roue en attente`);
-                const nouveauxBonus = demandesArray.filter(d => d.statut === 'en_attente' && d.type === 'BONUS' && !dernieresTransactions.includes(d.id) && (new Date() - new Date(d.date)) < 600000);
+                const nouveauxBonus = demandesArray.filter(d => d.statut === 'en_attente' && d.type === 'BONUS' && (new Date() - new Date(d.date)) < 600000);
                 nouveauxBonus.slice(0, 3).forEach(tx => envoyerNotificationTransaction(tx));
             }
             dernierCompteTransactions = enAttente;
             dernierCompteBonus = bonusAttente;
         }
-
-        window.addEventListener('load',function(){ console.log('🚀 Page admin chargée - Transactions persistantes + Son notifications + Numéros ordonnés + Sauvegarde triple'); });
+        
+        function envoyerNotificationTransaction(transaction) { 
+            if (!notificationPermission) return; 
+            jouerSonNotification();
+            let montant = ''; 
+            if(transaction.type === 'ACHAT') montant = `${transaction.montant} Ar → ${transaction.montantRecu?.toFixed(4)} ${transaction.crypto}`; 
+            else if(transaction.type === 'VENTE') montant = `${transaction.montant} ${transaction.crypto} → ${transaction.montantRecu?.toLocaleString()} Ar`; 
+            else if(transaction.type === 'BONUS') montant = `🎰 Bonus: ${transaction.lotGagne || transaction.montant}`; 
+            const notification = new Notification('💰 Nouvelle transaction en attente', { 
+                body: `${transaction.utilisateur} - ${transaction.type}: ${montant}`, 
+                vibrate: [200,100,200], 
+                tag: transaction.id, 
+                actions: [{ action: 'view', title: '👁️ Voir' }, { action: 'approve', title: '✅ Approuver' }, { action: 'reject', title: '❌ Rejeter' }] 
+            }); 
+            notification.onclick = function() { 
+                window.focus(); 
+                if(transaction.type === 'BONUS') switchTab('bonusroue'); 
+                else switchTab('transactions'); 
+                voirDetailsTransaction(transaction.id); 
+                this.close(); 
+            }; 
+            notification.onaction = function(e) { 
+                window.focus(); 
+                if(transaction.type === 'BONUS') switchTab('bonusroue'); 
+                else switchTab('transactions'); 
+                if (e.action === 'view') voirDetailsTransaction(transaction.id); 
+                else if (e.action === 'approve') setTimeout(() => approuverDemande(transaction.id), 500); 
+                else if (e.action === 'reject') setTimeout(() => rejeterDemande(transaction.id), 500); 
+                this.close(); 
+            }; 
+        }
+        
+        function afficherNotification(message) { const toast = document.getElementById('notification-toast'); if (!toast) return; document.getElementById('toast-message').textContent = message; toast.classList.add('show'); if (toastTimer) clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('show'), 5000); }
+        function fermerToast() { const toast = document.getElementById('notification-toast'); if (toast) { toast.classList.remove('show'); if (toastTimer) clearTimeout(toastTimer); } }
+        function verifierPermissionNotification() { if (!('Notification' in window)) return; if (Notification.permission === 'granted') notificationPermission = true; else if (Notification.permission === 'default' && !localStorage.getItem('notificationPermission')) setTimeout(() => { document.getElementById('notification-permission-banner').style.display = 'block'; }, 5000); }
+        function demanderPermissionNotification() { Notification.requestPermission().then(p => { if (p === 'granted') { notificationPermission = true; document.getElementById('notification-permission-banner').style.display = 'none'; localStorage.setItem('notificationPermission', 'granted'); } }); }
+        function fermerBannerPermission() { document.getElementById('notification-permission-banner').style.display = 'none'; localStorage.setItem('notificationPermission', 'declined'); }
+        
+        function switchTab(tab){ 
+            document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); 
+            ['gestion','taux','pause','utilisateurs','numeros','demandes','news','transactions','bonusroue','config','roue','parrainage'].forEach(t=>document.getElementById(t+'-tab').style.display='none'); 
+            const tabsMap = { gestion:0, taux:1, pause:2, utilisateurs:3, numeros:4, demandes:5, news:6, transactions:7, bonusroue:8, config:9, roue:10, parrainage:11 };
+            const idx = tabsMap[tab];
+            if(idx !== undefined) document.querySelectorAll('.tab')[idx]?.classList.add('active');
+            document.getElementById(tab+'-tab').style.display='block';
+            if(tab === 'transactions'){ afficherTransactions(); calculerStatsTransactions(); if(document.getElementById('notif-transactions')) document.getElementById('notif-transactions').style.background='var(--warning)'; }
+            if(tab === 'bonusroue'){ afficherBonus(); }
+            if(tab === 'numeros'){ afficherNumeros(); }
+            if(tab === 'roue'){ afficherRoue(); }
+            if(tab === 'parrainage'){ afficherParrainages(); }
+        }
+        
+        function editerNews(id){ const n=donnees.news.find(n=>n.id===id); if(!n) return; document.getElementById('news-editing-id').value=id; document.getElementById('news-titre').value=n.titre; document.getElementById('news-contenu').value=n.contenu; document.getElementById('news-auteur').value=n.auteur||'Typh Exchange'; document.getElementById('news-important').checked=n.important||false; document.getElementById('news-statut').checked=n.statut!==false; document.getElementById('news-form-title').innerHTML='<i class="fas fa-edit"></i> Modifier l\'actualité'; document.getElementById('btn-annuler-news').style.display='block'; }
+        function annulerEditionNews(){ document.getElementById('news-editing-id').value=''; document.getElementById('news-titre').value=''; document.getElementById('news-contenu').value=''; document.getElementById('news-auteur').value='Typh Exchange'; document.getElementById('news-important').checked=false; document.getElementById('news-statut').checked=true; document.getElementById('news-form-title').innerHTML='<i class="fas fa-plus-circle"></i> Ajouter une actualité'; document.getElementById('btn-annuler-news').style.display='none'; }
+        function sauvegarderNews(){ const titre=document.getElementById('news-titre').value.trim(); const contenu=document.getElementById('news-contenu').value.trim(); const auteur=document.getElementById('news-auteur').value.trim()||'Typh Exchange'; const important=document.getElementById('news-important').checked; const actif=document.getElementById('news-statut').checked; if(!titre||!contenu){ alert('Veuillez remplir tous les champs'); return; } if(!donnees.news) donnees.news=[]; const id=document.getElementById('news-editing-id').value; if(id){ const idx=donnees.news.findIndex(n=>n.id===id); if(idx!==-1){ donnees.news[idx]={...donnees.news[idx],titre,contenu,auteur,important,statut:actif,dateModification:new Date().toISOString()}; } } else { donnees.news.push({id:'NEWS-'+Date.now()+'-'+Math.random().toString(36).substr(2,9),titre,contenu,auteur,important,statut:actif,date:new Date().toISOString()}); } database.ref('donnees/news').set(donnees.news); annulerEditionNews(); afficherNews(); alert('✅ Actualité enregistrée avec succès'); }
+        function supprimerNews(id){ if(!confirm('❌ Supprimer cette actualité ?')) return; donnees.news=donnees.news.filter(n=>n.id!==id); database.ref('donnees/news').set(donnees.news); afficherNews(); alert('✅ Actualité supprimée'); }
+        
+        function supprimer(type,idx){ if(!confirm('Supprimer ?')) return; switch(type){ case 'portefeuille': donnees.portefeuilles.splice(idx,1); database.ref('donnees/portefeuilles').set(donnees.portefeuilles); break; case 'operateur': donnees.operateurs.splice(idx,1); database.ref('donnees/operateurs').set(donnees.operateurs); break; case 'reseau': donnees.reseaux.splice(idx,1); database.ref('donnees/reseaux').set(donnees.reseaux); break; case 'crypto': const c=donnees.cryptos[idx]; donnees.cryptos.splice(idx,1); if(donnees.taux&&donnees.taux[c]) delete donnees.taux[c]; database.ref('donnees/cryptos').set(donnees.cryptos); database.ref('donnees/taux').set(donnees.taux); break; case 'roue': let rData = Array.isArray(donnees.roue) ? donnees.roue : (typeof donnees.roue === 'object' && donnees.roue !== null ? Object.values(donnees.roue) : []); rData = rData.filter(item => item !== null); rData.splice(idx,1); donnees.roue = rData; database.ref('donnees/roue').set(donnees.roue); break; } afficherTout(); }
+        
+        let modalType, modalIndex, modalMode, modalCryptoNom;
+        function ouvrirModal(type,index=-1,cryptoNom=null){ modalType=type; modalIndex=index; modalCryptoNom=cryptoNom; modalMode=index===-1?'ajout':'modification'; const modal=document.getElementById('modal-admin'); const titre=document.getElementById('modal-titre'); const champs=document.getElementById('modal-champs'); let html=''; switch(type){ case 'portefeuille': titre.innerHTML='<i class="fas fa-briefcase"></i> '+(modalMode==='ajout'?'Nouveau portefeuille':'Modifier portefeuille'); if(modalMode==='ajout') html=`<input type="text" id="modal-nom" placeholder="Nom du portefeuille"><textarea id="modal-reponse" placeholder="Description"></textarea><textarea id="modal-message" placeholder="Message de confirmation"></textarea><select id="modal-reseau"><option value="">Sélectionner un réseau</option>${(donnees.reseaux||[]).map(r=>`<option value="${echapperHTML(r.nom)}">${echapperHTML(r.nom)} (${echapperHTML(r.crypto)})</option>`).join('')}</select><div style="margin-top:15px; background:var(--bg-dark); padding:10px; border-radius:10px;"><label style="display:flex; align-items:center; gap:10px; color:var(--text-primary); cursor:pointer;"><input type="checkbox" id="modal-liaison-requise" style="width:18px; height:18px; accent-color:var(--accent);"> Nécessite une liaison d'adresse</label></div>`; else html=`<input type="text" id="modal-nom" value="${echapperHTML(donnees.portefeuilles[index].nom)}"><textarea id="modal-reponse">${echapperHTML(donnees.portefeuilles[index].reponse||'')}</textarea><textarea id="modal-message">${echapperHTML(donnees.portefeuilles[index].messageConfirmation||'')}</textarea><select id="modal-reseau"><option value="">Sélectionner un réseau</option>${(donnees.reseaux||[]).map(r=>`<option value="${echapperHTML(r.nom)}" ${donnees.portefeuilles[index].reseau===r.nom?'selected':''}>${echapperHTML(r.nom)} (${echapperHTML(r.crypto)})</option>`).join('')}</select><div style="margin-top:15px; background:var(--bg-dark); padding:10px; border-radius:10px;"><label style="display:flex; align-items:center; gap:10px; color:var(--text-primary); cursor:pointer;"><input type="checkbox" id="modal-liaison-requise" style="width:18px; height:18px; accent-color:var(--accent);" ${donnees.portefeuilles[index].liaisonRequise ? 'checked' : ''}> Nécessite une liaison d'adresse</label></div>`; break; case 'operateur': titre.innerHTML='<i class="fas fa-mobile-alt"></i> '+(modalMode==='ajout'?'Nouvel opérateur':'Modifier opérateur'); if(modalMode==='ajout') html=`<input type="text" id="modal-nom" placeholder="Nom"><textarea id="modal-message" placeholder="Message de confirmation"></textarea>`; else html=`<input type="text" id="modal-nom" value="${echapperHTML(donnees.operateurs[index].nom)}"><textarea id="modal-message">${echapperHTML(donnees.operateurs[index].messageConfirmation||'')}</textarea>`; break; case 'reseau': titre.innerHTML='<i class="fas fa-network-wired"></i> '+(modalMode==='ajout'?'Nouveau réseau':'Modifier réseau'); if(modalMode==='ajout') html=`<input type="text" id="modal-nom" placeholder="Nom du réseau"><select id="modal-crypto">${(donnees.cryptos||[]).map(c=>`<option value="${echapperHTML(c)}">${echapperHTML(c)}</option>`).join('')}</select><input type="number" id="modal-frais-reseau" placeholder="Frais réseau (%)" step="0.1" min="0">`; else html=`<input type="text" id="modal-nom" value="${echapperHTML(donnees.reseaux[index].nom)}"><select id="modal-crypto">${(donnees.cryptos||[]).map(c=>`<option value="${echapperHTML(c)}" ${donnees.reseaux[index].crypto===c?'selected':''}>${echapperHTML(c)}</option>`).join('')}</select><input type="number" id="modal-frais-reseau" step="0.1" min="0" value="${donnees.reseaux[index].fraisReseau||0}">`; break; case 'crypto': titre.innerHTML='<i class="fas fa-coins"></i> '+(modalMode==='ajout'?'Ajouter crypto':'Modifier crypto'); html=`<input type="text" id="modal-nom" placeholder="Nom (ex: USDT, BTC)" value="${modalMode==='modification'?echapperHTML(donnees.cryptos[index]):''}">`; break; case 'taux': const crypto=cryptoNom||(modalMode==='modification'?Object.keys(donnees.taux)[index]:''); const taux=crypto&&donnees.taux[crypto]?donnees.taux[crypto]:{prixUSD:0,prixMGA:0,variation:"0",couleur:"positive"}; titre.innerHTML=`<i class="fas fa-chart-line"></i> Modifier taux ${echapperHTML(crypto)}`; html=`<input type="hidden" id="modal-crypto" value="${echapperHTML(crypto)}"><div style="margin-bottom:15px;color:var(--text-secondary);">Crypto: <strong>${echapperHTML(crypto)}</strong></div><div style="background:var(--bg-dark);padding:15px;border-radius:20px;margin-bottom:20px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span>Prix USD:</span><span style="font-weight:600;">$${taux.prixUSD.toFixed(2)}</span></div><div style="display:flex;justify-content:space-between;"><span>Prix MGA:</span><span style="font-weight:600;color:var(--warning);">${taux.prixMGA.toLocaleString()} Ar</span></div></div><input type="number" id="modal-prix-usd" placeholder="Prix USD" step="0.01" value="${taux.prixUSD||0}"><input type="number" id="modal-prix-mga" placeholder="Prix MGA" value="${taux.prixMGA||0}"><input type="text" id="modal-variation" placeholder="Variation %" value="${echapperHTML(taux.variation||'0')}"><select id="modal-couleur"><option value="positive" ${taux.couleur==='positive'?'selected':''}>Positif (+)</option><option value="negative" ${taux.couleur==='negative'?'selected':''}>Négatif (-)</option></select>`; break; case 'roue': titre.innerHTML='<i class="fas fa-gift"></i> '+(modalMode==='ajout'?'Nouveau Lot de la Roue':'Modifier Lot'); let rDef = {nom:'', type:'crypto', probabilite:0}; let rObj = modalMode === 'modification' ? donnees.roue[index] : rDef; html=`<input type="text" id="modal-roue-nom" placeholder="Nom du lot (ex: 5000 Ar ou 1 USDT ou Merci...)" value="${echapperHTML(rObj.nom)}"> 
+                    <select id="modal-roue-type" style="width: 100%; padding: 16px; margin-bottom: 16px; background: var(--primary); border: 1px solid var(--gray-300); border-radius: 40px; color: var(--white);">
+                        <option value="crypto" ${rObj.type==='crypto'?'selected':''}>💰 Crypto (ex: USDT)</option>
+                        <option value="fiat" ${rObj.type==='fiat'?'selected':''}>💵 Ariary (ex: 5000 Ar)</option>
+                        <option value="rien" ${rObj.type==='rien'?'selected':''}>😢 Perdant (Merci de votre fidélité)</option>
+                    </select> 
+                    <input type="number" id="modal-roue-prob" placeholder="Probabilité en % (total doit être 100%)" step="0.1" min="0" max="100" value="${rObj.probabilite}">
+                    <div class="info-message" style="margin-top:10px;"><i class="fas fa-info-circle"></i> La somme des probabilités doit être égale à 100%</div>`; break; } if(html){ champs.innerHTML=html; modal.classList.add('active'); } }
+        function fermerModal(){ document.getElementById('modal-admin').classList.remove('active'); }
+        function sauvegarderModal(){ const nom=document.getElementById('modal-nom')?.value; switch(modalType){ case 'portefeuille': if(!nom){ alert('Nom requis'); return; } const reponse=document.getElementById('modal-reponse')?.value||''; const message=document.getElementById('modal-message')?.value||''; const reseau=document.getElementById('modal-reseau')?.value||''; const liaisonRequise = document.getElementById('modal-liaison-requise')?.checked || false; if(modalMode==='ajout') donnees.portefeuilles.push({nom,reponse,messageConfirmation:message,reseau,liaisonRequise}); else donnees.portefeuilles[modalIndex]={...donnees.portefeuilles[modalIndex],nom,reponse,messageConfirmation:message,reseau,liaisonRequise}; database.ref('donnees/portefeuilles').set(donnees.portefeuilles); break; case 'operateur': if(!nom){ alert('Nom requis'); return; } const msg=document.getElementById('modal-message')?.value||''; if(modalMode==='ajout') donnees.operateurs.push({nom,messageConfirmation:msg}); else donnees.operateurs[modalIndex]={...donnees.operateurs[modalIndex],nom,messageConfirmation:msg}; database.ref('donnees/operateurs').set(donnees.operateurs); break; case 'reseau': if(!nom){ alert('Nom requis'); return; } const crypto=document.getElementById('modal-crypto')?.value; const frais=parseFloat(document.getElementById('modal-frais-reseau')?.value)||0; if(modalMode==='ajout'){ if(!donnees.reseaux) donnees.reseaux=[]; donnees.reseaux.push({nom,crypto,fraisReseau:frais}); } else donnees.reseaux[modalIndex]={...donnees.reseaux[modalIndex],nom,crypto,fraisReseau:frais}; database.ref('donnees/reseaux').set(donnees.reseaux); break; case 'crypto': if(!nom){ alert('Nom requis'); return; } if(modalMode==='ajout'){ if(!donnees.cryptos.includes(nom)){ donnees.cryptos.push(nom); if(!donnees.taux[nom]) donnees.taux[nom]={prixUSD:nom==='USDT'?1:0,prixMGA:nom==='USDT'?donnees.usdMGA:0,variation:"0",couleur:"positive",source:'manual'}; } } else{ const ancien=donnees.cryptos[modalIndex]; if(ancien!==nom&&donnees.taux[ancien]){ donnees.taux[nom]=donnees.taux[ancien]; delete donnees.taux[ancien]; } donnees.cryptos[modalIndex]=nom; } database.ref('donnees/cryptos').set(donnees.cryptos); database.ref('donnees/taux').set(donnees.taux); break; case 'taux': const c=document.getElementById('modal-crypto')?.value; if(c){ const pu=parseFloat(document.getElementById('modal-prix-usd')?.value)||0; const pm=parseFloat(document.getElementById('modal-prix-mga')?.value)||0; donnees.taux[c]={prixUSD:pu,prixMGA:pm,variation:document.getElementById('modal-variation')?.value||"0",couleur:document.getElementById('modal-couleur')?.value||"positive",lastUpdate:new Date().toISOString(),source:'manual'}; if(donnees.tauxMode==='auto') setTauxMode('manual'); database.ref('donnees/taux').set(donnees.taux); } break; case 'roue': const nomR=document.getElementById('modal-roue-nom')?.value; if(!nomR){ alert('Nom du lot requis'); return; } const typeR=document.getElementById('modal-roue-type')?.value; const probR=parseFloat(document.getElementById('modal-roue-prob')?.value)||0; if(probR < 0 || probR > 100){ alert('La probabilité doit être entre 0 et 100'); return; } let trRoue = Array.isArray(donnees.roue) ? donnees.roue : (typeof donnees.roue === 'object' && donnees.roue !== null ? Object.values(donnees.roue) : []); donnees.roue = trRoue.filter(item => item !== null); if(!donnees.roue) donnees.roue=[]; if(modalMode==='ajout') donnees.roue.push({id:'ROUE-'+Date.now()+'-'+Math.random().toString(36).substr(2,4), nom:nomR, type:typeR, probabilite:probR}); else donnees.roue[modalIndex]={...donnees.roue[modalIndex], nom:nomR, type:typeR, probabilite:probR}; database.ref('donnees/roue').set(donnees.roue); break; } fermerModal(); afficherTout(); }
+        
+        function setTauxMode(mode) { donnees.tauxMode=mode; document.getElementById('mode-auto').classList.toggle('active',mode==='auto'); document.getElementById('mode-manual').classList.toggle('active',mode==='manual'); database.ref('donnees/tauxMode').set(mode); if(mode==='auto') syncBinance(); }
+        function mettreAJourTauxUSD() { const v=parseFloat(document.getElementById('usd-mga-input').value); if(isNaN(v)||v<1000||v>10000){ alert('Taux valide 1000-10000'); return; } donnees.usdMGA=v; tauxUSD_MGA=v; document.getElementById('usd-mga-display').textContent=v.toLocaleString(); document.getElementById('usd-mga-lastupdate').innerHTML='Dernière mise à jour: '+new Date().toLocaleTimeString()+' (manuel)'; document.getElementById('usd-mga-input').value=''; database.ref('donnees/usdMGA').set(v); if(donnees.tauxMode==='manual'){ Object.keys(donnees.taux||{}).forEach(c=>{ if(donnees.taux[c]&&donnees.taux[c].prixUSD) donnees.taux[c].prixMGA=Math.round(donnees.taux[c].prixUSD*v); }); database.ref('donnees/taux').set(donnees.taux); afficherTauxSimplifies(); } }
+        async function syncTauxUSD() { await getTauxMGA(); alert(`✅ Taux USD/MGA: ${tauxUSD_MGA.toLocaleString()} Ar`); }
+        async function getTauxMGA() { try{ const r=await fetch('https://api.exchangerate-api.com/v4/latest/USD'); const d=await r.json(); if(d.rates&&d.rates.MGA){ tauxUSD_MGA=d.rates.MGA; return tauxUSD_MGA; } }catch(e){} return donnees.usdMGA||4700; }
+        async function syncBinance() { if(donnees.tauxMode !== 'auto') return; if(!rateLimiter.peutExecuter()) return; try{ document.getElementById('sync-badge').textContent='Synchronisation...'; document.getElementById('sync-badge').style.background='var(--warning)'; const tauxMGA=await getTauxMGA(); const r=await fetch('https://api.binance.com/api/v3/ticker/price'); const prices=await r.json(); let u={}; Object.entries(pairesBinance).forEach(([crypto,paire])=>{ if(crypto==='USDT') u[`donnees/taux/${crypto}`]={prixUSD:1,prixMGA:tauxMGA,variation:'0',couleur:'positive',lastUpdate:new Date().toISOString(),source:'binance'}; else{ const ticker=prices.find(p=>p.symbol===paire); if(ticker){ const pu=parseFloat(ticker.price); const pm=Math.round(pu*tauxMGA); const v=(Math.random()*4-2).toFixed(1); u[`donnees/taux/${crypto}`]={prixUSD:pu,prixMGA:pm,variation:(v>0?'+':'')+v,couleur:v>=0?'positive':'negative',lastUpdate:new Date().toISOString(),source:'binance'}; } } }); await database.ref().update(u); const snap=await database.ref('donnees/taux').once('value'); if(snap.val()) { donnees.taux=snap.val(); } document.getElementById('sync-badge').textContent='Actif (30min)'; document.getElementById('sync-badge').style.background='var(--success)'; afficherTauxSimplifies(); dernierSyncTaux=Date.now(); const lastUpdateSpan=document.getElementById('usd-mga-lastupdate'); if(lastUpdateSpan) lastUpdateSpan.innerHTML=`Dernière mise à jour: ${new Date().toLocaleTimeString()} (automatique toutes les 30 min)`; } catch(e){ console.error(e); document.getElementById('sync-badge').textContent='Erreur'; document.getElementById('sync-badge').style.background='var(--danger)'; } }
+        async function syncBinanceManuel() { if(!rateLimiter.peutExecuter()) { alert('Veuillez attendre un moment avant de rafraîchir à nouveau'); return; } alert('🔄 Synchronisation manuelle des taux en cours...'); await syncBinance(); alert('✅ Taux mis à jour !'); }
+        function demarrerSyncBinance() { if(binanceInterval) clearInterval(binanceInterval); syncBinance(); binanceInterval = setInterval(syncBinance, 1800000); let tempsRestantSync = 30; setInterval(() => { tempsRestantSync--; if(tempsRestantSync < 0) tempsRestantSync = 30; const syncElement = document.getElementById('next-sync'); if(syncElement) syncElement.textContent = `${tempsRestantSync}m`; }, 60000); }
+        
+        function modifierFrais(type){ const v=parseFloat(document.getElementById(`frais-${type}-input`).value); if(isNaN(v)||v<0||v>100){ alert('Pourcentage valide (0-100)'); return; } donnees.frais[type]=v; database.ref(`donnees/frais/${type}`).set(v); document.getElementById(`frais-${type}-display`).textContent=v+'%'; document.getElementById(`frais-${type}-input`).value=''; alert(`✅ Frais ${type} modifié à ${v}%`); }
+        function togglePause(type){ if(!donnees.pause) donnees.pause={achat:false,vente:false}; donnees.pause[type]=!donnees.pause[type]; database.ref('donnees/pause').set(donnees.pause); mettreAJourPauseUI(); alert(`✅ Section ${type.toUpperCase()} ${donnees.pause[type]?'EN PAUSE':'ACTIVÉE'}`); }
+        function mettreAJourPauseUI(){ const a=document.getElementById('achat-status-text'); const v=document.getElementById('vente-status-text'); const ba=document.getElementById('btn-pause-achat'); const bv=document.getElementById('btn-pause-vente'); if(a){ if(donnees.pause?.achat){ a.innerHTML='Actuellement: <span style="color: var(--danger);">EN PAUSE</span>'; ba.innerHTML='<i class="fas fa-play"></i> ACTIVER'; ba.className='btn btn-play'; } else{ a.innerHTML='Actuellement: <span style="color: var(--success);">Actif</span>'; ba.innerHTML='<i class="fas fa-pause"></i> Mettre en PAUSE'; ba.className='btn btn-pause'; } } if(v){ if(donnees.pause?.vente){ v.innerHTML='Actuellement: <span style="color: var(--danger);">EN PAUSE</span>'; bv.innerHTML='<i class="fas fa-play"></i> ACTIVER'; bv.className='btn btn-play'; } else{ v.innerHTML='Actuellement: <span style="color: var(--success);">Actif</span>'; bv.innerHTML='<i class="fas fa-pause"></i> Mettre en PAUSE'; bv.className='btn btn-pause'; } } }
+        function mettreAJourAffichageLimites(){ if(donnees.limites){ document.getElementById('config-min-achat').value=donnees.limites.minAchat||2000; document.getElementById('config-min-achat-trx').value=donnees.limites.minAchatTRX||5000; document.getElementById('config-max-achat').value=donnees.limites.maxAchat||100000; document.getElementById('config-min-vente').value=donnees.limites.minVente||2000; document.getElementById('config-max-vente').value=donnees.limites.maxVente||100000; } if(donnees.messagesSpeciaux) document.getElementById('config-message-trx').value=donnees.messagesSpeciaux.trx||"Frais réseau TRC20 : 3% ou -1 TRX si activation"; }
+        function sauvegarderLimites(){ donnees.limites={minAchat:parseInt(document.getElementById('config-min-achat').value)||2000,minAchatTRX:parseInt(document.getElementById('config-min-achat-trx').value)||5000,maxAchat:parseInt(document.getElementById('config-max-achat').value)||100000,minVente:parseInt(document.getElementById('config-min-vente').value)||2000,maxVente:parseInt(document.getElementById('config-max-vente').value)||100000}; database.ref('donnees/limites').set(donnees.limites); alert('✅ Limites sauvegardées'); }
+        function sauvegarderMessagesSpeciaux(){ if(!donnees.messagesSpeciaux) donnees.messagesSpeciaux={}; donnees.messagesSpeciaux.trx=document.getElementById('config-message-trx').value; database.ref('donnees/messagesSpeciaux').set(donnees.messagesSpeciaux); alert('✅ Message spécial sauvegardé'); }
+        function verifierConnexionFirebase(){ database.ref('.info/connected').once('value').then(s=>alert(s.val()?'✅ Connecté à Firebase':'❌ Déconnecté')).catch(e=>alert('❌ Erreur: '+e.message)); }
+        function forcerChargementDemandes() { database.ref('donnees/demandes').once('value').then(async (snapshot) => { const demandes = snapshot.val(); if(demandes) { donnees.demandes = demandes; const demandesArray = getDemandesTableau(); sauvegarderDemandes(demandesArray); afficherDemandes(); alert(`✅ ${demandesArray.length} demande(s) chargée(s)`); } else { alert('❌ Aucune demande trouvée dans Firebase'); } }).catch(err => { console.error('Erreur:', err); alert('Erreur de chargement: ' + err.message); }); }
+        
+        class RateLimiter { constructor(limite = 15, fenetre = 60000) { this.limite = limite; this.fenetre = fenetre; this.requetes = []; } peutExecuter() { const maintenant = Date.now(); this.requetes = this.requetes.filter(t => t > maintenant - this.fenetre); if(this.requetes.length >= this.limite) return false; this.requetes.push(maintenant); return true; } }
+        const rateLimiter = new RateLimiter(15, 60000);
+        let transactionSelectionneeId = null;
+        
+        function demarrerRafraichissementUtilisateurs() { setInterval(rafraichirUtilisateurs, 120000); rafraichirUtilisateurs(); }
+        
+        async function loginAdmin() {
+            const email = document.getElementById('admin-email').value, password = document.getElementById('admin-password').value;
+            document.getElementById('admin-error').style.display = 'none';
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                if (userCredential.user.email !== 'sarobidytyph4@gmail.com') { await auth.signOut(); throw new Error('Email non autorisé'); }
+            } catch (error) { document.getElementById('admin-error').style.display = 'block'; document.getElementById('admin-error').innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + error.message; }
+        }
+        function logoutAdmin() { auth.signOut(); }
+        
+        auth.onAuthStateChanged((user) => {
+            if (user && user.email === 'sarobidytyph4@gmail.com') {
+                document.getElementById('login-page').style.display = 'none';
+                document.getElementById('admin-interface').style.display = 'block';
+                chargerDonnees();
+                demarrerSyncBinance();
+                demarrerSurveillanceTransactions();
+                verifierPermissionNotification();
+                demarrerRafraichissementUtilisateurs();
+            } else if (document.getElementById('admin-interface').style.display === 'block') {
+                document.getElementById('login-page').style.display = 'flex';
+                document.getElementById('admin-interface').style.display = 'none';
+            }
+        });
+        
+        window.addEventListener('load',function(){ console.log('🚀 ADMIN PRO - Système de stockage indestructible activé - Multi-appareils synchronisés'); });
     </script>
 </body>
 </html>
