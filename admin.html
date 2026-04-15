@@ -223,7 +223,6 @@
         <div class="container">
             <h1><i class="fas fa-cog" style="color: var(--accent);"></i> Administration PRO</h1>
             
-            <!-- Indicateur de synchronisation multi-appareils -->
             <div class="sync-lock-info" id="sync-status-info">
                 <i class="fas fa-sync-alt fa-spin" style="color: var(--success);"></i>
                 <span>Synchronisation en temps réel activée - <strong id="sync-device-count">Multi-appareils</strong></span>
@@ -238,7 +237,6 @@
                 <div class="stat-card"><div class="stat-value" id="stats-parrainages">0</div><div class="stat-label">Parrainages</div></div>
             </div>
             
-            <!-- Bouton EXPORT COMPLET en évidence -->
             <div style="margin-bottom: 20px;">
                 <button class="btn btn-export-full" onclick="exporterTOUTESDonnees()" style="width: 100%; padding: 16px; font-size: 1.1rem;">
                     <i class="fas fa-database"></i> 📦 EXPORT COMPLET (Transactions + Utilisateurs + Config)
@@ -335,14 +333,70 @@
         let intervalNotification = null, toastTimer = null, notificationPermission = false;
         let dernierSyncTaux = null;
         
-        // Lock pour éviter les écritures concurrentes
         let isWritingToFirebase = false;
         let writeQueue = [];
-        
-        // Cache local avec timestamp
         let localDataVersion = 0;
         
         const pairesBinance = { 'USDT':'USDTUSDT','BTC':'BTCUSDT','ETH':'ETHUSDT','BNB':'BNBUSDT','LTC':'LTCUSDT','SOL':'SOLUSDT','TRX':'TRXUSDT','DOGE':'DOGEUSDT','MATIC':'POLUSDT','SUI':'SUIUSDT','XRP':'XRPUSDT','TON':'TONUSDT','POL':'POLUSDT','USDC':'USDCUSDT' };
+
+        // ============================================================
+        // FONCTIONS D'ARCHIVAGE ET BACKUP
+        // ============================================================
+        
+        async function archiverTransactionConfirmee(transaction) {
+            if (transaction.statut !== 'confirme') return;
+            
+            const date = new Date();
+            const annee = date.getFullYear();
+            const mois = date.getMonth() + 1;
+            const cheminArchive = `donnees/transactions_archive/${annee}/${mois}/${transaction.id}`;
+            
+            try {
+                await database.ref(cheminArchive).set({
+                    ...transaction,
+                    dateArchive: new Date().toISOString()
+                });
+                console.log(`📦 Transaction ${transaction.id} archivée`);
+            } catch(e) {
+                console.warn('Erreur archivage:', e);
+            }
+        }
+        
+        async function sauvegardeQuotidienne() {
+            const demandesArray = getDemandesTableau();
+            const dateStr = new Date().toISOString().split('T')[0];
+            
+            try {
+                await database.ref(`donnees/backup_quotidien/${dateStr}`).set({
+                    transactions: demandesArray,
+                    count: demandesArray.length,
+                    date: new Date().toISOString()
+                });
+                console.log(`💾 Backup quotidien effectué: ${demandesArray.length} transactions`);
+            } catch(e) {
+                console.warn('Erreur backup quotidien:', e);
+            }
+        }
+        
+        async function nettoyerAnciensBackups() {
+            const trenteJoursAvant = new Date();
+            trenteJoursAvant.setDate(trenteJoursAvant.getDate() - 30);
+            
+            try {
+                const snap = await database.ref('donnees/backup_quotidien').once('value');
+                if (snap.exists()) {
+                    const backups = snap.val();
+                    for (const [dateBackup, data] of Object.entries(backups)) {
+                        if (new Date(dateBackup) < trenteJoursAvant) {
+                            await database.ref(`donnees/backup_quotidien/${dateBackup}`).remove();
+                            console.log(`🗑️ Ancien backup supprimé: ${dateBackup}`);
+                        }
+                    }
+                }
+            } catch(e) {
+                console.warn('Erreur nettoyage backups:', e);
+            }
+        }
 
         // ============================================================
         // FONCTIONS UTILITAIRES
@@ -376,14 +430,12 @@
         // SYSTÈME DE STOCKAGE INDESTRUCTIBLE
         // ============================================================
         
-        // Récupérer les transactions sous forme de tableau (pas d'objet pour éviter les écrasements)
         function getDemandesTableau() {
             if(!donnees.demandes) return [];
             if(Array.isArray(donnees.demandes)) return donnees.demandes;
             return Object.values(donnees.demandes);
         }
         
-        // Sauvegarde avec verrouillage - Évite les conflits multi-appareils
         async function sauvegarderAvecLock(ref, data, operation = 'set') {
             return new Promise((resolve, reject) => {
                 const executeWrite = async () => {
@@ -394,7 +446,6 @@
                     
                     isWritingToFirebase = true;
                     try {
-                        // Utiliser transaction pour les mises à jour critiques
                         if (operation === 'update' && typeof data === 'object') {
                             await database.ref(ref).transaction((currentData) => {
                                 if (currentData === null) return data;
@@ -420,26 +471,21 @@
             });
         }
         
-        // Sauvegarde d'une transaction individuelle (NE JAMAIS ÉCRASER)
         async function sauvegarderTransaction(transaction) {
             if (!transaction || !transaction.id) return false;
             
-            // Ajouter un timestamp de dernière modification
             transaction.lastModified = Date.now();
             transaction.lastModifiedBy = auth.currentUser?.email || 'admin';
             
             try {
-                // Utiliser transaction pour éviter les conflits
-                await database.ref(`donnees/transactions/${transaction.id}`).transaction((currentData) => {
+                await database.ref(`donnees/demandes/${transaction.id}`).transaction((currentData) => {
                     if (currentData === null) return transaction;
-                    // Si la transaction existe déjà, garder la plus récente
                     if (currentData.lastModified && transaction.lastModified && currentData.lastModified > transaction.lastModified) {
                         return currentData;
                     }
                     return { ...currentData, ...transaction };
                 });
                 
-                // Sauvegarde parallèle dans localStorage (backup)
                 const allTransactions = getDemandesTableau();
                 const transactionIndex = allTransactions.findIndex(t => t.id === transaction.id);
                 if (transactionIndex !== -1) {
@@ -461,38 +507,29 @@
             }
         }
         
-        // Sauvegarde de TOUTES les demandes (avec fusion intelligente)
         async function sauvegarderDemandes(demandesArray) {
             if (!demandesArray || !Array.isArray(demandesArray)) return;
             
-            // Convertir en objet pour Firebase (mais avec conservation des données)
             const demandesObj = {};
             demandesArray.forEach(d => { 
                 if(d && d.id) {
-                    // S'assurer que chaque transaction a un timestamp
                     if (!d.lastModified) d.lastModified = Date.now();
                     demandesObj[d.id] = d;
                 }
             });
             
-            // Mettre à jour la variable locale
             donnees.demandes = demandesObj;
-            
-            // Sauvegarde dans Firebase avec transaction pour éviter les conflits
             await sauvegarderAvecLock('donnees/demandes', demandesObj, 'set');
             
-            // Sauvegarde locale complète
             localStorage.setItem('transactions_master_backup', JSON.stringify({
                 data: demandesArray,
                 timestamp: Date.now(),
                 version: donnees.version
             }));
             
-            // Sauvegarde dans IndexedDB également
             sauvegarderIndexedDB(demandesArray);
         }
         
-        // Sauvegarde IndexedDB
         function sauvegarderIndexedDB(transactions) {
             if (!transactions || transactions.length === 0) return;
             
@@ -517,7 +554,6 @@
             };
         }
         
-        // Chargement depuis IndexedDB
         async function chargerDepuisIndexedDB() {
             return new Promise((resolve) => {
                 const request = indexedDB.open('TyphMasterDB', 2);
@@ -546,12 +582,10 @@
             });
         }
         
-        // Chargement intelligent avec fallback (NE PAS ÉCRASER LES DONNÉES EXISTANTES)
         async function chargerTransactionsAvecFallback() {
             let transactions = [];
             let source = '';
             
-            // 1. Essayer Firebase d'abord (source de vérité)
             try {
                 const snapshot = await database.ref('donnees/demandes').once('value');
                 const firebaseData = snapshot.val();
@@ -560,32 +594,26 @@
                     source = 'Firebase';
                     console.log(`📡 Chargé depuis Firebase: ${transactions.length} transactions`);
                     
-                    // Mettre à jour le cache local
                     localStorage.setItem('transactions_master_backup', JSON.stringify({
                         data: transactions,
                         timestamp: Date.now(),
                         version: donnees.version
                     }));
                     
-                    // Sauvegarder dans IndexedDB
                     sauvegarderIndexedDB(transactions);
-                    
                     return transactions;
                 }
             } catch(e) { console.warn('Firebase inaccessible', e); }
             
-            // 2. Fallback localStorage
             const localBackup = localStorage.getItem('transactions_master_backup');
             if(localBackup) {
                 try {
                     const { data, timestamp } = JSON.parse(localBackup);
-                    // Si le backup a moins de 7 jours, l'utiliser
                     if((Date.now() - timestamp) < 7 * 24 * 3600000 && data && data.length > 0) {
                         transactions = data;
                         source = 'localStorage';
                         console.log(`💾 Restauré depuis localStorage: ${transactions.length} transactions`);
                         
-                        // Tenter de resynchroniser avec Firebase
                         for(const tx of transactions) {
                             await sauvegarderTransaction(tx).catch(e => console.warn);
                         }
@@ -594,7 +622,6 @@
                 } catch(e) {}
             }
             
-            // 3. Fallback IndexedDB
             const indexedDBData = await chargerDepuisIndexedDB();
             if(indexedDBData && indexedDBData.transactions && indexedDBData.transactions.length > 0) {
                 transactions = indexedDBData.transactions;
@@ -607,7 +634,6 @@
             return [];
         }
         
-        // Synchronisation en temps réel avec Firebase (évite les conflits)
         function demarrerSynchronisationRealtime() {
             database.ref('donnees/demandes').on('value', async (snapshot) => {
                 const demandes = snapshot.val();
@@ -615,7 +641,6 @@
                     const firebaseTransactions = Object.values(demandes);
                     const localTransactions = getDemandesTableau();
                     
-                    // Fusion intelligente : garder la version la plus récente de chaque transaction
                     const mergedTransactions = [...localTransactions];
                     
                     for (const fbTx of firebaseTransactions) {
@@ -623,7 +648,6 @@
                         if (existingIndex === -1) {
                             mergedTransactions.push(fbTx);
                         } else {
-                            // Garder la version la plus récente
                             const existingTx = mergedTransactions[existingIndex];
                             const fbModified = fbTx.lastModified || 0;
                             const existingModified = existingTx.lastModified || 0;
@@ -633,19 +657,16 @@
                         }
                     }
                     
-                    // Mettre à jour donnees.demandes
                     const demandesObj = {};
                     mergedTransactions.forEach(d => { if(d && d.id) demandesObj[d.id] = d; });
                     donnees.demandes = demandesObj;
                     
-                    // Sauvegarde locale
                     localStorage.setItem('transactions_master_backup', JSON.stringify({
                         data: mergedTransactions,
                         timestamp: Date.now(),
                         version: donnees.version
                     }));
                     
-                    // Rafraîchir l'affichage
                     const ongletActif = document.getElementById('demandes-tab').style.display !== 'none';
                     if(ongletActif) afficherDemandes();
                     const ongletTransactions = document.getElementById('transactions-tab').style.display !== 'none';
@@ -653,7 +674,6 @@
                     const ongletBonus = document.getElementById('bonusroue-tab').style.display !== 'none';
                     if(ongletBonus) afficherBonus();
                     
-                    // Mettre à jour les badges
                     const enAttente = mergedTransactions.filter(d => d.statut === 'en_attente' && d.type !== 'BONUS').length;
                     const badge = document.getElementById('notif-transactions');
                     if(badge) { if(enAttente > 0) { badge.textContent = enAttente; badge.style.display = 'inline-block'; } else { badge.style.display = 'none'; } }
@@ -667,7 +687,6 @@
             });
         }
         
-        // Sauvegarde automatique périodique
         let intervalSauvegardeAuto = null;
         
         function demarrerSauvegardeAutomatique() {
@@ -677,21 +696,17 @@
                 const demandesArray = getDemandesTableau();
                 if(demandesArray.length > 0) {
                     console.log(`💾 Sauvegarde auto: ${demandesArray.length} transactions`);
-                    
-                    // Sauvegarde complète dans localStorage
                     localStorage.setItem('transactions_complete_backup', JSON.stringify({
                         data: demandesArray,
                         timestamp: Date.now(),
                         count: demandesArray.length,
                         version: donnees.version
                     }));
-                    
-                    // Sauvegarde dans IndexedDB
                     sauvegarderIndexedDB(demandesArray);
                 }
-            }, 5 * 60 * 1000); // Toutes les 5 minutes
+            }, 5 * 60 * 1000);
         }
-        
+
         // ============================================================
         // EXPORT COMPLET DE TOUTES LES DONNÉES
         // ============================================================
@@ -735,7 +750,6 @@
             alert(`✅ Export complet effectué !\n\n📊 ${exportData.stats.totalTransactions} transactions\n👥 ${exportData.stats.totalUtilisateurs} utilisateurs\n📁 Fichier: ${fileName}`);
         }
         
-        // Exporter uniquement les transactions
         function exporterTransactions() {
             const demandesArray = getDemandesTableau();
             const a = document.createElement('a');
@@ -761,9 +775,7 @@
                 sauvegardeCount++; 
             }
             
-            // Sauvegarde complète également
             await sauvegarderDemandes(demandesArray);
-            
             alert(`✅ ${sauvegardeCount} transaction(s) sauvegardée(s) avec succès !`);
         }
         
@@ -776,7 +788,7 @@
         }
         
         // ============================================================
-        // FONCTIONS D'APPROBATION (avec sauvegarde)
+        // FONCTIONS D'APPROBATION (avec sauvegarde et archivage)
         // ============================================================
         function approuverDemande(id) { 
             if(!confirm('✅ Approuver cette demande ?')) return; 
@@ -790,6 +802,7 @@
                 d.historique.push({date:new Date().toISOString(),action:'APPROUVEE_PAR_ADMIN',details:'Demande approuvée par admin',admin: auth.currentUser?.email || 'admin'}); 
                 sauvegarderDemandes(demandesArray);
                 sauvegarderTransaction(d);
+                archiverTransactionConfirmee(d);
                 afficherDemandes(); 
                 afficherTransactions(); 
                 afficherBonus();
@@ -861,7 +874,6 @@
         // CHARGEMENT DES DONNÉES
         // ============================================================
         async function chargerDonnees() {
-            // Charger les transactions depuis Firebase avec fallback
             const transactions = await chargerTransactionsAvecFallback();
             if(transactions.length > 0) {
                 const demandesObj = {};
@@ -869,15 +881,11 @@
                 donnees.demandes = demandesObj;
             }
             
-            // Charger le reste des données
             database.ref('donnees').once('value').then(s => {
                 const data = s.val();
                 if(data && Object.keys(data).length > 0){
-                    // Fusionner sans écraser les transactions existantes
                     donnees = { ...obtenirDonneesParDefaut(), ...data };
-                    // S'assurer que les transactions ne sont pas écrasées
                     if(data.demandes && Object.keys(data.demandes).length > 0) {
-                        // Fusionner avec les transactions existantes
                         const existingTransactions = getDemandesTableau();
                         const newTransactions = Object.values(data.demandes);
                         const merged = [...existingTransactions];
@@ -923,9 +931,20 @@
                 afficherTout();
                 document.getElementById('usd-mga-display').textContent = donnees.usdMGA.toLocaleString();
                 
-                // Démarrer la synchronisation en temps réel
                 demarrerSynchronisationRealtime();
                 demarrerSauvegardeAutomatique();
+                
+                // Planifier la sauvegarde quotidienne (toutes les 24h)
+                setInterval(() => {
+                    sauvegardeQuotidienne();
+                    nettoyerAnciensBackups();
+                }, 24 * 60 * 60 * 1000);
+                
+                // Première sauvegarde dans 1 heure
+                setTimeout(() => {
+                    sauvegardeQuotidienne();
+                    nettoyerAnciensBackups();
+                }, 60 * 60 * 1000);
             }).catch(e => { 
                 console.error(e); 
                 donnees = obtenirDonneesParDefaut(); 
@@ -936,7 +955,7 @@
         }
         
         // ============================================================
-        // FONCTIONS D'AFFICHAGE (simplifiées - garder le même code que l'original)
+        // FONCTIONS D'AFFICHAGE
         // ============================================================
         
         function afficherTout() { 
@@ -1472,6 +1491,9 @@
                 tx.historique.push({date:new Date().toISOString(),action:'STATUT_CHANGE',details:`Statut changé de ${ancien} à ${ns} par admin`}); 
                 sauvegarderDemandes(demandesArray);
                 sauvegarderTransaction(tx);
+                if (ns === 'confirme') {
+                    archiverTransactionConfirmee(tx);
+                }
                 alert(`✅ Statut changé à ${ns} et sauvegardé`); 
                 voirDetailsTransaction(transactionSelectionneeId); 
                 afficherTransactions(); 
@@ -1518,12 +1540,12 @@
             let montantEnvoyeHtml = tx.type !== 'BONUS' ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Montant envoyé:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.montant)} ${tx.type==='ACHAT'?'Ar':tx.crypto}</td></tr>` : '';
             let reseauHtml = tx.type !== 'BONUS' ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Réseau:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.reseau||'N/A')}</td></tr>` : '';
             recu.innerHTML=`<table style="width:100%;border-collapse:collapse;margin:20px 0;"><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>ID Transaction:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.id)}</td></tr>
-                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>ID Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.userID||'Non attribué')}</td></tr>
-                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Type:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.type)}</td></tr>
-                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Statut:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.statut)}</td></tr>
-                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.utilisateur)}</td></tr>
-                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Email:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.email)}</td></tr>
-                    <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Date:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(new Date(tx.date).toLocaleString('fr-FR'))}</td></tr>
+                     <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>ID Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.userID||'Non attribué')}</td></tr>
+                     <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Type:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.type)}</td></tr>
+                     <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Statut:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.statut)}</td></tr>
+                     <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.utilisateur)}</td></tr>
+                     <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Email:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.email)}</td></tr>
+                     <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Date:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(new Date(tx.date).toLocaleString('fr-FR'))}</td></tr>
                     ${montantEnvoyeHtml}
                     <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>${tx.type==='BONUS'?'Lot gagné':'Vous recevez'}:</strong><td style="padding:8px;border-bottom:1px solid #eee;color:#059669;font-weight:bold;">${echapperHTML(montantRecu)}</td></tr>
                     ${reseauHtml}
