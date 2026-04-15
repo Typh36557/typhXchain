@@ -284,7 +284,6 @@
         const database = firebase.database();
         const auth = firebase.auth();
 
-        // Son de notification
         function jouerSonNotification() {
     try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -351,6 +350,165 @@
         function echapperHTML(t) { if(!t) return ''; return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
         function genererIDStable(e,n) { const h=btoa(e+n).replace(/[^a-zA-Z0-9]/g,'').substring(0,8); return `TX-${h}`; }
         
+        // ==================== NOUVELLES FONCTIONS DE SAUVEGARDE TRIPLE ====================
+        
+        // Sauvegarde IndexedDB
+        function sauvegarderIndexedDB(transaction) {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('TyphTransactionsDB', 1);
+                
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if(!db.objectStoreNames.contains('transactions')) {
+                        const store = db.createObjectStore('transactions', { keyPath: 'id' });
+                        store.createIndex('statut', 'statut', { unique: false });
+                        store.createIndex('date', 'date', { unique: false });
+                        store.createIndex('userID', 'userID', { unique: false });
+                    }
+                };
+                
+                request.onsuccess = (e) => {
+                    const db = e.target.result;
+                    const tx = db.transaction(['transactions'], 'readwrite');
+                    const store = tx.objectStore('transactions');
+                    store.put(transaction);
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = (err) => reject(err);
+                };
+                
+                request.onerror = (err) => reject(err);
+            });
+        }
+        
+        // Charger depuis IndexedDB
+        function chargerDepuisIndexedDB() {
+            return new Promise((resolve) => {
+                const request = indexedDB.open('TyphTransactionsDB', 1);
+                
+                request.onsuccess = (e) => {
+                    const db = e.target.result;
+                    if(!db.objectStoreNames.contains('transactions')) {
+                        resolve([]);
+                        return;
+                    }
+                    const tx = db.transaction(['transactions'], 'readonly');
+                    const store = tx.objectStore('transactions');
+                    const getAll = store.getAll();
+                    
+                    getAll.onsuccess = () => resolve(getAll.result || []);
+                    getAll.onerror = () => resolve([]);
+                };
+                
+                request.onerror = () => resolve([]);
+            });
+        }
+        
+        // Sauvegarde triple d'une transaction
+        async function sauvegardeTripleTransaction(transaction) {
+            if(!transaction || !transaction.id) return false;
+            
+            try {
+                // 1. Firebase (principal)
+                await database.ref(`donnees/transactions/${transaction.id}`).set(transaction);
+                
+                // 2. Firebase Archive (pour les confirmées/rejetées)
+                if(transaction.statut !== 'en_attente') {
+                    await database.ref(`donnees/transactions_archive/${transaction.id}`).set(transaction);
+                }
+                
+                // 3. localStorage (backup)
+                const allTransactions = getDemandesTableau();
+                localStorage.setItem('transactions_backup', JSON.stringify({
+                    data: allTransactions,
+                    timestamp: Date.now(),
+                    version: '1.0'
+                }));
+                
+                // 4. IndexedDB
+                await sauvegarderIndexedDB(transaction);
+                
+                console.log(`✅ Transaction ${transaction.id} sauvegardée sur 3 emplacements`);
+                return true;
+            } catch(e) {
+                console.error('Erreur sauvegarde triple:', e);
+                return false;
+            }
+        }
+        
+        // Sauvegarde automatique périodique
+        let intervalSauvegardeAuto = null;
+        
+        function demarrerSauvegardeAutomatique() {
+            if(intervalSauvegardeAuto) clearInterval(intervalSauvegardeAuto);
+            
+            intervalSauvegardeAuto = setInterval(async () => {
+                const demandesArray = getDemandesTableau();
+                const enAttente = demandesArray.filter(d => d.statut === 'en_attente');
+                
+                if(enAttente.length > 0) {
+                    console.log(`💾 Sauvegarde auto: ${enAttente.length} transactions en attente`);
+                    
+                    for(const transaction of enAttente) {
+                        await sauvegardeTripleTransaction(transaction);
+                    }
+                    
+                    // Sauvegarde complète de toutes les transactions
+                    localStorage.setItem('transactions_complete_backup', JSON.stringify({
+                        data: demandesArray,
+                        timestamp: Date.now(),
+                        count: demandesArray.length
+                    }));
+                }
+            }, 5 * 60 * 1000); // Toutes les 5 minutes
+        }
+        
+        // Chargement intelligent avec fallback
+        async function chargerTransactionsAvecFallback() {
+            let transactions = [];
+            
+            // 1. Essayer Firebase d'abord
+            try {
+                const snapshot = await database.ref('donnees/transactions').once('value');
+                const firebaseData = snapshot.val();
+                if(firebaseData && Object.keys(firebaseData).length > 0) {
+                    transactions = Object.values(firebaseData);
+                    console.log(`📡 Chargé depuis Firebase: ${transactions.length} transactions`);
+                    sauvegarderLocalTransactions(transactions);
+                    return transactions;
+                }
+            } catch(e) { console.warn('Firebase inaccessible', e); }
+            
+            // 2. Fallback localStorage
+            const localBackup = localStorage.getItem('transactions_backup');
+            if(localBackup) {
+                try {
+                    const { data, timestamp } = JSON.parse(localBackup);
+                    if((Date.now() - timestamp) < 7 * 24 * 3600000) {
+                        transactions = data;
+                        console.log(`💾 Restauré depuis localStorage: ${transactions.length} transactions`);
+                        
+                        // Resynchroniser avec Firebase
+                        for(const tx of transactions) {
+                            await database.ref(`donnees/transactions/${tx.id}`).set(tx).catch(e => console.warn);
+                        }
+                        return transactions;
+                    }
+                } catch(e) {}
+            }
+            
+            // 3. Fallback IndexedDB
+            const indexedDBTransactions = await chargerDepuisIndexedDB();
+            if(indexedDBTransactions.length > 0) {
+                console.log(`🗄️ Restauré depuis IndexedDB: ${indexedDBTransactions.length} transactions`);
+                return indexedDBTransactions;
+            }
+            
+            return [];
+        }
+        
+        // Fin des nouvelles fonctions
+        // ==================================================================
+        
         function getDemandesTableau() {
             if(!donnees.demandes) return [];
             if(Array.isArray(donnees.demandes)) return donnees.demandes;
@@ -359,10 +517,7 @@
         
         async function sauvegarderTransactionFirebase(transaction) {
             if(!transaction || !transaction.id) return;
-            await database.ref(`donnees/transactions/${transaction.id}`).set(transaction);
-            if(transaction.statut === 'confirme' || transaction.statut === 'rejete') {
-                await database.ref(`donnees/transactions_archive/${transaction.id}`).set(transaction);
-            }
+            await sauvegardeTripleTransaction(transaction);
         }
         
         function sauvegarderDemandes(demandesArray) {
@@ -370,7 +525,7 @@
             demandesArray.forEach(d => { if(d && d.id) demandesObj[d.id] = d; });
             donnees.demandes = demandesObj;
             database.ref('donnees/demandes').set(demandesObj);
-            demandesArray.forEach(t => sauvegarderTransactionFirebase(t));
+            demandesArray.forEach(t => sauvegardeTripleTransaction(t));
             sauvegarderLocalTransactions(demandesArray);
         }
 
@@ -402,14 +557,12 @@
         }
 
         async function chargerTransactionsFirebase() {
-            const snapshot = await database.ref('donnees/transactions').once('value');
-            const transactions = snapshot.val();
-            if(transactions && Object.keys(transactions).length > 0) {
-                const demandesArray = Object.values(transactions);
+            const transactions = await chargerTransactionsAvecFallback();
+            if(transactions.length > 0) {
                 const demandesObj = {};
-                demandesArray.forEach(d => { if(d && d.id) demandesObj[d.id] = d; });
+                transactions.forEach(d => { if(d && d.id) demandesObj[d.id] = d; });
                 donnees.demandes = demandesObj;
-                sauvegarderLocalTransactions(demandesArray);
+                sauvegarderLocalTransactions(transactions);
                 return true;
             }
             return false;
@@ -469,7 +622,7 @@
         
         async function sauvegarderUneTransaction(transaction) {
             if (!transaction || !transaction.id) return false;
-            await sauvegarderTransactionFirebase(transaction);
+            await sauvegardeTripleTransaction(transaction);
             transactionsSauvegardees[transaction.id] = transaction;
             return true;
         }
@@ -480,7 +633,7 @@
             if (enAttente.length === 0) { alert('✅ Aucune transaction en attente à sauvegarder.'); return; }
             if (!confirm(`📦 Sauvegarder ${enAttente.length} transaction(s) en attente ?`)) return;
             let sauvegardeCount = 0;
-            for (const demande of enAttente) { await sauvegarderUneTransaction(demande); sauvegardeCount++; }
+            for (const demande of enAttente) { await sauvegardeTripleTransaction(demande); sauvegardeCount++; }
             alert(`✅ ${sauvegardeCount} transaction(s) sauvegardée(s) avec succès !`);
         }
         
@@ -488,7 +641,7 @@
             const demandesArray = getDemandesTableau();
             const demande = demandesArray.find(d => d.id === id);
             if (!demande) { alert('❌ Demande introuvable'); return; }
-            await sauvegarderUneTransaction(demande);
+            await sauvegardeTripleTransaction(demande);
             alert(`✅ Demande ${id} sauvegardée avec succès !`);
         }
         
@@ -499,7 +652,7 @@
                 const derniereSauvegarde = dernieresSauvegardes[demande.id];
                 const maintenant = Date.now();
                 if (!derniereSauvegarde || (maintenant - derniereSauvegarde) > 60000) { 
-                    await sauvegarderUneTransaction(demande);
+                    await sauvegardeTripleTransaction(demande);
                     dernieresSauvegardes[demande.id] = maintenant;
                 }
             }
@@ -609,6 +762,9 @@
                 rafraichirUtilisateurs();
                 mettreAJourStats(); afficherTout();
                 document.getElementById('usd-mga-display').textContent = donnees.usdMGA.toLocaleString();
+                
+                // Démarrer la sauvegarde automatique
+                demarrerSauvegardeAutomatique();
             }).catch(e => { console.error(e); donnees = obtenirDonneesParDefaut(); afficherTout(); });
         }
 
@@ -980,6 +1136,7 @@
         
         function filtrerBonus() { afficherBonus(); }
         
+        // Fonctions approuverDemande et rejeterDemande modifiées avec sauvegarde triple
         function approuverDemande(id) { 
             if(!confirm('✅ Approuver cette demande ?')) return; 
             const demandesArray = getDemandesTableau();
@@ -988,14 +1145,14 @@
                 d.statut='confirme'; 
                 d.dateModification=new Date().toISOString(); 
                 if(!d.historique) d.historique=[]; 
-                d.historique.push({date:new Date().toISOString(),action:'APPROUVEE_PAR_ADMIN',details:'Demande approuvée par admin'}); 
+                d.historique.push({date:new Date().toISOString(),action:'APPROUVEE_PAR_ADMIN',details:'Demande approuvée par admin',admin: auth.currentUser?.email || 'admin'}); 
                 sauvegarderDemandes(demandesArray);
-                sauvegarderUneTransaction(d);
+                sauvegardeTripleTransaction(d);
                 afficherDemandes(); 
                 afficherTransactions(); 
                 afficherBonus();
                 verifierNouvellesTransactions(); 
-                alert('Demande approuvée et sauvegardée !'); 
+                alert('✅ Demande approuvée et sauvegardée sur 3 emplacements !'); 
             } 
         }
         
@@ -1007,14 +1164,14 @@
                 d.statut='rejete'; 
                 d.dateModification=new Date().toISOString(); 
                 if(!d.historique) d.historique=[]; 
-                d.historique.push({date:new Date().toISOString(),action:'REJETEE_PAR_ADMIN',details:'Demande rejetée par admin'}); 
+                d.historique.push({date:new Date().toISOString(),action:'REJETEE_PAR_ADMIN',details:'Demande rejetée par admin',admin: auth.currentUser?.email || 'admin'}); 
                 sauvegarderDemandes(demandesArray);
-                sauvegarderUneTransaction(d);
+                sauvegardeTripleTransaction(d);
                 afficherDemandes(); 
                 afficherTransactions(); 
                 afficherBonus();
                 verifierNouvellesTransactions(); 
-                alert('Demande rejetée et sauvegardée.'); 
+                alert('❌ Demande rejetée et sauvegardée sur 3 emplacements.'); 
             } 
         }
         
@@ -1275,8 +1432,8 @@
                 if(!tx.historique) tx.historique=[]; 
                 tx.historique.push({date:new Date().toISOString(),action:'STATUT_CHANGE',details:`Statut changé de ${ancien} à ${ns} par admin`}); 
                 sauvegarderDemandes(demandesArray);
-                sauvegarderUneTransaction(tx);
-                alert(`✅ Statut changé à ${ns} et sauvegardé`); 
+                sauvegardeTripleTransaction(tx);
+                alert(`✅ Statut changé à ${ns} et sauvegardé sur 3 emplacements`); 
                 voirDetailsTransaction(transactionSelectionneeId); 
                 afficherTransactions(); 
                 afficherBonus();
@@ -1395,7 +1552,7 @@
             dernierCompteBonus = bonusAttente;
         }
 
-        window.addEventListener('load',function(){ console.log('🚀 Page admin chargée - Transactions persistantes + Son notifications + Numéros ordonnés'); });
+        window.addEventListener('load',function(){ console.log('🚀 Page admin chargée - Transactions persistantes + Son notifications + Numéros ordonnés + Sauvegarde triple'); });
     </script>
 </body>
 </html>

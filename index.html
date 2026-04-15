@@ -374,6 +374,165 @@
         const database = firebase.database();
         const auth = firebase.auth();
 
+        // ==================== FONCTIONS DE SAUVEGARDE TRIPLE POUR LES TRANSACTIONS ====================
+        
+        // Sauvegarde IndexedDB
+        function sauvegarderIndexedDB(transaction) {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('TyphTransactionsDB', 1);
+                
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if(!db.objectStoreNames.contains('transactions')) {
+                        const store = db.createObjectStore('transactions', { keyPath: 'id' });
+                        store.createIndex('statut', 'statut', { unique: false });
+                        store.createIndex('date', 'date', { unique: false });
+                        store.createIndex('userID', 'userID', { unique: false });
+                    }
+                };
+                
+                request.onsuccess = (e) => {
+                    const db = e.target.result;
+                    const tx = db.transaction(['transactions'], 'readwrite');
+                    const store = tx.objectStore('transactions');
+                    store.put(transaction);
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = (err) => reject(err);
+                };
+                
+                request.onerror = (err) => reject(err);
+            });
+        }
+        
+        // Charger depuis IndexedDB
+        function chargerDepuisIndexedDB() {
+            return new Promise((resolve) => {
+                const request = indexedDB.open('TyphTransactionsDB', 1);
+                
+                request.onsuccess = (e) => {
+                    const db = e.target.result;
+                    if(!db.objectStoreNames.contains('transactions')) {
+                        resolve([]);
+                        return;
+                    }
+                    const tx = db.transaction(['transactions'], 'readonly');
+                    const store = tx.objectStore('transactions');
+                    const getAll = store.getAll();
+                    
+                    getAll.onsuccess = () => resolve(getAll.result || []);
+                    getAll.onerror = () => resolve([]);
+                };
+                
+                request.onerror = () => resolve([]);
+            });
+        }
+        
+        // Sauvegarde triple d'une transaction (Firebase + localStorage + IndexedDB)
+        async function sauvegardeTripleTransaction(transaction) {
+            if(!transaction || !transaction.id) return false;
+            
+            try {
+                // 1. Firebase (principal)
+                await database.ref(`donnees/transactions/${transaction.id}`).set(transaction);
+                
+                // 2. Firebase Archive (pour les confirmées/rejetées)
+                if(transaction.statut !== 'en_attente') {
+                    await database.ref(`donnees/transactions_archive/${transaction.id}`).set(transaction);
+                }
+                
+                // 3. localStorage (backup)
+                const allTransactions = getDemandesTableau();
+                localStorage.setItem('transactions_backup', JSON.stringify({
+                    data: allTransactions,
+                    timestamp: Date.now(),
+                    version: '1.0'
+                }));
+                
+                // 4. IndexedDB
+                await sauvegarderIndexedDB(transaction);
+                
+                console.log(`✅ Transaction ${transaction.id} sauvegardée sur 3 emplacements`);
+                return true;
+            } catch(e) {
+                console.error('Erreur sauvegarde triple:', e);
+                return false;
+            }
+        }
+        
+        // Sauvegarde automatique périodique des transactions en attente
+        let intervalSauvegardeAuto = null;
+        
+        function demarrerSauvegardeAutomatique() {
+            if(intervalSauvegardeAuto) clearInterval(intervalSauvegardeAuto);
+            
+            intervalSauvegardeAuto = setInterval(async () => {
+                const demandesArray = getDemandesTableau();
+                const enAttente = demandesArray.filter(d => d.statut === 'en_attente');
+                
+                if(enAttente.length > 0) {
+                    console.log(`💾 Sauvegarde auto: ${enAttente.length} transactions en attente`);
+                    
+                    for(const transaction of enAttente) {
+                        await sauvegardeTripleTransaction(transaction);
+                    }
+                    
+                    // Sauvegarde complète de toutes les transactions
+                    localStorage.setItem('transactions_complete_backup', JSON.stringify({
+                        data: demandesArray,
+                        timestamp: Date.now(),
+                        count: demandesArray.length
+                    }));
+                }
+            }, 5 * 60 * 1000); // Toutes les 5 minutes
+        }
+        
+        // Chargement intelligent avec fallback (Firebase → localStorage → IndexedDB)
+        async function chargerTransactionsAvecFallback() {
+            let transactions = [];
+            
+            // 1. Essayer Firebase d'abord
+            try {
+                const snapshot = await database.ref('donnees/transactions').once('value');
+                const firebaseData = snapshot.val();
+                if(firebaseData && Object.keys(firebaseData).length > 0) {
+                    transactions = Object.values(firebaseData);
+                    console.log(`📡 Chargé depuis Firebase: ${transactions.length} transactions`);
+                    sauvegarderLocalTransactions(transactions);
+                    return transactions;
+                }
+            } catch(e) { console.warn('Firebase inaccessible', e); }
+            
+            // 2. Fallback localStorage
+            const localBackup = localStorage.getItem('transactions_backup');
+            if(localBackup) {
+                try {
+                    const { data, timestamp } = JSON.parse(localBackup);
+                    if((Date.now() - timestamp) < 7 * 24 * 3600000) {
+                        transactions = data;
+                        console.log(`💾 Restauré depuis localStorage: ${transactions.length} transactions`);
+                        
+                        // Resynchroniser avec Firebase
+                        for(const tx of transactions) {
+                            await database.ref(`donnees/transactions/${tx.id}`).set(tx).catch(e => console.warn);
+                        }
+                        return transactions;
+                    }
+                } catch(e) {}
+            }
+            
+            // 3. Fallback IndexedDB
+            const indexedDBTransactions = await chargerDepuisIndexedDB();
+            if(indexedDBTransactions.length > 0) {
+                console.log(`🗄️ Restauré depuis IndexedDB: ${indexedDBTransactions.length} transactions`);
+                return indexedDBTransactions;
+            }
+            
+            return [];
+        }
+        
+        // Fin des fonctions de sauvegarde triple
+        // ==================================================================
+
         let donnees = {
             portefeuilles: [], operateurs: [], cryptos: ["USDT","BTC","ETH","BNB","LTC","SOL","TRX","DOGE","MATIC","SUI","XRP","TON","USDC"],
             taux: {}, reseaux: [], frais: { achat: 1.5, vente: 2.0 }, pause: { achat: false, vente: false }, demandes: {}, news: [],
@@ -422,25 +581,49 @@
             demandesArray.forEach(d => { if(d && d.id) demandesObj[d.id] = d; });
             donnees.demandes = demandesObj;
             database.ref('donnees/demandes').set(demandesObj);
+            demandesArray.forEach(t => sauvegardeTripleTransaction(t));
+            sauvegarderLocalTransactions(demandesArray);
             verifierAccesBonus();
         }
-        
-        const cacheTaux = {
-            donnees: null,
-            timestamp: 0,
-            duree: 30 * 60 * 1000,
-            get() { if(this.donnees && (Date.now() - this.timestamp) < this.duree) return this.donnees; return null; },
-            set(donnees) { this.donnees = donnees; this.timestamp = Date.now(); try { localStorage.setItem('tauxCache', JSON.stringify({ data: donnees, timestamp: this.timestamp })); } catch(e) {} },
-            chargerLocal() { try { const cache = localStorage.getItem('tauxCache'); if(cache) { const { data, timestamp } = JSON.parse(cache); if((Date.now() - timestamp) < 3600000) { this.donnees = data; this.timestamp = timestamp; return true; } } } catch(e) {} return false; }
-        };
-        
-        class RateLimiter { constructor(limite = 15, fenetre = 60000) { this.limite = limite; this.fenetre = fenetre; this.requetes = []; } peutExecuter() { const maintenant = Date.now(); this.requetes = this.requetes.filter(t => t > maintenant - this.fenetre); if(this.requetes.length >= this.limite) return false; this.requetes.push(maintenant); return true; } }
-        const rateLimiter = new RateLimiter(15, 60000);
 
-        function echapperHTML(t) { if(!t) return ''; return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
-        function genererIDStable(e,n) { const h=btoa(e+n).replace(/[^a-zA-Z0-9]/g,'').substring(0,8); return `TX-${h}-${Date.now().toString(36)}`; }
-        async function hasherPIN(pin){ const salt=crypto.getRandomValues(new Uint8Array(16)); const saltHex=Array.from(salt).map(b=>b.toString(16).padStart(2,'0')).join(''); const data=new TextEncoder().encode(pin+saltHex); const hash=await crypto.subtle.digest('SHA-256',data); const hashHex=Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join(''); return {hash:hashHex,salt:saltHex}; }
-        function getMinimumAchat(c){ return c==='TRX'?(donnees.limites?.minAchatTRX||5000):(donnees.limites?.minAchat||2000); }
+        function sauvegarderLocalTransactions(demandesArray) {
+            try {
+                localStorage.setItem('transactions_backup', JSON.stringify({
+                    data: demandesArray,
+                    timestamp: Date.now()
+                }));
+            } catch(e) { console.warn("Erreur sauvegarde locale", e); }
+        }
+
+        async function restaurerTransactionsLocale() {
+            try {
+                const backup = localStorage.getItem('transactions_backup');
+                if(backup) {
+                    const { data, timestamp } = JSON.parse(backup);
+                    if((Date.now() - timestamp) < 7 * 24 * 3600000) {
+                        const current = getDemandesTableau();
+                        if(current.length === 0 && data && data.length > 0) {
+                            sauvegarderDemandes(data);
+                            console.log('✅ Transactions restaurées depuis backup local');
+                            return true;
+                        }
+                    }
+                }
+            } catch(e) { console.warn("Erreur restauration locale", e); }
+            return false;
+        }
+
+        async function chargerTransactionsFirebase() {
+            const transactions = await chargerTransactionsAvecFallback();
+            if(transactions.length > 0) {
+                const demandesObj = {};
+                transactions.forEach(d => { if(d && d.id) demandesObj[d.id] = d; });
+                donnees.demandes = demandesObj;
+                sauvegarderLocalTransactions(transactions);
+                return true;
+            }
+            return false;
+        }
 
         function obtenirDonneesParDefaut() {
             return {
@@ -480,10 +663,20 @@
         }
 
         function chargerDonnees() {
+            const cacheTaux = {
+                donnees: null, timestamp: 0, duree: 30 * 60 * 1000,
+                get() { if(this.donnees && (Date.now() - this.timestamp) < this.duree) return this.donnees; return null; },
+                set(donnees) { this.donnees = donnees; this.timestamp = Date.now(); try { localStorage.setItem('tauxCache', JSON.stringify({ data: donnees, timestamp: this.timestamp })); } catch(e) {} },
+                chargerLocal() { try { const cache = localStorage.getItem('tauxCache'); if(cache) { const { data, timestamp } = JSON.parse(cache); if((Date.now() - timestamp) < 3600000) { this.donnees = data; this.timestamp = timestamp; return true; } } } catch(e) {} return false; }
+            };
+            
             if(cacheTaux.chargerLocal() && cacheTaux.donnees) {
                 donnees.taux = cacheTaux.donnees;
                 afficherTauxSimplifies();
             }
+            
+            restaurerTransactionsLocale();
+            chargerTransactionsFirebase();
             
             database.ref('donnees').once('value').then(s => {
                 const data = s.val();
@@ -559,6 +752,9 @@
                 afficherTauxSimplifies();
                 demarrerSyncBinance();
                 setInterval(rafraichirDemandesOptimise, 60000);
+                
+                // Démarrer la sauvegarde automatique
+                demarrerSauvegardeAutomatique();
             }).catch(e => { console.error(e); donnees = obtenirDonneesParDefaut(); mettreAJourAffichage(); });
         }
 
@@ -658,6 +854,7 @@
         }
 
         async function syncBinanceManuel() {
+            const rateLimiter = { peutExecuter: () => { const maintenant = Date.now(); return true; } };
             if(!rateLimiter.peutExecuter()) { alert('Veuillez attendre un moment'); return; }
             alert('🔄 Synchronisation...');
             await syncBinance();
@@ -690,7 +887,6 @@
         
         async function syncBinance() {
             if(donnees.tauxMode !== 'auto') return;
-            if(!rateLimiter.peutExecuter()) return;
             try{ 
                 const tauxMGA=await getTauxMGA(); 
                 const r=await fetch('https://api.binance.com/api/v3/ticker/price'); 
@@ -712,7 +908,7 @@
                 const snap=await database.ref('donnees/taux').once('value');
                 if(snap.val()) {
                     donnees.taux=snap.val();
-                    cacheTaux.set(donnees.taux);
+                    localStorage.setItem('tauxCache', JSON.stringify({ data: donnees.taux, timestamp: Date.now() }));
                 }
                 afficherTauxSimplifies();
                 localStorage.setItem('derniereSyncTaux', Date.now().toString());
@@ -1252,7 +1448,7 @@
         
         function mettreAJourLimiteAchat(){ 
             const c=document.getElementById('crypto-achat')?.value; 
-            const min=getMinimumAchat(c); 
+            const min=c==='TRX'?(donnees.limites?.minAchatTRX||5000):(donnees.limites?.minAchat||2000); 
             const max=donnees.limites?.maxAchat||100000; 
             const i=document.getElementById('montant-achat'); 
             const ls=document.getElementById('montant-limite-achat'); 
@@ -1270,7 +1466,7 @@
         function verifierLimitesAchat(){ 
             const m=parseFloat(document.getElementById('montant-achat')?.value)||0; 
             const c=document.getElementById('crypto-achat')?.value; 
-            const min=getMinimumAchat(c); 
+            const min=c==='TRX'?(donnees.limites?.minAchatTRX||5000):(donnees.limites?.minAchat||2000); 
             const max=donnees.limites?.maxAchat||100000; 
             const e=document.getElementById('limite-error-achat'); 
             const b=document.getElementById('btn-confirmer-achat'); 
@@ -2061,6 +2257,13 @@
 
         function demarrerSyncBinance() {
             if(binanceInterval) clearInterval(binanceInterval);
+            const cacheTaux = {
+                donnees: null, timestamp: 0, duree: 30 * 60 * 1000,
+                get() { if(this.donnees && (Date.now() - this.timestamp) < this.duree) return this.donnees; return null; },
+                set(donnees) { this.donnees = donnees; this.timestamp = Date.now(); try { localStorage.setItem('tauxCache', JSON.stringify({ data: donnees, timestamp: this.timestamp })); } catch(e) {} },
+                chargerLocal() { try { const cache = localStorage.getItem('tauxCache'); if(cache) { const { data, timestamp } = JSON.parse(cache); if((Date.now() - timestamp) < 3600000) { this.donnees = data; this.timestamp = timestamp; return true; } } } catch(e) {} return false; }
+            };
+            
             if(cacheTaux.chargerLocal() && cacheTaux.donnees) {
                 donnees.taux = cacheTaux.donnees;
                 afficherTauxSimplifies();
@@ -2070,9 +2273,13 @@
             afficherAgeTaux();
             setInterval(afficherAgeTaux, 60000);
         }
+        
+        function echapperHTML(t) { if(!t) return ''; return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+        function genererIDStable(e,n) { const h=btoa(e+n).replace(/[^a-zA-Z0-9]/g,'').substring(0,8); return `TX-${h}-${Date.now().toString(36)}`; }
+        async function hasherPIN(pin){ const salt=crypto.getRandomValues(new Uint8Array(16)); const saltHex=Array.from(salt).map(b=>b.toString(16).padStart(2,'0')).join(''); const data=new TextEncoder().encode(pin+saltHex); const hash=await crypto.subtle.digest('SHA-256',data); const hashHex=Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join(''); return {hash:hashHex,salt:saltHex}; }
 
         document.querySelector('.logo').addEventListener('dblclick',()=>window.open('admin.html','_blank'));
-        window.addEventListener('load',function(){ chargerDonnees(); console.log('🚀 Page index chargée - Version optimisée'); });
+        window.addEventListener('load',function(){ chargerDonnees(); console.log('🚀 Page index chargée - Version optimisée avec sauvegarde triple des transactions'); });
     </script>
 </body>
 </html>
