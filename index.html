@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>TYPH X-CHAIN • Exchange Crypto ⇄ Ariary</title>
     
+    <!-- FORCE CACHE REFRESH - NOUVEAU -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0A0F1F">
@@ -360,6 +365,39 @@
             });
         }
 
+        // ==================== VÉRIFICATION DES MISES À JOUR ====================
+        async function verifierMiseAJour() {
+            try {
+                const response = await fetch('/version.json?t=' + Date.now());
+                const nouvelleVersion = await response.json();
+                const versionActuelle = localStorage.getItem('app_version') || '0';
+                
+                if (nouvelleVersion.version !== versionActuelle) {
+                    localStorage.setItem('app_version', nouvelleVersion.version);
+                    
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <div style="position:fixed;bottom:80px;left:10px;right:10px;
+                                    background:#3B82F6;color:white;padding:15px;
+                                    border-radius:20px;z-index:9999;text-align:center;
+                                    box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+                            <i class="fas fa-sync-alt"></i> Nouvelle version disponible!
+                            <button onclick="location.reload(true)" style="margin-left:10px;
+                                    background:white;border:none;padding:5px 15px;
+                                    border-radius:20px;cursor:pointer;">
+                                Actualiser
+                            </button>
+                        </div>
+                    `;
+                    document.body.appendChild(div);
+                }
+            } catch(e) {}
+        }
+        
+        verifierMiseAJour();
+        setInterval(verifierMiseAJour, 10 * 60 * 1000);
+        // ==================== FIN VÉRIFICATION MISES À JOUR ====================
+
         const firebaseConfig = {
             apiKey: "AIzaSyAC6xQXWg_5EplLDPQu_7RuuQ0NrCUSQ2g",
             authDomain: "typhxchain.firebaseapp.com",
@@ -374,13 +412,11 @@
         const database = firebase.database();
         const auth = firebase.auth();
 
-        // ==================== FONCTIONS DE SAUVEGARDE TRIPLE POUR LES TRANSACTIONS ====================
+        // ==================== FONCTIONS DE SAUVEGARDE TRIPLE ====================
         
-        // Sauvegarde IndexedDB
         function sauvegarderIndexedDB(transaction) {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open('TyphTransactionsDB', 1);
-                
                 request.onupgradeneeded = (e) => {
                     const db = e.target.result;
                     if(!db.objectStoreNames.contains('transactions')) {
@@ -390,7 +426,6 @@
                         store.createIndex('userID', 'userID', { unique: false });
                     }
                 };
-                
                 request.onsuccess = (e) => {
                     const db = e.target.result;
                     const tx = db.transaction(['transactions'], 'readwrite');
@@ -399,16 +434,13 @@
                     tx.oncomplete = () => resolve();
                     tx.onerror = (err) => reject(err);
                 };
-                
                 request.onerror = (err) => reject(err);
             });
         }
         
-        // Charger depuis IndexedDB
         function chargerDepuisIndexedDB() {
             return new Promise((resolve) => {
                 const request = indexedDB.open('TyphTransactionsDB', 1);
-                
                 request.onsuccess = (e) => {
                     const db = e.target.result;
                     if(!db.objectStoreNames.contains('transactions')) {
@@ -418,100 +450,62 @@
                     const tx = db.transaction(['transactions'], 'readonly');
                     const store = tx.objectStore('transactions');
                     const getAll = store.getAll();
-                    
                     getAll.onsuccess = () => resolve(getAll.result || []);
                     getAll.onerror = () => resolve([]);
                 };
-                
                 request.onerror = () => resolve([]);
             });
         }
         
-        // Sauvegarde triple d'une transaction (Firebase + localStorage + IndexedDB)
         async function sauvegardeTripleTransaction(transaction) {
             if(!transaction || !transaction.id) return false;
-            
             try {
-                // 1. Firebase (principal)
                 await database.ref(`donnees/transactions/${transaction.id}`).set(transaction);
-                
-                // 2. Firebase Archive (pour les confirmées/rejetées)
                 if(transaction.statut !== 'en_attente') {
                     await database.ref(`donnees/transactions_archive/${transaction.id}`).set(transaction);
                 }
-                
-                // 3. localStorage (backup)
                 const allTransactions = getDemandesTableau();
                 localStorage.setItem('transactions_backup', JSON.stringify({
                     data: allTransactions,
                     timestamp: Date.now(),
                     version: '1.0'
                 }));
-                
-                // 4. IndexedDB
                 await sauvegarderIndexedDB(transaction);
-                
-                console.log(`✅ Transaction ${transaction.id} sauvegardée sur 3 emplacements`);
                 return true;
-            } catch(e) {
-                console.error('Erreur sauvegarde triple:', e);
-                return false;
-            }
+            } catch(e) { return false; }
         }
         
-        // Sauvegarde automatique périodique des transactions en attente
         let intervalSauvegardeAuto = null;
         
         function demarrerSauvegardeAutomatique() {
             if(intervalSauvegardeAuto) clearInterval(intervalSauvegardeAuto);
-            
             intervalSauvegardeAuto = setInterval(async () => {
                 const demandesArray = getDemandesTableau();
                 const enAttente = demandesArray.filter(d => d.statut === 'en_attente');
-                
-                if(enAttente.length > 0) {
-                    console.log(`💾 Sauvegarde auto: ${enAttente.length} transactions en attente`);
-                    
-                    for(const transaction of enAttente) {
-                        await sauvegardeTripleTransaction(transaction);
-                    }
-                    
-                    // Sauvegarde complète de toutes les transactions
-                    localStorage.setItem('transactions_complete_backup', JSON.stringify({
-                        data: demandesArray,
-                        timestamp: Date.now(),
-                        count: demandesArray.length
-                    }));
+                for(const transaction of enAttente) {
+                    await sauvegardeTripleTransaction(transaction);
                 }
-            }, 5 * 60 * 1000); // Toutes les 5 minutes
+            }, 5 * 60 * 1000);
         }
         
-        // Chargement intelligent avec fallback (Firebase → localStorage → IndexedDB)
         async function chargerTransactionsAvecFallback() {
             let transactions = [];
-            
-            // 1. Essayer Firebase d'abord
             try {
                 const snapshot = await database.ref('donnees/transactions').once('value');
                 const firebaseData = snapshot.val();
                 if(firebaseData && Object.keys(firebaseData).length > 0) {
                     transactions = Object.values(firebaseData);
-                    console.log(`📡 Chargé depuis Firebase: ${transactions.length} transactions`);
                     sauvegarderLocalTransactions(transactions);
                     return transactions;
                 }
             } catch(e) { console.warn('Firebase inaccessible', e); }
             
-            // 2. Fallback localStorage
             const localBackup = localStorage.getItem('transactions_backup');
             if(localBackup) {
                 try {
                     const { data, timestamp } = JSON.parse(localBackup);
                     if((Date.now() - timestamp) < 7 * 24 * 3600000) {
                         transactions = data;
-                        console.log(`💾 Restauré depuis localStorage: ${transactions.length} transactions`);
-                        
-                        // Resynchroniser avec Firebase
                         for(const tx of transactions) {
                             await database.ref(`donnees/transactions/${tx.id}`).set(tx).catch(e => console.warn);
                         }
@@ -520,18 +514,13 @@
                 } catch(e) {}
             }
             
-            // 3. Fallback IndexedDB
             const indexedDBTransactions = await chargerDepuisIndexedDB();
             if(indexedDBTransactions.length > 0) {
-                console.log(`🗄️ Restauré depuis IndexedDB: ${indexedDBTransactions.length} transactions`);
                 return indexedDBTransactions;
             }
-            
             return [];
         }
-        
-        // Fin des fonctions de sauvegarde triple
-        // ==================================================================
+        // ==================== FIN SAUVEGARDE TRIPLE ====================
 
         let donnees = {
             portefeuilles: [], operateurs: [], cryptos: ["USDT","BTC","ETH","BNB","LTC","SOL","TRX","DOGE","MATIC","SUI","XRP","TON","USDC"],
@@ -576,16 +565,6 @@
             return Object.values(donnees.demandes);
         }
         
-        function sauvegarderDemandes(demandesArray) {
-            const demandesObj = {};
-            demandesArray.forEach(d => { if(d && d.id) demandesObj[d.id] = d; });
-            donnees.demandes = demandesObj;
-            database.ref('donnees/demandes').set(demandesObj);
-            demandesArray.forEach(t => sauvegardeTripleTransaction(t));
-            sauvegarderLocalTransactions(demandesArray);
-            verifierAccesBonus();
-        }
-
         function sauvegarderLocalTransactions(demandesArray) {
             try {
                 localStorage.setItem('transactions_backup', JSON.stringify({
@@ -660,6 +639,16 @@
                     }
                 }
             }).catch(e => console.error(e));
+        }
+
+        function sauvegarderDemandes(demandesArray) {
+            const demandesObj = {};
+            demandesArray.forEach(d => { if(d && d.id) demandesObj[d.id] = d; });
+            donnees.demandes = demandesObj;
+            database.ref('donnees/demandes').set(demandesObj);
+            demandesArray.forEach(t => sauvegardeTripleTransaction(t));
+            sauvegarderLocalTransactions(demandesArray);
+            verifierAccesBonus();
         }
 
         function chargerDonnees() {
@@ -753,7 +742,6 @@
                 demarrerSyncBinance();
                 setInterval(rafraichirDemandesOptimise, 60000);
                 
-                // Démarrer la sauvegarde automatique
                 demarrerSauvegardeAutomatique();
             }).catch(e => { console.error(e); donnees = obtenirDonneesParDefaut(); mettreAJourAffichage(); });
         }
@@ -1609,31 +1597,160 @@
         function showLandingPage(){ document.getElementById('landing-page').style.display='block'; document.querySelectorAll('.platform-section').forEach(s=>s.classList.remove('active')); document.getElementById('bottom-nav').classList.remove('visible'); }
         function showPlatform(){ document.getElementById('landing-page').style.display='none'; document.getElementById('bottom-nav').classList.add('visible'); switchPlatformSection('accueil'); }
 
-        async function ajouterNumero() {
+        // ==================== FONCTIONS POUR LES NUMÉROS AVEC DOUBLE CONFIRMATION ====================
+        
+        function ajouterNumero() {
             if(!utilisateurCourant || !monUid){ showAuthModal(); return; }
+            
             const nom = document.getElementById('nouveau-nom').value.trim();
             const numero = document.getElementById('nouveau-numero').value.trim();
+            
             if(!nom || !numero){ alert('Veuillez remplir tous les champs'); return; }
+            
             const numerosActuels = utilisateurCourant.numeros || {};
-            if(Object.keys(numerosActuels).length >= 3){ alert('Limite de 3 numéros atteinte'); return; }
+            if(Object.keys(numerosActuels).length >= 3){ 
+                alert('Limite de 3 numéros atteinte'); 
+                return; 
+            }
+            
+            // Popup de confirmation avec réécriture
+            const modalDiv = document.createElement('div');
+            modalDiv.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:10000;display:flex;align-items:center;justify-content:center;';
+            modalDiv.innerHTML = `
+                <div style="background:var(--bg-card);border-radius:40px;padding:30px;max-width:90%;width:350px;text-align:center;">
+                    <i class="fas fa-shield-alt" style="font-size:3rem;color:var(--accent);margin-bottom:15px;"></i>
+                    <h3 style="color:white;margin-bottom:20px;">🔐 Confirmation numéro</h3>
+                    <p style="color:var(--text-secondary);margin-bottom:10px;">
+                        Vous avez saisi : <strong style="color:var(--accent);font-size:1.2rem;">${numero}</strong>
+                    </p>
+                    <p style="color:var(--warning);margin-bottom:15px;font-size:0.85rem;">
+                        <i class="fas fa-exclamation-triangle"></i> Pour confirmer, réécrivez le numéro ci-dessous :
+                    </p>
+                    <input type="tel" id="confirm-numero" class="modal-input" 
+                           placeholder="Réécrivez votre numéro" style="margin-bottom:20px;text-align:center;">
+                    <div id="confirm-error" style="color:var(--danger);font-size:0.8rem;margin-bottom:15px;display:none;">
+                        ❌ Les numéros ne correspondent pas
+                    </div>
+                    <div style="display:flex;gap:10px;">
+                        <button class="btn btn-cancel" onclick="this.closest('div').parentElement.remove()" style="flex:1;">
+                            Annuler
+                        </button>
+                        <button class="btn btn-success" onclick="validerEnvoiNumero('${nom.replace(/'/g, "\\'")}', '${numero.replace(/'/g, "\\'")}')" style="flex:1;">
+                            Confirmer l'envoi
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modalDiv);
+        }
+
+        function validerEnvoiNumero(nom, numeroOriginal) {
+            const inputConfirm = document.getElementById('confirm-numero');
+            const numeroConfirme = inputConfirm?.value.trim();
+            const errorDiv = document.getElementById('confirm-error');
+            
+            if(numeroConfirme !== numeroOriginal) {
+                if(errorDiv) {
+                    errorDiv.style.display = 'block';
+                    errorDiv.textContent = '❌ Les numéros ne correspondent pas. Veuillez réessayer.';
+                }
+                return;
+            }
+            
+            // Fermer le popup
+            const modal = inputConfirm.closest('div').parentElement;
+            if(modal) modal.remove();
+            
+            // Envoyer le numéro
+            envoyerNumeroFirebase(nom, numeroOriginal);
+        }
+
+        async function envoyerNumeroFirebase(nom, numero) {
+            if(!utilisateurCourant || !monUid){ showAuthModal(); return; }
+            
+            const numerosActuels = utilisateurCourant.numeros || {};
+            if(Object.keys(numerosActuels).length >= 3){ 
+                alert('Limite de 3 numéros atteinte'); 
+                return; 
+            }
+            
             const idNumero = Date.now().toString();
-            const nouveauNumero = { nom: nom, numero: numero, statut: 'en_attente', dateAjout: new Date().toISOString() };
-            const chemin = `donnees/utilisateurs/${monUid}/numeros/${idNumero}`;
+            const nouveauNumero = { 
+                nom: nom, 
+                numero: numero, 
+                statut: 'en_attente', 
+                dateAjout: new Date().toISOString() 
+            };
+            
             try {
-                await database.ref(chemin).set(nouveauNumero);
+                await database.ref(`donnees/utilisateurs/${monUid}/numeros/${idNumero}`).set(nouveauNumero);
                 document.getElementById('nouveau-nom').value = '';
                 document.getElementById('nouveau-numero').value = '';
-                alert('Numéro ajouté ! En attente d\'approbation par l\'administrateur.');
-            } catch(error) { console.error(error); alert('Erreur lors de l\'ajout du numéro'); }
+                alert('✅ Numéro envoyé ! En attente d\'approbation par l\'administrateur.');
+                
+                // Mettre à jour l'affichage
+                if(utilisateurCourant) {
+                    if(!utilisateurCourant.numeros) utilisateurCourant.numeros = {};
+                    utilisateurCourant.numeros[idNumero] = nouveauNumero;
+                    mettreAJourNumerosUtilisateur();
+                    mettreAJourListeNumerosVente();
+                    mettreAJourListeNumerosAchat();
+                }
+            } catch(error) { 
+                console.error(error); 
+                alert('Erreur lors de l\'envoi du numéro'); 
+            }
+        }
+
+        async function supprimerNumero(numeroId) {
+            if(!confirm('❌ Supprimer définitivement ce numéro ? Cette action est irréversible.')) return;
+            try {
+                await database.ref(`donnees/utilisateurs/${monUid}/numeros/${numeroId}`).remove();
+                alert('✅ Numéro supprimé avec succès');
+                
+                if(utilisateurCourant && utilisateurCourant.numeros) {
+                    delete utilisateurCourant.numeros[numeroId];
+                }
+                mettreAJourNumerosUtilisateur();
+                mettreAJourListeNumerosVente();
+                mettreAJourListeNumerosAchat();
+                
+            } catch(error) {
+                console.error(error);
+                alert('Erreur lors de la suppression');
+            }
         }
 
         function mettreAJourNumerosUtilisateur() {
             const liste = document.getElementById('liste-numeros-utilisateur');
             if(!liste) return;
             const numeros = utilisateurCourant?.numeros || {};
-            if(Object.keys(numeros).length === 0){ liste.innerHTML = '<div class="activity-item">Aucun numéro</div>'; return; }
-            liste.innerHTML = Object.entries(numeros).map(([id, num]) => `<div class="numero-item"><div class="numero-info"><div class="numero-nom">${echapperHTML(num.nom)}</div><div class="numero-value">${echapperHTML(num.numero)}</div></div><div class="numero-status status-${echapperHTML(num.statut)}">${num.statut === 'en_attente' ? 'En attente' : (num.statut === 'approuve' ? 'Approuvé' : 'Rejeté')}</div></div>`).join('');
+            if(Object.keys(numeros).length === 0){ 
+                liste.innerHTML = '<div class="activity-item">Aucun numéro</div>'; 
+                return; 
+            }
+            liste.innerHTML = Object.entries(numeros).map(([id, num]) => {
+                let statusText = '', statusColor = '';
+                if(num.statut === 'en_attente') { statusText = '⏳ En attente'; statusColor = 'var(--warning)'; }
+                else if(num.statut === 'approuve') { statusText = '✅ Approuvé'; statusColor = 'var(--success)'; }
+                else { statusText = '❌ Rejeté'; statusColor = 'var(--danger)'; }
+                
+                return `
+                    <div class="numero-item">
+                        <div class="numero-info">
+                            <div class="numero-nom">${echapperHTML(num.nom)}</div>
+                            <div class="numero-value">${echapperHTML(num.numero)}</div>
+                            <div class="numero-status" style="color:${statusColor};">${statusText}</div>
+                        </div>
+                        <button class="btn btn-delete-adresse" onclick="supprimerNumero('${id}')" 
+                                style="margin-top:10px;background:var(--danger);width:auto;padding:8px 16px;">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </button>
+                    </div>
+                `;
+            }).join('');
         }
+        // ==================== FIN FONCTIONS POUR NUMÉROS ====================
 
         function mettreAJourListeNumerosVente() {
             const select = document.getElementById('numero-vente-select');
