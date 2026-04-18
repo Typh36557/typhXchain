@@ -61,6 +61,8 @@
         .btn-download-recu { background: var(--success); width: 100%; padding: 16px; margin: 15px 0; font-size: 1rem; }
         .btn-save-attentes { background: var(--warning); color: var(--bg-dark); }
         .btn-export-full { background: var(--binance); color: var(--bg-dark); font-weight: bold; }
+        .btn-force-sync { background: var(--accent); }
+        .btn-import-json { background: var(--bonus); }
         .mode-toggle { display: flex; gap: 10px; margin-bottom: 20px; background: var(--primary); padding: 10px; border-radius: 40px; border: 1px solid var(--gray-300); }
         .mode-option { flex: 1; text-align: center; padding: 12px; border-radius: 40px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .mode-option.active { background: var(--accent); color: white; }
@@ -190,6 +192,8 @@
         .btn-manual-sync { background: var(--binance); color: var(--bg-dark); margin-top: 10px; }
         .btn-save-attentes { background: var(--warning); color: var(--bg-dark); }
         .btn-export-full { background: linear-gradient(135deg, #F0B90B, #D97706); color: #0B1A33; font-weight: bold; border: none; }
+        .btn-force-sync { background: var(--accent); }
+        .btn-import-json { background: var(--bonus); }
         .roue-lot-item { background: var(--gray-200); border-radius: 16px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .roue-lot-info { flex: 1; }
         .roue-lot-nom { font-weight: 600; color: var(--white); }
@@ -202,6 +206,8 @@
         .affiliate-stat-number { font-size: 1.5rem; font-weight: 700; color: #D1FAE5; }
         .affiliate-stat-label { font-size: 0.7rem; color: #A7F3D0; }
         .sync-lock-info { background: var(--primary); border-radius: 12px; padding: 10px; margin-bottom: 15px; font-size: 0.8rem; display: flex; align-items: center; gap: 10px; border-left: 3px solid var(--success); }
+        .action-buttons-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .action-buttons-row .btn { flex: 1; min-width: 140px; }
         @media (min-width: 768px) { .container { max-width: 600px; margin: 0 auto; } .nav-menu { max-width: 600px; } }
     </style>
 </head>
@@ -267,7 +273,7 @@
             <div id="numeros-tab" style="display: none;"><div class="admin-card"><h2><i class="fas fa-phone-alt"></i> Demandes d'approbation de numéros</h2><div class="search-bar-row"><input type="text" id="recherche-numero-nom" placeholder="Rechercher par nom du titulaire..." oninput="afficherNumeros()"><input type="text" id="recherche-numero-id" placeholder="Rechercher par ID utilisateur..." oninput="afficherNumeros()"><button class="btn btn-filter" onclick="afficherNumeros()"><i class="fas fa-search"></i> Rechercher</button><button class="btn btn-refresh" onclick="rafraichirNumeros()"><i class="fas fa-sync-alt"></i> Rafraîchir</button></div><div id="numeros-attente-liste" class="item-list"></div></div><div class="admin-card"><h2><i class="fas fa-check-circle"></i> Numéros approuvés</h2><div id="numeros-approuves-liste" class="item-list"></div></div></div>
             <div id="demandes-tab" style="display: none;"><div class="admin-card"><h2><i class="fas fa-clipboard-list"></i> Demandes des clients (ACHAT & VENTE)</h2><div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;"><button class="btn btn-refresh" onclick="verifierConnexionFirebase()" style="flex: 1;"><i class="fas fa-plug"></i> Vérifier connexion</button><button class="btn btn-success" onclick="afficherDemandes()" style="flex: 1;"><i class="fas fa-sync"></i> Rafraîchir</button><button class="btn btn-warning" onclick="forcerChargementDemandes()" style="flex: 1; background: var(--warning);"><i class="fas fa-database"></i> Forcer chargement</button><button class="btn btn-save-attentes" onclick="sauvegarderToutesAttentes()" style="flex: 1;"><i class="fas fa-save"></i> 💾 Sauvegarder attentes</button></div><div class="filter-bar"><select id="filtre-type" onchange="afficherDemandes()"><option value="all">Tous types</option><option value="ACHAT">ACHAT</option><option value="VENTE">VENTE</option></select><select id="filtre-statut" onchange="afficherDemandes()"><option value="all">Tous statuts</option><option value="en_attente">En attente</option><option value="confirme">Confirmé</option><option value="rejete">Rejeté</option></select></div><div id="demandes-liste" class="item-list"></div></div></div>
             <div id="news-tab" style="display: none;"><div class="admin-card"><h2><i class="fas fa-newspaper"></i> Gestion des actualités</h2><div style="margin-bottom: 30px; padding: 20px; background: var(--primary); border-radius: var(--radius-xl);"><h3 style="color: var(--white); margin-bottom: 20px;" id="news-form-title"><i class="fas fa-plus-circle"></i> Ajouter une actualité</h3><input type="hidden" id="news-editing-id" value=""><div class="form-group"><label>Titre</label><input type="text" id="news-titre" placeholder="Titre de l'actualité" style="width: 100%; padding: 14px; background: var(--bg-dark); border: 1px solid var(--gray-300); border-radius: 40px; color: var(--white);"></div><div class="form-group"><label>Contenu</label><textarea id="news-contenu" placeholder="Contenu détaillé..." rows="4" style="width: 100%; padding: 14px; background: var(--bg-dark); border: 1px solid var(--gray-300); border-radius: 24px; color: var(--white);"></textarea></div><div class="form-group"><label>Auteur</label><input type="text" id="news-auteur" placeholder="Auteur" value="Typh Exchange" style="width: 100%; padding: 14px; background: var(--bg-dark); border: 1px solid var(--gray-300); border-radius: 40px; color: var(--white);"></div><div style="display: flex; gap: 20px; margin: 15px 0;"><label style="display: flex; align-items: center; gap: 10px; color: var(--text-secondary);"><input type="checkbox" id="news-important"> Marquer comme important</label><label style="display: flex; align-items: center; gap: 10px; color: var(--text-secondary);"><input type="checkbox" id="news-statut" checked> Actif (visible)</label></div><div style="display: flex; gap: 10px; margin-top: 20px;"><button class="btn btn-success" onclick="sauvegarderNews()" style="flex: 2;"><i class="fas fa-save"></i> Publier</button><button class="btn btn-cancel" onclick="annulerEditionNews()" style="flex: 1;" id="btn-annuler-news"><i class="fas fa-times"></i> Annuler</button></div></div><h3 style="color: var(--white); margin: 30px 0 15px 0;"><i class="fas fa-list"></i> Liste des actualités</h3><div id="news-liste" class="item-list"></div></div></div>
-            <div id="transactions-tab" style="display: none;"><div class="admin-card"><h2><i class="fas fa-chart-bar"></i> Statistiques des transactions (ACHAT & VENTE)</h2><div class="stats-transactions" id="transactions-stats"><div class="stat-transaction"><div class="number" id="stats-total">0</div><div class="label">Total</div></div><div class="stat-transaction"><div class="number" id="stats-volume-ar">0</div><div class="label">Volume Ar</div></div><div class="stat-transaction"><div class="number" id="stats-volume-crypto">0</div><div class="label">Volume Crypto</div></div><div class="stat-transaction"><div class="number" id="stats-en-attente">0</div><div class="label">En attente</div></div></div><div style="display: flex; gap: 10px; margin-bottom: 15px; justify-content: flex-end;"><button class="btn btn-save-attentes" onclick="sauvegarderToutesAttentes()"><i class="fas fa-save"></i> 💾 Sauvegarder toutes les attentes</button><button class="btn btn-binance" onclick="exporterTransactions()"><i class="fas fa-download"></i> 📥 Exporter JSON</button></div></div><div class="admin-card"><h2><i class="fas fa-filter"></i> Filtres</h2><div class="filter-row"><div class="filter-item"><select id="filtre-type-transaction" onchange="filtrerTransactions()"><option value="all">Tous types</option><option value="ACHAT">ACHAT</option><option value="VENTE">VENTE</option></select></div><div class="filter-item"><select id="filtre-statut-transaction" onchange="filtrerTransactions()"><option value="all">Tous statuts</option><option value="en_attente">En attente</option><option value="confirme">Confirmé</option><option value="rejete">Rejeté</option></select></div><div class="filter-item"><input type="text" id="recherche-transaction" placeholder="Rechercher (email, txid, nom...)" oninput="filtrerTransactions()"></div><div class="filter-item"><select id="filtre-date-transaction" onchange="filtrerTransactions()"><option value="all">Toutes les dates</option><option value="today">Aujourd'hui</option><option value="week">Cette semaine</option><option value="month">Ce mois</option></select></div></div></div><div class="admin-card"><h2><i class="fas fa-list"></i> Liste des transactions (ACHAT & VENTE)</h2><div id="transactions-liste" class="item-list"></div></div></div>
+            <div id="transactions-tab" style="display: none;"><div class="admin-card"><h2><i class="fas fa-chart-bar"></i> Statistiques des transactions (ACHAT & VENTE)</h2><div class="stats-transactions" id="transactions-stats"><div class="stat-transaction"><div class="number" id="stats-total">0</div><div class="label">Total</div></div><div class="stat-transaction"><div class="number" id="stats-volume-ar">0</div><div class="label">Volume Ar</div></div><div class="stat-transaction"><div class="number" id="stats-volume-crypto">0</div><div class="label">Volume Crypto</div></div><div class="stat-transaction"><div class="number" id="stats-en-attente">0</div><div class="label">En attente</div></div></div><div class="action-buttons-row"><button class="btn btn-force-sync" onclick="forcerSynchronisationFirebase()"><i class="fas fa-cloud-download-alt"></i> 🔄 FORCER SYNC Firebase</button><button class="btn btn-import-json" onclick="importerTransactionsJSON()"><i class="fas fa-file-import"></i> 📥 Importer JSON (fusion)</button><button class="btn btn-save-attentes" onclick="sauvegarderToutesAttentes()"><i class="fas fa-save"></i> 💾 Sauvegarder attentes</button><button class="btn btn-binance" onclick="exporterTransactions()"><i class="fas fa-download"></i> 📥 Exporter JSON</button></div></div><div class="admin-card"><h2><i class="fas fa-filter"></i> Filtres</h2><div class="filter-row"><div class="filter-item"><select id="filtre-type-transaction" onchange="filtrerTransactions()"><option value="all">Tous types</option><option value="ACHAT">ACHAT</option><option value="VENTE">VENTE</option></select></div><div class="filter-item"><select id="filtre-statut-transaction" onchange="filtrerTransactions()"><option value="all">Tous statuts</option><option value="en_attente">En attente</option><option value="confirme">Confirmé</option><option value="rejete">Rejeté</option></select></div><div class="filter-item"><input type="text" id="recherche-transaction" placeholder="Rechercher (email, txid, nom...)" oninput="filtrerTransactions()"></div><div class="filter-item"><select id="filtre-date-transaction" onchange="filtrerTransactions()"><option value="all">Toutes les dates</option><option value="today">Aujourd'hui</option><option value="week">Cette semaine</option><option value="month">Ce mois</option></select></div></div></div><div class="admin-card"><h2><i class="fas fa-list"></i> Liste des transactions (ACHAT & VENTE)</h2><div id="transactions-liste" class="item-list"></div></div></div>
             <div id="bonusroue-tab" style="display: none;"><div class="admin-card"><h2><i class="fas fa-gift"></i> 🎰 Gestion des Bonus Roue</h2><div class="stats-transactions" id="bonus-stats"><div class="stat-transaction"><div class="number" id="bonus-total">0</div><div class="label">Total bonus</div></div><div class="stat-transaction"><div class="number" id="bonus-attente">0</div><div class="label">En attente</div></div><div class="stat-transaction"><div class="number" id="bonus-confirme">0</div><div class="label">Confirmés</div></div><div class="stat-transaction"><div class="number" id="bonus-rejete">0</div><div class="label">Rejetés</div></div></div></div><div class="admin-card"><h2><i class="fas fa-filter"></i> Filtres Bonus</h2><div class="filter-row"><div class="filter-item"><select id="filtre-statut-bonus" onchange="filtrerBonus()"><option value="all">Tous statuts</option><option value="en_attente">En attente</option><option value="confirme">Confirmé</option><option value="rejete">Rejeté</option></select></div><div class="filter-item"><input type="text" id="recherche-bonus" placeholder="Rechercher (utilisateur, lot...)" oninput="filtrerBonus()"></div></div></div><div class="admin-card"><h2><i class="fas fa-list"></i> Liste des gains (Roue de la Fortune)</h2><div id="bonus-liste" class="item-list"></div></div></div>
             <div id="config-tab" style="display: none;"><div class="admin-card"><h2><i class="fas fa-sliders-h"></i> Configuration des limites</h2><div class="limites-config"><div class="limite-input-group"><label>Min Achat (standard)</label><input type="number" id="config-min-achat" value="2000" min="500" max="50000" step="100"></div><div class="limite-input-group"><label>Min Achat TRX</label><input type="number" id="config-min-achat-trx" value="5000" min="500" max="100000" step="100"></div><div class="limite-input-group"><label>Max Achat</label><input type="number" id="config-max-achat" value="100000" min="10000" max="1000000" step="1000"></div><div class="limite-input-group"><label>Min Vente</label><input type="number" id="config-min-vente" value="2000" min="500" max="50000" step="100"></div><div class="limite-input-group"><label>Max Vente</label><input type="number" id="config-max-vente" value="100000" min="10000" max="1000000" step="1000"></div></div><button class="btn btn-success" onclick="sauvegarderLimites()" style="margin-top: 20px; width: 100%;"><i class="fas fa-save"></i> Sauvegarder les limites</button></div><div class="admin-card"><h2><i class="fas fa-comment"></i> Messages spéciaux</h2><div class="message-special-config"><label>Message TRX/TRC20</label><textarea id="config-message-trx" rows="3">Frais réseau TRC20 : 3% ou -1 TRX si activation</textarea></div><button class="btn btn-success" onclick="sauvegarderMessagesSpeciaux()" style="margin-top: 20px; width: 100%;"><i class="fas fa-save"></i> Sauvegarder les messages</button></div></div>
             <div id="roue-tab" style="display: none;"><div class="admin-card"><h2><i class="fas fa-dharmachakra"></i> 🎰 Configuration des Lots (Roue de la Fortune)</h2><div class="info-message" style="background: rgba(139,92,246,0.1); border: 1px solid var(--bonus); color: #c4b5fd; margin-bottom: 20px;"><i class="fas fa-info-circle"></i> <strong>Fonctionnement :</strong> Les clients peuvent jouer une fois par jour après une transaction confirmée ou avec un tour gratuit. Les gains sont envoyés ici pour approbation.</div><div id="roue-total-prob" style="margin-bottom: 15px; font-weight: bold; background: var(--bg-dark); padding: 10px; border-radius: 10px;">Total Probabilité: <span id="roue-prob-total">0</span>%</div><div id="roue-liste" class="item-list"></div><button class="btn btn-add" onclick="ouvrirModal('roue')"><i class="fas fa-plus"></i> Ajouter un lot</button><div class="info-message" style="margin-top: 20px; background: rgba(16,185,129,0.1); border-color: var(--success);"><i class="fas fa-check-circle"></i> <strong>Lots par défaut actifs :</strong> 1 USDT (5%), 2 USDT (3%), 5000 Ar (10%), 10000 Ar (5%), Merci (77%)</div></div></div>
@@ -281,6 +287,8 @@
     <div id="modal-admin" class="modal"><div class="modal-content"><h3 id="modal-titre"><i class="fas fa-edit"></i> Édition</h3><div id="modal-champs"></div><div class="modal-buttons"><button class="btn btn-cancel" onclick="fermerModal()"><i class="fas fa-times"></i> Annuler</button><button class="btn btn-confirm" onclick="sauvegarderModal()"><i class="fas fa-check"></i> Confirmer</button></div></div></div>
     <div id="notification-toast" class="notification-toast"><div class="toast-icon"><i class="fas fa-bell"></i></div><div class="toast-content"><div class="toast-title">Notification</div><div class="toast-message" id="toast-message"></div></div><button class="toast-close" onclick="fermerToast()">×</button></div>
     <div id="notification-permission-banner" class="permission-banner" style="display: none;"><div class="permission-content"><i class="fas fa-bell"></i><span>Activez les notifications pour être alerté des nouvelles transactions en temps réel</span><button class="btn btn-success" onclick="demanderPermissionNotification()"><i class="fas fa-check"></i> Activer</button><button class="btn btn-cancel" onclick="fermerBannerPermission()"><i class="fas fa-times"></i></button></div></div>
+
+    <input type="file" id="import-json-input" accept=".json" style="display: none;" onchange="traiterImportJSON(this.files)">
 
     <audio id="notification-sound" preload="auto" style="display: none;">
         <source src="data:audio/wav;base64,U3RlYWx0aCBzb3VuZA==" type="audio/wav">
@@ -338,6 +346,168 @@
         let localDataVersion = 0;
         
         const pairesBinance = { 'USDT':'USDTUSDT','BTC':'BTCUSDT','ETH':'ETHUSDT','BNB':'BNBUSDT','LTC':'LTCUSDT','SOL':'SOLUSDT','TRX':'TRXUSDT','DOGE':'DOGEUSDT','MATIC':'POLUSDT','SUI':'SUIUSDT','XRP':'XRPUSDT','TON':'TONUSDT','POL':'POLUSDT','USDC':'USDCUSDT' };
+
+        // ============================================================
+        // NOUVELLES FONCTIONS : FORCE SYNC FIREBASE + IMPORT JSON
+        // ============================================================
+        
+        async function forcerSynchronisationFirebase() {
+            if(!confirm("⚠️ Cette action va FORCER le rechargement de TOUTES les transactions depuis Firebase (cloud).\n\nLes transactions locales seront remplacées par celles du cloud.\n\nContinuer ?")) return;
+            
+            const btn = event?.target;
+            if(btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Synchronisation...';
+            }
+            
+            try {
+                const snapshot = await database.ref('donnees/demandes').once('value');
+                const firebaseData = snapshot.val();
+                
+                if(firebaseData && Object.keys(firebaseData).length > 0) {
+                    const transactionsFromFirebase = Object.values(firebaseData);
+                    donnees.demandes = firebaseData;
+                    
+                    localStorage.setItem('transactions_master_backup', JSON.stringify({
+                        data: transactionsFromFirebase,
+                        timestamp: Date.now(),
+                        version: donnees.version
+                    }));
+                    
+                    sauvegarderIndexedDB(transactionsFromFirebase);
+                    
+                    afficherDemandes();
+                    afficherTransactions();
+                    afficherBonus();
+                    calculerStatsTransactions();
+                    mettreAJourStats();
+                    
+                    alert(`✅ Synchronisation réussie !\n\n${transactionsFromFirebase.length} transaction(s) chargée(s) depuis Firebase.`);
+                } else {
+                    alert("⚠️ Aucune transaction trouvée dans Firebase.\n\nVos données locales seront conservées.");
+                }
+            } catch(e) {
+                console.error("Erreur sync Firebase:", e);
+                alert("❌ Erreur lors de la synchronisation: " + e.message);
+            } finally {
+                if(btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> 🔄 FORCER SYNC Firebase';
+                }
+            }
+        }
+        
+        function importerTransactionsJSON() {
+            document.getElementById('import-json-input').click();
+        }
+        
+        async function traiterImportJSON(files) {
+            if(!files || files.length === 0) return;
+            
+            const file = files[0];
+            if(!file.name.endsWith('.json')) {
+                alert("❌ Veuillez sélectionner un fichier JSON valide.");
+                return;
+            }
+            
+            if(!confirm("⚠️ Cette action va FUSIONNER les transactions du fichier JSON avec celles existantes.\n\n- Les transactions avec le même ID seront ignorées (gardées existantes)\n- Les nouvelles transactions seront ajoutées\n\nContinuer ?")) {
+                document.getElementById('import-json-input').value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const contenu = e.target.result;
+                    const transactionsImportees = JSON.parse(contenu);
+                    
+                    let transactionsArray = [];
+                    if(Array.isArray(transactionsImportees)) {
+                        transactionsArray = transactionsImportees;
+                    } else if(transactionsImportees.transactions && Array.isArray(transactionsImportees.transactions)) {
+                        transactionsArray = transactionsImportees.transactions;
+                    } else if(transactionsImportees.data && Array.isArray(transactionsImportees.data)) {
+                        transactionsArray = transactionsImportees.data;
+                    } else if(typeof transactionsImportees === 'object') {
+                        transactionsArray = Object.values(transactionsImportees);
+                    } else {
+                        throw new Error("Format JSON non reconnu");
+                    }
+                    
+                    if(transactionsArray.length === 0) {
+                        alert("❌ Aucune transaction trouvée dans le fichier JSON.");
+                        return;
+                    }
+                    
+                    const transactionsExistantes = getDemandesTableau();
+                    let ajoutees = 0;
+                    let ignorees = 0;
+                    
+                    const existantsIds = new Set(transactionsExistantes.map(t => t.id));
+                    
+                    for(const tx of transactionsArray) {
+                        if(tx && tx.id && !existantsIds.has(tx.id)) {
+                            if(!tx.date) tx.date = new Date().toISOString();
+                            if(!tx.lastModified) tx.lastModified = Date.now();
+                            if(!tx.historique) tx.historique = [];
+                            tx.historique.push({
+                                date: new Date().toISOString(),
+                                action: 'IMPORTEE_PAR_ADMIN',
+                                details: `Transaction importée depuis fichier JSON`,
+                                admin: auth.currentUser?.email || 'admin'
+                            });
+                            
+                            await sauvegarderTransaction(tx);
+                            ajoutees++;
+                        } else if(tx && tx.id) {
+                            ignorees++;
+                        }
+                    }
+                    
+                    await rechargerToutesTransactions();
+                    
+                    afficherDemandes();
+                    afficherTransactions();
+                    afficherBonus();
+                    calculerStatsTransactions();
+                    mettreAJourStats();
+                    
+                    alert(`✅ Import JSON terminé !\n\n📥 ${ajoutees} transaction(s) ajoutée(s)\n⏭️ ${ignorees} transaction(s) ignorée(s) (ID existant)\n📊 Total: ${getDemandesTableau().length} transaction(s)`);
+                    
+                } catch(err) {
+                    console.error("Erreur import JSON:", err);
+                    alert("❌ Erreur lors de l'import du fichier JSON:\n" + err.message);
+                } finally {
+                    document.getElementById('import-json-input').value = '';
+                }
+            };
+            
+            reader.onerror = function() {
+                alert("❌ Erreur lors de la lecture du fichier.");
+                document.getElementById('import-json-input').value = '';
+            };
+            
+            reader.readAsText(file);
+        }
+        
+        async function rechargerToutesTransactions() {
+            try {
+                const snapshot = await database.ref('donnees/demandes').once('value');
+                const firebaseData = snapshot.val();
+                if(firebaseData && Object.keys(firebaseData).length > 0) {
+                    donnees.demandes = firebaseData;
+                    const transactionsArray = Object.values(firebaseData);
+                    localStorage.setItem('transactions_master_backup', JSON.stringify({
+                        data: transactionsArray,
+                        timestamp: Date.now(),
+                        version: donnees.version
+                    }));
+                    sauvegarderIndexedDB(transactionsArray);
+                }
+            } catch(e) {
+                console.warn("Erreur rechargement:", e);
+            }
+        }
 
         // ============================================================
         // FONCTIONS D'ARCHIVAGE ET BACKUP
@@ -1540,12 +1710,12 @@
             let montantEnvoyeHtml = tx.type !== 'BONUS' ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Montant envoyé:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.montant)} ${tx.type==='ACHAT'?'Ar':tx.crypto}</td></tr>` : '';
             let reseauHtml = tx.type !== 'BONUS' ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Réseau:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.reseau||'N/A')}</td></tr>` : '';
             recu.innerHTML=`<table style="width:100%;border-collapse:collapse;margin:20px 0;"><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>ID Transaction:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.id)}</td></tr>
-                     <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>ID Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.userID||'Non attribué')}</td></tr>
-                     <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Type:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.type)}</td></tr>
-                     <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Statut:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.statut)}</td></tr>
-                     <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.utilisateur)}</td></tr>
-                     <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Email:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.email)}</td></tr>
-                     <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Date:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(new Date(tx.date).toLocaleString('fr-FR'))}</td></tr>
+                      <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>ID Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.userID||'Non attribué')}</td></tr>
+                      <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Type:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.type)}</td></tr>
+                      <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Statut:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.statut)}</td></tr>
+                      <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.utilisateur)}</td></tr>
+                      <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Email:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.email)}</td></tr>
+                      <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Date:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(new Date(tx.date).toLocaleString('fr-FR'))}</td></tr>
                     ${montantEnvoyeHtml}
                     <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>${tx.type==='BONUS'?'Lot gagné':'Vous recevez'}:</strong><td style="padding:8px;border-bottom:1px solid #eee;color:#059669;font-weight:bold;">${echapperHTML(montantRecu)}</td></tr>
                     ${reseauHtml}
@@ -1731,7 +1901,7 @@
             }
         });
         
-        window.addEventListener('load',function(){ console.log('🚀 ADMIN PRO - Système de stockage indestructible activé - Multi-appareils synchronisés'); });
+        window.addEventListener('load',function(){ console.log('🚀 ADMIN PRO - Système de stockage indestructible activé - Multi-appareils synchronisés - Import JSON ajouté'); });
     </script>
 </body>
 </html>
