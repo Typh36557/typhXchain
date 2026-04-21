@@ -231,7 +231,7 @@
             
             <div class="sync-lock-info" id="sync-status-info">
                 <i class="fas fa-sync-alt fa-spin" style="color: var(--success);"></i>
-                <span>Synchronisation en temps réel activée - <strong id="sync-device-count">Multi-appareils</strong></span>
+                <span>Synchronisation optimisée - <strong id="sync-device-count">Cache activé</strong></span>
             </div>
             
             <div class="stats-grid" id="stats-dashboard">
@@ -312,6 +312,59 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const auth = firebase.auth();
+        
+        // Activer la persistance offline pour réduire les requêtes
+        database.goOnline();
+
+        // ============================================================
+        // SYSTÈME DE CACHE OPTIMISÉ
+        // ============================================================
+        const cacheManager = {
+            cache: {},
+            dureeDefaut: 300000, // 5 minutes par défaut
+            
+            get(key, dureeMs = null) {
+                const item = this.cache[key];
+                if (!item) return null;
+                const duree = dureeMs || this.dureeDefaut;
+                if (Date.now() - item.timestamp > duree) {
+                    delete this.cache[key];
+                    return null;
+                }
+                return item.data;
+            },
+            
+            set(key, data) {
+                this.cache[key] = { data, timestamp: Date.now() };
+                // Nettoyer les vieux caches périodiquement
+                if (Object.keys(this.cache).length > 50) {
+                    const now = Date.now();
+                    for (const k in this.cache) {
+                        if (now - this.cache[k].timestamp > 3600000) {
+                            delete this.cache[k];
+                        }
+                    }
+                }
+            },
+            
+            clear(key) {
+                if (key) delete this.cache[key];
+                else this.cache = {};
+            }
+        };
+        
+        // Limiteur de requêtes Firebase
+        const queryLimiter = {
+            lastQueries: {},
+            
+            canQuery(path, intervalMs = 5000) {
+                const now = Date.now();
+                const last = this.lastQueries[path] || 0;
+                if (now - last < intervalMs) return false;
+                this.lastQueries[path] = now;
+                return true;
+            }
+        };
 
         // ============================================================
         // VARIABLES GLOBALES
@@ -345,11 +398,37 @@
         let writeQueue = [];
         let localDataVersion = 0;
         
+        // Optimisation: réduire la fréquence de rafraîchissement
+        let dernierRafraichissementDemandes = 0;
+        let dernierRafraichissementUtilisateurs = 0;
+        
         const pairesBinance = { 'USDT':'USDTUSDT','BTC':'BTCUSDT','ETH':'ETHUSDT','BNB':'BNBUSDT','LTC':'LTCUSDT','SOL':'SOLUSDT','TRX':'TRXUSDT','DOGE':'DOGEUSDT','MATIC':'POLUSDT','SUI':'SUIUSDT','XRP':'XRPUSDT','TON':'TONUSDT','POL':'POLUSDT','USDC':'USDCUSDT' };
 
         // ============================================================
-        // NOUVELLES FONCTIONS : FORCE SYNC FIREBASE + IMPORT JSON
+        // FONCTIONS OPTIMISÉES DE CHARGEMENT
         // ============================================================
+        
+        async function chargerDonneesAvecCache(chemin, dureeCache = 300000) {
+            const cacheKey = `firebase_${chemin.replace(/\//g, '_')}`;
+            const cached = cacheManager.get(cacheKey, dureeCache);
+            if (cached !== null) return cached;
+            
+            if (!queryLimiter.canQuery(chemin, 2000)) {
+                return null;
+            }
+            
+            try {
+                const snapshot = await database.ref(chemin).once('value');
+                const data = snapshot.val();
+                if (data !== null) {
+                    cacheManager.set(cacheKey, data);
+                }
+                return data;
+            } catch(e) {
+                console.warn(`Erreur chargement ${chemin}:`, e);
+                return null;
+            }
+        }
         
         async function forcerSynchronisationFirebase() {
             if(!confirm("⚠️ Cette action va FORCER le rechargement de TOUTES les transactions depuis Firebase (cloud).\n\nLes transactions locales seront remplacées par celles du cloud.\n\nContinuer ?")) return;
@@ -361,6 +440,9 @@
             }
             
             try {
+                // Vider le cache pour forcer le rechargement
+                cacheManager.clear('firebase_donnees_demandes');
+                
                 const snapshot = await database.ref('donnees/demandes').once('value');
                 const firebaseData = snapshot.val();
                 
@@ -510,7 +592,7 @@
         }
 
         // ============================================================
-        // FONCTIONS D'ARCHIVAGE ET BACKUP
+        // FONCTIONS D'ARCHIVAGE ET BACKUP OPTIMISÉES
         // ============================================================
         
         async function archiverTransactionConfirmee(transaction) {
@@ -526,23 +608,32 @@
                     ...transaction,
                     dateArchive: new Date().toISOString()
                 });
-                console.log(`📦 Transaction ${transaction.id} archivée`);
             } catch(e) {
                 console.warn('Erreur archivage:', e);
             }
         }
         
+        // Backup quotidien optimisé - une seule fois par jour
+        let dernierBackupDate = '';
+        
         async function sauvegardeQuotidienne() {
-            const demandesArray = getDemandesTableau();
             const dateStr = new Date().toISOString().split('T')[0];
+            
+            // Vérifier si déjà sauvegardé aujourd'hui
+            if (dernierBackupDate === dateStr) return;
+            
+            const demandesArray = getDemandesTableau();
+            // Ne sauvegarder que les transactions confirmées pour réduire la taille
+            const transactionsConfirmees = demandesArray.filter(d => d.statut === 'confirme');
             
             try {
                 await database.ref(`donnees/backup_quotidien/${dateStr}`).set({
-                    transactions: demandesArray,
-                    count: demandesArray.length,
+                    transactions: transactionsConfirmees,
+                    count: transactionsConfirmees.length,
                     date: new Date().toISOString()
                 });
-                console.log(`💾 Backup quotidien effectué: ${demandesArray.length} transactions`);
+                dernierBackupDate = dateStr;
+                console.log(`💾 Backup quotidien effectué: ${transactionsConfirmees.length} transactions confirmées`);
             } catch(e) {
                 console.warn('Erreur backup quotidien:', e);
             }
@@ -559,7 +650,6 @@
                     for (const [dateBackup, data] of Object.entries(backups)) {
                         if (new Date(dateBackup) < trenteJoursAvant) {
                             await database.ref(`donnees/backup_quotidien/${dateBackup}`).remove();
-                            console.log(`🗑️ Ancien backup supprimé: ${dateBackup}`);
                         }
                     }
                 }
@@ -597,7 +687,7 @@
         }
 
         // ============================================================
-        // SYSTÈME DE STOCKAGE INDESTRUCTIBLE
+        // SYSTÈME DE STOCKAGE INDESTRUCTIBLE OPTIMISÉ
         // ============================================================
         
         function getDemandesTableau() {
@@ -669,7 +759,6 @@
                     version: donnees.version
                 }));
                 
-                console.log(`✅ Transaction ${transaction.id} sauvegardée`);
                 return true;
             } catch(e) {
                 console.error('Erreur sauvegarde transaction:', e);
@@ -804,57 +893,72 @@
             return [];
         }
         
+        // Synchronisation optimisée - avec cache et intervalle
+        let derniereSyncTransactions = 0;
+        const SYNC_INTERVAL = 60000; // 1 minute minimum entre les synchros
+        
         function demarrerSynchronisationRealtime() {
-            database.ref('donnees/demandes').on('value', async (snapshot) => {
-                const demandes = snapshot.val();
-                if(demandes) {
-                    const firebaseTransactions = Object.values(demandes);
-                    const localTransactions = getDemandesTableau();
-                    
-                    const mergedTransactions = [...localTransactions];
-                    
-                    for (const fbTx of firebaseTransactions) {
-                        const existingIndex = mergedTransactions.findIndex(t => t.id === fbTx.id);
-                        if (existingIndex === -1) {
-                            mergedTransactions.push(fbTx);
-                        } else {
-                            const existingTx = mergedTransactions[existingIndex];
-                            const fbModified = fbTx.lastModified || 0;
-                            const existingModified = existingTx.lastModified || 0;
-                            if (fbModified > existingModified) {
-                                mergedTransactions[existingIndex] = fbTx;
+            // Utiliser once() au lieu de on() pour réduire les téléchargements
+            // La synchronisation se fera via des appels périodiques optimisés
+            setInterval(async () => {
+                const now = Date.now();
+                if (now - derniereSyncTransactions < SYNC_INTERVAL) return;
+                derniereSyncTransactions = now;
+                
+                try {
+                    const snapshot = await database.ref('donnees/demandes').once('value');
+                    const demandes = snapshot.val();
+                    if(demandes) {
+                        const firebaseTransactions = Object.values(demandes);
+                        const localTransactions = getDemandesTableau();
+                        
+                        const mergedTransactions = [...localTransactions];
+                        
+                        for (const fbTx of firebaseTransactions) {
+                            const existingIndex = mergedTransactions.findIndex(t => t.id === fbTx.id);
+                            if (existingIndex === -1) {
+                                mergedTransactions.push(fbTx);
+                            } else {
+                                const existingTx = mergedTransactions[existingIndex];
+                                const fbModified = fbTx.lastModified || 0;
+                                const existingModified = existingTx.lastModified || 0;
+                                if (fbModified > existingModified) {
+                                    mergedTransactions[existingIndex] = fbTx;
+                                }
                             }
                         }
+                        
+                        const demandesObj = {};
+                        mergedTransactions.forEach(d => { if(d && d.id) demandesObj[d.id] = d; });
+                        donnees.demandes = demandesObj;
+                        
+                        localStorage.setItem('transactions_master_backup', JSON.stringify({
+                            data: mergedTransactions,
+                            timestamp: Date.now(),
+                            version: donnees.version
+                        }));
+                        
+                        const ongletActif = document.getElementById('demandes-tab').style.display !== 'none';
+                        if(ongletActif) afficherDemandes();
+                        const ongletTransactions = document.getElementById('transactions-tab').style.display !== 'none';
+                        if(ongletTransactions) { afficherTransactions(); calculerStatsTransactions(); }
+                        const ongletBonus = document.getElementById('bonusroue-tab').style.display !== 'none';
+                        if(ongletBonus) afficherBonus();
+                        
+                        const enAttente = mergedTransactions.filter(d => d.statut === 'en_attente' && d.type !== 'BONUS').length;
+                        const badge = document.getElementById('notif-transactions');
+                        if(badge) { if(enAttente > 0) { badge.textContent = enAttente; badge.style.display = 'inline-block'; } else { badge.style.display = 'none'; } }
+                        
+                        const bonusAttente = mergedTransactions.filter(d => d.statut === 'en_attente' && d.type === 'BONUS').length;
+                        const badgeBonus = document.getElementById('notif-bonus');
+                        if(badgeBonus) { if(bonusAttente > 0) { badgeBonus.textContent = bonusAttente; badgeBonus.style.display = 'inline-block'; } else { badgeBonus.style.display = 'none'; } }
+                        
+                        verifierNouvellesTransactions();
                     }
-                    
-                    const demandesObj = {};
-                    mergedTransactions.forEach(d => { if(d && d.id) demandesObj[d.id] = d; });
-                    donnees.demandes = demandesObj;
-                    
-                    localStorage.setItem('transactions_master_backup', JSON.stringify({
-                        data: mergedTransactions,
-                        timestamp: Date.now(),
-                        version: donnees.version
-                    }));
-                    
-                    const ongletActif = document.getElementById('demandes-tab').style.display !== 'none';
-                    if(ongletActif) afficherDemandes();
-                    const ongletTransactions = document.getElementById('transactions-tab').style.display !== 'none';
-                    if(ongletTransactions) { afficherTransactions(); calculerStatsTransactions(); }
-                    const ongletBonus = document.getElementById('bonusroue-tab').style.display !== 'none';
-                    if(ongletBonus) afficherBonus();
-                    
-                    const enAttente = mergedTransactions.filter(d => d.statut === 'en_attente' && d.type !== 'BONUS').length;
-                    const badge = document.getElementById('notif-transactions');
-                    if(badge) { if(enAttente > 0) { badge.textContent = enAttente; badge.style.display = 'inline-block'; } else { badge.style.display = 'none'; } }
-                    
-                    const bonusAttente = mergedTransactions.filter(d => d.statut === 'en_attente' && d.type === 'BONUS').length;
-                    const badgeBonus = document.getElementById('notif-bonus');
-                    if(badgeBonus) { if(bonusAttente > 0) { badgeBonus.textContent = bonusAttente; badgeBonus.style.display = 'inline-block'; } else { badgeBonus.style.display = 'none'; } }
-                    
-                    verifierNouvellesTransactions();
+                } catch(e) {
+                    console.warn('Erreur synchronisation:', e);
                 }
-            });
+            }, 60000); // Synchronisation toutes les minutes au lieu de temps réel
         }
         
         let intervalSauvegardeAuto = null;
@@ -865,7 +969,6 @@
             intervalSauvegardeAuto = setInterval(async () => {
                 const demandesArray = getDemandesTableau();
                 if(demandesArray.length > 0) {
-                    console.log(`💾 Sauvegarde auto: ${demandesArray.length} transactions`);
                     localStorage.setItem('transactions_complete_backup', JSON.stringify({
                         data: demandesArray,
                         timestamp: Date.now(),
@@ -1041,7 +1144,7 @@
         }
         
         // ============================================================
-        // CHARGEMENT DES DONNÉES
+        // CHARGEMENT DES DONNÉES OPTIMISÉ
         // ============================================================
         async function chargerDonnees() {
             const transactions = await chargerTransactionsAvecFallback();
@@ -1051,81 +1154,75 @@
                 donnees.demandes = demandesObj;
             }
             
-            database.ref('donnees').once('value').then(s => {
-                const data = s.val();
-                if(data && Object.keys(data).length > 0){
-                    donnees = { ...obtenirDonneesParDefaut(), ...data };
-                    if(data.demandes && Object.keys(data.demandes).length > 0) {
-                        const existingTransactions = getDemandesTableau();
-                        const newTransactions = Object.values(data.demandes);
-                        const merged = [...existingTransactions];
-                        for (const newTx of newTransactions) {
-                            const existingIndex = merged.findIndex(t => t.id === newTx.id);
-                            if (existingIndex === -1) {
-                                merged.push(newTx);
-                            } else {
-                                const existingModified = merged[existingIndex].lastModified || 0;
-                                const newModified = newTx.lastModified || 0;
-                                if (newModified > existingModified) {
-                                    merged[existingIndex] = newTx;
-                                }
+            // Chargement optimisé avec cache
+            const data = await chargerDonneesAvecCache('donnees', 600000); // 10 minutes de cache
+            
+            if(data && Object.keys(data).length > 0){
+                donnees = { ...obtenirDonneesParDefaut(), ...data };
+                if(data.demandes && Object.keys(data.demandes).length > 0) {
+                    const existingTransactions = getDemandesTableau();
+                    const newTransactions = Object.values(data.demandes);
+                    const merged = [...existingTransactions];
+                    for (const newTx of newTransactions) {
+                        const existingIndex = merged.findIndex(t => t.id === newTx.id);
+                        if (existingIndex === -1) {
+                            merged.push(newTx);
+                        } else {
+                            const existingModified = merged[existingIndex].lastModified || 0;
+                            const newModified = newTx.lastModified || 0;
+                            if (newModified > existingModified) {
+                                merged[existingIndex] = newTx;
                             }
                         }
-                        const demandesObj = {};
-                        merged.forEach(d => { if(d && d.id) demandesObj[d.id] = d; });
-                        donnees.demandes = demandesObj;
                     }
-                    
-                    let roueFirebase = data.roue;
-                    if (roueFirebase) {
-                        let tr = Array.isArray(roueFirebase) ? roueFirebase : Object.values(roueFirebase);
-                        donnees.roue = tr.filter(item => item !== null);
-                    }
-                    if(!donnees.roue || donnees.roue.length === 0) donnees.roue = obtenirDonneesParDefaut().roue;
-                    if(!donnees.limites) donnees.limites = obtenirDonneesParDefaut().limites;
-                    if(!donnees.messagesSpeciaux) donnees.messagesSpeciaux = obtenirDonneesParDefaut().messagesSpeciaux;
-                    if(!donnees.taux) donnees.taux = {};
-                    if(!donnees.news) donnees.news = obtenirDonneesParDefaut().news;
-                    if(!donnees.reseaux) donnees.reseaux = obtenirDonneesParDefaut().reseaux;
-                    if(!donnees.portefeuilles) donnees.portefeuilles = obtenirDonneesParDefaut().portefeuilles;
-                    if(!donnees.operateurs) donnees.operateurs = obtenirDonneesParDefaut().operateurs;
-                    if(!donnees.cryptos) donnees.cryptos = obtenirDonneesParDefaut().cryptos;
-                    
-                    tauxUSD_MGA = donnees.usdMGA || 4700;
-                } else { 
-                    donnees = obtenirDonneesParDefaut();
+                    const demandesObj = {};
+                    merged.forEach(d => { if(d && d.id) demandesObj[d.id] = d; });
+                    donnees.demandes = demandesObj;
                 }
                 
-                rafraichirUtilisateurs();
-                mettreAJourStats(); 
-                afficherTout();
-                document.getElementById('usd-mga-display').textContent = donnees.usdMGA.toLocaleString();
+                let roueFirebase = data.roue;
+                if (roueFirebase) {
+                    let tr = Array.isArray(roueFirebase) ? roueFirebase : Object.values(roueFirebase);
+                    donnees.roue = tr.filter(item => item !== null);
+                }
+                if(!donnees.roue || donnees.roue.length === 0) donnees.roue = obtenirDonneesParDefaut().roue;
+                if(!donnees.limites) donnees.limites = obtenirDonneesParDefaut().limites;
+                if(!donnees.messagesSpeciaux) donnees.messagesSpeciaux = obtenirDonneesParDefaut().messagesSpeciaux;
+                if(!donnees.taux) donnees.taux = {};
+                if(!donnees.news) donnees.news = obtenirDonneesParDefaut().news;
+                if(!donnees.reseaux) donnees.reseaux = obtenirDonneesParDefaut().reseaux;
+                if(!donnees.portefeuilles) donnees.portefeuilles = obtenirDonneesParDefaut().portefeuilles;
+                if(!donnees.operateurs) donnees.operateurs = obtenirDonneesParDefaut().operateurs;
+                if(!donnees.cryptos) donnees.cryptos = obtenirDonneesParDefaut().cryptos;
                 
-                demarrerSynchronisationRealtime();
-                demarrerSauvegardeAutomatique();
-                
-                // Planifier la sauvegarde quotidienne (toutes les 24h)
-                setInterval(() => {
-                    sauvegardeQuotidienne();
-                    nettoyerAnciensBackups();
-                }, 24 * 60 * 60 * 1000);
-                
-                // Première sauvegarde dans 1 heure
-                setTimeout(() => {
-                    sauvegardeQuotidienne();
-                    nettoyerAnciensBackups();
-                }, 60 * 60 * 1000);
-            }).catch(e => { 
-                console.error(e); 
-                donnees = obtenirDonneesParDefaut(); 
-                afficherTout();
-                demarrerSynchronisationRealtime();
-                demarrerSauvegardeAutomatique();
-            });
+                tauxUSD_MGA = donnees.usdMGA || 4700;
+            } else { 
+                donnees = obtenirDonneesParDefaut();
+            }
+            
+            rafraichirUtilisateurs();
+            mettreAJourStats(); 
+            afficherTout();
+            document.getElementById('usd-mga-display').textContent = donnees.usdMGA.toLocaleString();
+            
+            demarrerSynchronisationRealtime();
+            demarrerSauvegardeAutomatique();
+            
+            // Planifier la sauvegarde quotidienne (toutes les 24h)
+            setInterval(() => {
+                sauvegardeQuotidienne();
+                nettoyerAnciensBackups();
+            }, 24 * 60 * 60 * 1000);
+            
+            // Première sauvegarde dans 1 heure
+            setTimeout(() => {
+                sauvegardeQuotidienne();
+                nettoyerAnciensBackups();
+            }, 60 * 60 * 1000);
         }
         
         // ============================================================
-        // FONCTIONS D'AFFICHAGE
+        // FONCTIONS D'AFFICHAGE (inchangées)
         // ============================================================
         
         function afficherTout() { 
@@ -1578,7 +1675,20 @@
             }
         }
         
-        function rafraichirUtilisateurs() { database.ref('donnees/utilisateurs').once('value').then((snap) => { utilisateurs = snap.val() || {}; mettreAJourStats(); afficherNumeros(); afficherUtilisateurs(); afficherParrainages(); }).catch(e => console.error(e)); }
+        function rafraichirUtilisateurs() { 
+            const now = Date.now();
+            if (now - dernierRafraichissementUtilisateurs < 60000) return; // 1 minute minimum
+            dernierRafraichissementUtilisateurs = now;
+            
+            database.ref('donnees/utilisateurs').once('value').then((snap) => { 
+                utilisateurs = snap.val() || {}; 
+                mettreAJourStats(); 
+                afficherNumeros(); 
+                afficherUtilisateurs(); 
+                afficherParrainages(); 
+            }).catch(e => console.error(e)); 
+        }
+        
         function rafraichirNumeros() { rafraichirUtilisateurs(); afficherNumeros(); }
         
         async function approuverNumero(uid, numeroId) { 
@@ -1710,18 +1820,18 @@
             let montantEnvoyeHtml = tx.type !== 'BONUS' ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Montant envoyé:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.montant)} ${tx.type==='ACHAT'?'Ar':tx.crypto}</td></tr>` : '';
             let reseauHtml = tx.type !== 'BONUS' ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Réseau:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.reseau||'N/A')}</td></tr>` : '';
             recu.innerHTML=`<table style="width:100%;border-collapse:collapse;margin:20px 0;"><tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>ID Transaction:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.id)}</td></tr>
-                      <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>ID Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.userID||'Non attribué')}</td></tr>
-                      <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Type:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.type)}</td></tr>
-                      <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Statut:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.statut)}</td></tr>
-                      <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.utilisateur)}</td></tr>
-                      <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Email:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.email)}</td></tr>
-                      <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Date:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(new Date(tx.date).toLocaleString('fr-FR'))}</td></tr>
+                       <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>ID Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.userID||'Non attribué')}</td></tr>
+                       <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Type:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.type)}</td></tr>
+                       <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Statut:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.statut)}</td></tr>
+                       <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Client:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.utilisateur)}</td></tr>
+                       <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Email:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(tx.email)}</td></tr>
+                       <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Date:</strong><td style="padding:8px;border-bottom:1px solid #eee;">${echapperHTML(new Date(tx.date).toLocaleString('fr-FR'))}</td></tr>
                     ${montantEnvoyeHtml}
                     <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>${tx.type==='BONUS'?'Lot gagné':'Vous recevez'}:</strong><td style="padding:8px;border-bottom:1px solid #eee;color:#059669;font-weight:bold;">${echapperHTML(montantRecu)}</td></tr>
                     ${reseauHtml}
                     ${beneficiaire}
                     <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>TXID/Preuve:</strong><td style="padding:8px;border-bottom:1px solid #eee;font-size:0.8rem;word-break:break-all;">${echapperHTML(tx.txid||'Non fourni')}</td></tr>
-                </table>`; 
+                 </table>`; 
             dateGen.textContent=echapperHTML(new Date().toLocaleString('fr-FR')); 
             html2canvas(document.getElementById('template-recu'),{scale:2,backgroundColor:'#ffffff',logging:false}).then(canvas=>{ const a=document.createElement('a'); a.download=`recu-${tx.id}-${Date.now()}.png`; a.href=canvas.toDataURL('image/png'); a.click(); const demandesArray2 = getDemandesTableau();
             const tx2=demandesArray2.find(d=>d.id===tx.id); if(tx2){ if(!tx2.historique) tx2.historique=[]; tx2.historique.push({date:new Date().toISOString(),action:'RECU_TELECHARGE',details:'Reçu téléchargé par admin'}); sauvegarderDemandes(demandesArray2); } }).catch(e=>{ console.error(e); alert('❌ Erreur génération reçu'); }); 
@@ -1901,7 +2011,7 @@
             }
         });
         
-        window.addEventListener('load',function(){ console.log('🚀 ADMIN PRO - Système de stockage indestructible activé - Multi-appareils synchronisés - Import JSON ajouté'); });
+        window.addEventListener('load',function(){ console.log('🚀 ADMIN PRO - Version optimisée - Cache activé - Téléchargements réduits'); });
     </script>
 </body>
 </html>
