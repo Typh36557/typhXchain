@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test App Check - TYPH X-CHAIN</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0A0F1F;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background: #131B2F;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            border: 1px solid #3B82F6;
+        }
+        h1 { color: #3B82F6; margin-bottom: 20px; }
+        .status {
+            background: #1A253C;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .success { color: #10B981; }
+        .error { color: #EF4444; }
+        .warning { color: #F59E0B; }
+        button {
+            background: #3B82F6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #2563EB; }
+        pre {
+            background: #0A0F1F;
+            padding: 15px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        hr { border-color: #2D3A4A; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Test App Check reCAPTCHA v3</h1>
+        
+        <div id="firebase-status">
+            <h3>📡 Statut Firebase</h3>
+            <div class="status" id="firebase-loading">⏳ Vérification...</div>
+        </div>
+
+        <div id="appcheck-status">
+            <h3>🔑 Statut App Check</h3>
+            <div class="status" id="appcheck-loading">⏳ Vérification...</div>
+        </div>
+
+        <div id="token-status">
+            <h3>🎫 Token généré</h3>
+            <div class="status" id="token-display">⏳ Récupération...</div>
+        </div>
+
+        <hr>
+
+        <div>
+            <button onclick="testerAppCheck()">🔄 Tester à nouveau</button>
+            <button onclick="afficherToken()">🔑 Afficher token</button>
+        </div>
+
+        <hr>
+
+        <div id="debug-info">
+            <h3>🐛 Debug</h3>
+            <pre id="debug-log"></pre>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check-compat.js"></script>
+
+    <!-- Votre fichier config App Check -->
+    <script src="config.js"></script>
+
+    <script>
+        const debugLog = document.getElementById('debug-log');
+        
+        function log(message, type = 'info') {
+            const date = new Date().toLocaleTimeString();
+            debugLog.innerHTML += `[${date}] ${message}\n`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+            console.log(message);
+        }
+
+        // Vérifier Firebase
+        function verifierFirebase() {
+            const statusDiv = document.getElementById('firebase-loading');
+            if (typeof firebase !== 'undefined') {
+                statusDiv.innerHTML = '✅ Firebase chargé avec succès';
+                statusDiv.className = 'status success';
+                log('✅ Firebase est disponible');
+                return true;
+            } else {
+                statusDiv.innerHTML = '❌ Firebase NON chargé';
+                statusDiv.className = 'status error';
+                log('❌ Firebase n\'est pas disponible');
+                return false;
+            }
+        }
+
+        // Vérifier App Check
+        function verifierAppCheck() {
+            const statusDiv = document.getElementById('appcheck-loading');
+            if (typeof firebase !== 'undefined' && firebase.appCheck) {
+                try {
+                    const appCheck = firebase.appCheck();
+                    if (appCheck) {
+                        statusDiv.innerHTML = '✅ App Check initialisé avec succès';
+                        statusDiv.className = 'status success';
+                        log('✅ App Check est disponible');
+                        return true;
+                    }
+                } catch(e) {
+                    statusDiv.innerHTML = `❌ Erreur: ${e.message}`;
+                    statusDiv.className = 'status error';
+                    log(`❌ Erreur App Check: ${e.message}`);
+                    return false;
+                }
+            } else {
+                statusDiv.innerHTML = '❌ App Check NON disponible';
+                statusDiv.className = 'status error';
+                log('❌ App Check n\'est pas disponible');
+                return false;
+            }
+        }
+
+        // Récupérer et afficher le token
+        async function afficherToken() {
+            const tokenDiv = document.getElementById('token-display');
+            tokenDiv.innerHTML = '⏳ Récupération du token...';
+            tokenDiv.className = 'status';
+            
+            try {
+                if (typeof firebase !== 'undefined' && firebase.appCheck) {
+                    const appCheck = firebase.appCheck();
+                    const tokenResult = await appCheck.getToken();
+                    
+                    if (tokenResult && tokenResult.token) {
+                        tokenDiv.innerHTML = `
+                            <div class="success">✅ Token récupéré avec succès !</div>
+                            <br>
+                            <strong>Token:</strong><br>
+                            <span style="font-size: 11px; word-break: break-all;">${tokenResult.token.substring(0, 100)}...</span>
+                            <br><br>
+                            <strong>Expiration:</strong> ${new Date(tokenResult.expireTimeMillis).toLocaleString()}
+                        `;
+                        tokenDiv.className = 'status success';
+                        log(`✅ Token obtenu (${tokenResult.token.length} caractères)`);
+                        log(`📅 Expire le: ${new Date(tokenResult.expireTimeMillis).toLocaleString()}`);
+                    } else {
+                        tokenDiv.innerHTML = '❌ Token vide ou invalide';
+                        tokenDiv.className = 'status error';
+                        log('❌ Token vide ou invalide');
+                    }
+                } else {
+                    tokenDiv.innerHTML = '❌ App Check non disponible';
+                    tokenDiv.className = 'status error';
+                    log('❌ Impossible de récupérer le token: App Check non disponible');
+                }
+            } catch(error) {
+                tokenDiv.innerHTML = `❌ Erreur: ${error.message}`;
+                tokenDiv.className = 'status error';
+                log(`❌ Erreur lors de la récupération du token: ${error.message}`);
+            }
+        }
+
+        // Test complet
+        async function testerAppCheck() {
+            log('=== Début du test App Check ===');
+            debugLog.innerHTML = '';
+            
+            const firebaseOK = verifierFirebase();
+            if (firebaseOK) {
+                const appCheckOK = verifierAppCheck();
+                if (appCheckOK) {
+                    await afficherToken();
+                }
+            }
+            log('=== Fin du test ===');
+        }
+
+        // Exécution automatique au chargement
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🔧 Page de test chargée');
+            setTimeout(testerAppCheck, 1000);
+        });
+    </script>
+</body>
+</html>
