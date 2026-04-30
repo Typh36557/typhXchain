@@ -1,40 +1,19 @@
-// config.js - App Check reCAPTCHA v3 (Version corrigée)
-
+// config.js - App Check reCAPTCHA v3
 (function() {
-    console.log('🔧 Chargement config.js...');
+    console.log('🔧 Activation App Check...');
     
-    function initAppCheck() {
-        // Vérifier si Firebase est initialisé
+    if (typeof firebase !== 'undefined' && firebase.appCheck) {
         try {
-            // Récupérer l'instance Firebase par défaut
-            const app = firebase.app();
-            
-            if (app && typeof firebase.appCheck !== 'undefined') {
-                try {
-                    const appCheck = firebase.appCheck();
-                    appCheck.activate(
-                        '6Le9utAsAAAAALrbDCplutKi71-EBLCWGpNozUyv',
-                        true
-                    );
-                    console.log('✅ App Check initialisé avec succès');
-                } catch(e) {
-                    console.warn('⚠️ Erreur activation App Check:', e.message);
-                }
-            } else {
-                console.warn('⏳ Firebase pas encore prêt, réessai dans 500ms...');
-                setTimeout(initAppCheck, 500);
-            }
+            const appCheck = firebase.appCheck();
+            appCheck.activate(
+                '6Le9utAsAAAAALrbDCplutKi71-EBLCWGpNozUyv',
+                true
+            );
+            console.log('✅ App Check initialisé avec succès');
         } catch(e) {
-            console.warn('⏳ Firebase non initialisé, réessai dans 500ms...');
-            setTimeout(initAppCheck, 500);
+            console.warn('⚠️ Erreur App Check:', e.message);
         }
-    }
-    
-    // Attendre que le DOM et Firebase soient prêts
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initAppCheck);
     } else {
-        // Petit délai pour laisser Firebase s'initialiser
-        setTimeout(initAppCheck, 500);
+        console.error('❌ Firebase App Check non disponible');
     }
 })();
